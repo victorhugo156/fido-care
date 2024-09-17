@@ -1,12 +1,18 @@
-import { Text } from "react-native"
+import { Text, View, StyleSheet } from "react-native"
 import { Container, Title } from "./styles"
 
 export default function Login(){
     return(
-
-        <Container>
-            <Title>Helloo World</Title>
-        </Container>
-        
+       <View style={styles.container}>
+            <Text> Login </Text>
+        </View>
     )
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+});
