@@ -5,7 +5,7 @@ import React from 'react'
 export default function index() {
   return (
     <View>
-      <Text>Index</Text>
+      <Text>Index Page</Text>
     </View>
   )
 }

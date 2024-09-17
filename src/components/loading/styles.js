@@ -1,4 +1,5 @@
 import styled from "styled-components/native";
+import { Container,LoadingIndicator  } from "../../screens/Login/styles";
 
 export const Container = styled.View`
 
