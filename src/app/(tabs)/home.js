@@ -4,7 +4,7 @@ import React from 'react'
 export default function home() {
   return (
     <View style={styles.container}>
-      <Text>Design the Home/Find Sitter page here</Text>
+      <Text>Design the Home/Find Sitter page here!</Text>
     </View>
   );
 }
