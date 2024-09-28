@@ -23,32 +23,32 @@ export default function TabLayout() {
    >
         <Tabs.Screen name='home' 
           options={{
-            title: 'Home',
+            title: 'HOME',
             headerShown: false,
-            tabBarIcon: ({color})=><FontAwesome name="home" size={24} color={color} />
+            tabBarIcon: ({color})=><FontAwesome name="home" size={32} color={color} />
           }}
         
         />
         <Tabs.Screen name='bookings'
           options={{
-            title: 'Bookings',
+            title: 'BOOKINGS',
             headerShown: false,
-            tabBarIcon: ({color})=><Entypo name="calendar" size={24} color={color} />
+            tabBarIcon: ({color})=><Entypo name="calendar" size={32} color={color} />
           }}
         
         />
         <Tabs.Screen name='inbox' 
           options={{
-            title: 'Inbox',
+            title: 'INBOX',
             headerShown: false,
-            tabBarIcon: ({color})=><Ionicons name="chatbox" size={24} color={color} />
+            tabBarIcon: ({color})=><Ionicons name="chatbox" size={32} color={color} />
           }}        
         />
         <Tabs.Screen name='profile'
           options={{
-            title: 'Profile',
+            title: 'PROFILE',
             headerShown: false,
-            tabBarIcon: ({color})=><FontAwesome name="user" size={24} color={color} />
+            tabBarIcon: ({color})=><FontAwesome name="user" size={32} color={color} />
           }}  
         
         />     
