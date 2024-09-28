@@ -23,7 +23,6 @@ export default function App() {
         translucent
       />
       {fontsLoaded ? <Login /> : <Loading />}
-
     </ThemeProvider>
 
   );
