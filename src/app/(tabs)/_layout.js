@@ -1,4 +1,4 @@
-import { View, Text, findNodeHandle } from 'react-native'
+import { Image } from 'react-native'
 import React from 'react'
 import { Tabs } from 'expo-router'
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -23,8 +23,29 @@ export default function TabLayout() {
    >
         <Tabs.Screen name='home' 
           options={{
-            title: 'Home',
-            headerShown: false,
+
+            headerStyle:{
+              backgroundColor: Colors.TURQUOISE_GREEN,
+            },
+            headerLeft:()=>(
+              <Image
+              source={require('../../assets/icons/ArrowLeft.png')}
+              />
+            ),
+
+            headerTitleAlign: "center",
+            
+            headerTitle:()=>(
+              <Image
+              source={require('../../assets/images/fido_logo_cream.png')}
+              style={{
+                width: 74,
+                resizeMode: "contain",
+                alignItems: "center"
+                
+              }}
+              />
+            ),
             tabBarIcon: ({color})=><FontAwesome name="home" size={24} color={color} />
           }}
         
