@@ -35,7 +35,7 @@ export default function LoginScreen() {
             style={styles.input} />
         </View>
 
-        <Link href="/(tabs)/home">
+        <Link href="/Home">
           <Text style={styles.recoverPasswordLink}>Forgot your password?</Text>
         </Link>
       </View>

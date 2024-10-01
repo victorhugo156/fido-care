@@ -1,5 +1,4 @@
 import { Stack } from "expo-router";
-import { useFonts } from "expo-font";
 import { SafeAreaView, StatusBar } from "react-native";
 
 

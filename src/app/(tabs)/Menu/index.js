@@ -1,10 +1,14 @@
 import { View, Text, StyleSheet } from 'react-native'
 import React from 'react'
+import { Link } from 'expo-router';
 
-export default function home() {
+export default function Menu() {
   return (
     <View style={styles.container}>
-      <Text>Design the Home/Find Sitter page here!!!</Text>
+      <Text>Design the Menu</Text>
+      <Link href="/Bookings">
+      <Text>Go to Bookings</Text>
+      </Link>
     </View>
   );
 }

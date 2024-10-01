@@ -1,10 +1,10 @@
-import { View, Text, StyleSheet } from 'react-native'
+import { View, Text,StyleSheet } from 'react-native'
 import React from 'react'
 
-export default function profile() {
+export default function Bookings() {
   return (
     <View style={styles.container}>
-      <Text>Design the Profile page here</Text>
+      <Text>Design the booking page here!</Text>
     </View>
   );
 }

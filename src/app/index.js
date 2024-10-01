@@ -1,5 +1,4 @@
 import { Text, View, StyleSheet, SafeAreaView } from "react-native";
-import { Link } from "expo-router";
 import React from "react";
 import Colors from "../constants/Colors";
 import { useFonts,
@@ -11,7 +10,6 @@ import { useFonts,
 import { StatusBar } from 'react-native';
 import { Loading } from "../components/loading";
 import LoginScreen from "./screens/Login";
-import Welcome from "./screens/Welcome";
 
 export default function index() {
 
@@ -25,7 +23,7 @@ export default function index() {
         backgroundColor="transparent"
         translucent
       />
-      {fontsLoaded ? <Welcome /> : <Loading />}
+      {fontsLoaded ? <LoginScreen /> : <Loading />}
     </SafeAreaView>
 
     // <ImageBackground
