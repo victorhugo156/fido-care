@@ -41,8 +41,10 @@ export default function LoginScreen() {
       </View>
 
       <View style={styles.containerButtons}>
-        
-        <ButtonGreen btnName="LOGIN" />
+
+        <Link href="/Home">
+          <ButtonGreen btnName="LOGIN" />
+        </Link>
 
         <Text style={styles.textGeneral}>or</Text>
 
