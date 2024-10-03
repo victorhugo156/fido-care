@@ -28,7 +28,14 @@ export default function Rootlayout() {
                     options={{
                         title: "Inbox",  // Title for chat screen
                     }}
-                />        
+                />   
+
+                <Stack.Screen
+                name="screens/Petsitterprofile/Petsitterprofile"
+                options={{
+                    title: "Pet Sitter Profile",  // Title for pet sitter profile screen
+                }}
+                />     
 
 
             </Stack>

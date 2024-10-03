@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image, TextInput } 
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import Colors from '../../../constants/Colors';
+import Font_Family from '../../../constants/Font_Family';
 
 const inboxData = [
   { id: '1', userName: 'John Doe', 
@@ -91,6 +92,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: '600',
     color: Colors.BRIGHT_BLUE,
+    fontFamily: Font_Family.BOLD,
   },
   searchContainer: {
     flexDirection: 'row',
