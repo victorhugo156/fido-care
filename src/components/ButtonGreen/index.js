@@ -8,7 +8,7 @@ import Font_Size from "../../constants/Font_Size"
 export default function ButtonGreen({btnName}){
     return(
         <TouchableOpacity style={styles.ContainerBtn}>
-            <Link href={"/(tabs)/home"} asChild >
+            <Link href={"/(tabs)/Home"} asChild >
                 <Text style={styles.BtnTxt}>{btnName}</Text>
             </Link>
         </TouchableOpacity>

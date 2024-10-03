@@ -14,11 +14,11 @@ export default function TabLayout() {
     return (
         <Tabs screenOptions={{
             tabBarActiveTintColor: Colors.BRIGHT_BLUE,
-            tabBarInactiveTintColor: 'gray',
+            tabBarInactiveTintColor: 'white',
             
             tabBarStyle: {
                 
-                backgroundColor: Colors.SOFT_CREAM,
+                backgroundColor: Colors.TURQUOISE_GREEN,
                 borderTopColor: 'transparent',
                 elevation: 0,
                 height: 70
