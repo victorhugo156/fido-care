@@ -1,33 +1,42 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons'; // Importing Ionicons for iOS-like icons
-import { useNavigation } from 'expo-router'; // Navigation hook from expo-router
+import React, { useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image, TextInput } from 'react-native';
+import Icon from 'react-native-vector-icons/Ionicons';
+import { useRouter } from 'expo-router';
+import Colors from '../../../constants/Colors';
 
 const inboxData = [
-  {
-    id: '1',
-    userName: 'John Doe',
-    lastMessage: 'Hey! Is Max available for pet sitting next week?',
-    time: '10:45 AM',
-    avatar: 'https://i.pravatar.cc/150?img=1',
-  },
-  {
-    id: '2',
-    userName: 'Jane Smith',
-    lastMessage: 'Can you walk Bella this weekend?',
-    time: 'Yesterday',
-    avatar: 'https://i.pravatar.cc/150?img=2',
-  },
-  // Add more chat data here
+  { id: '1', userName: 'John Doe', 
+    lastMessage: 'Hey! Is Max available for pet sitting next week?', 
+    time: '10:45 AM', 
+    avatar: 'https://i.pravatar.cc/150?img=1' },
+  { id: '2', userName: 'Jane Smith', 
+    lastMessage: 'Can you walk Bella this weekend?', 
+    time: 'Yesterday', 
+    avatar: 'https://i.pravatar.cc/150?img=2' },
 ];
 
 const Inbox = () => {
-  const navigation = useNavigation();
+  const router = useRouter();
+  const [searchText, setSearchText] = useState('');
+  const [filteredData, setFilteredData] = useState(inboxData);
+
+  const handleSearch = (text) => {
+    setSearchText(text);
+    if (text) {
+      const filtered = inboxData.filter(item => 
+        item.userName.toLowerCase().includes(text.toLowerCase()) || 
+        item.lastMessage.toLowerCase().includes(text.toLowerCase())
+      );
+      setFilteredData(filtered);
+    } else {
+      setFilteredData(inboxData);
+    }
+  };
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.chatItem}
-      onPress={() => navigation.push('/screens/Chat/chat/${item.id}')} // Navigate to chat detail
+      onPress={() => router.push(`/screens/Chat/chat?id=${item.id}`)}
     >
       <Image source={{ uri: item.avatar }} style={styles.avatar} />
       <View style={styles.chatContent}>
@@ -46,8 +55,17 @@ const Inbox = () => {
       <View style={styles.header}>
         <Text style={styles.headerText}>Messages</Text>
       </View>
+      <View style={styles.searchContainer}>
+        <Icon name="search" size={20} color={Colors.BRIGHT_BLUE} />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search chats..."
+          value={searchText}
+          onChangeText={handleSearch}
+        />
+      </View>
       <FlatList
-        data={inboxData}
+        data={filteredData}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={styles.inboxList}
@@ -72,7 +90,24 @@ const styles = StyleSheet.create({
   headerText: {
     fontSize: 24,
     fontWeight: '600',
-    color: '#333',
+    color: Colors.BRIGHT_BLUE,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+  },
+  searchInput: {
+    flex: 1,
+    height: 40,
+    backgroundColor: '#F1F1F1',
+    borderRadius: 20,
+    marginLeft: 10,
+    paddingHorizontal: 15,
   },
   inboxList: {
     padding: 20,
@@ -119,4 +154,5 @@ const styles = StyleSheet.create({
 });
 
 export default Inbox;
+
 

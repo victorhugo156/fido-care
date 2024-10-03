@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet, KeyboardAvoidingView } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useNavigation, useRoute } from '@react-navigation/native'; // Ensure this import is correct
+import { useRouter, useLocalSearchParams } from 'expo-router'; // Use useRouter and useLocalSearchParams for navigation and params
+import Colors from '../../../constants/Colors';
 
 // Dummy chat data for demonstration purposes
 const chatData = [
@@ -13,9 +14,8 @@ const chatData = [
 
 const Chat = () => {
   const [message, setMessage] = useState('');
-  const route = useRoute(); // Correctly use useRoute hook
-  const navigation = useNavigation();
-  const { id } = route.params || {}; // Retrieve chat ID from route params
+  const router = useRouter();
+  const { id } = useLocalSearchParams(); // Use useLocalSearchParams to get the id
 
   const renderItem = ({ item }) => (
     <View style={[styles.messageContainer, item.sender === 'You' ? styles.userMessage : styles.receiverMessage]}>
@@ -26,10 +26,7 @@ const Chat = () => {
   return (
     <View style={styles.container}>
       {/* Chat Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Icon name="arrow-back" size={24} color="#FFF" />
-        </TouchableOpacity>
+      <View style={styles.header}>       
         <Text style={styles.headerTitle}>Chat with {id}</Text>
       </View>
 
@@ -50,7 +47,7 @@ const Chat = () => {
           value={message}
           onChangeText={(text) => setMessage(text)}
         />
-        <TouchableOpacity style={styles.sendButton}>
+        <TouchableOpacity style={styles.sendButton} onPress={() => { /* Add message sending functionality here */ }}>
           <Icon name="send" size={24} color="#FFF" />
         </TouchableOpacity>
       </KeyboardAvoidingView>
@@ -65,7 +62,7 @@ const styles = StyleSheet.create({
   },
   header: {
     height: 70,
-    backgroundColor: '#3F51B5',
+    backgroundColor: Colors.TURQUOISE_GREEN,
     justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
@@ -133,6 +130,4 @@ const styles = StyleSheet.create({
 });
 
 export default Chat;
-
-
 

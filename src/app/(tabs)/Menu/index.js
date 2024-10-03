@@ -4,6 +4,8 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router'; // Import useRouter for navigation
 import Colors from '../../../constants/Colors';
+import Font_Family from '../../../constants/Font_Family';
+import Font_Size from '../../../constants/Font_Size';
 
 const menuItems = [
   { name: 'PersonalDetails', label: 'Personal Details', icon: 'user', color: 'white' },
@@ -75,6 +77,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginLeft: 15,
     color: 'white',
+    fontFamily: Font_Family.BOLD,
   },
 });
 

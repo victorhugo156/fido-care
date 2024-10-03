@@ -23,8 +23,12 @@ export default function Rootlayout() {
                     }}
                 />
 
-                
-
+                <Stack.Screen
+                    name="screens/Chat/chat"
+                    options={{
+                        title: "Inbox",  // Title for chat screen
+                    }}
+                />        
 
 
             </Stack>
