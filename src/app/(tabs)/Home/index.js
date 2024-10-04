@@ -1,181 +1,153 @@
-import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, TextInput } from 'react-native'
-import React from 'react'
-import { Link } from 'expo-router';
+import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, TextInput } from 'react-native';
+import React from 'react';
+import { useRouter } from 'expo-router'; // Use useRouter hook
 
 import Colors from '../../../constants/Colors';
 import Font_Family from "../../../constants/Font_Family";
 import Font_Size from "../../../constants/Font_Size";
 
+
 export default function Home() {
+  const router = useRouter(); // Initialize router
+
   return (
     <SafeAreaView style={styles.ContainerSafeArea}>
-
+      {/* Search Bar */}
       <View style={styles.ContainerSearchBar}>
         <View style={styles.SearchBar}>
           <Image style={styles.SearchIcon} source={require("../../../assets/icons/map-pin-line.png")} />
-          <TextInput style={styles.TxtInput}>Enter your address or suburb</TextInput>
+          <TextInput style={styles.TxtInput} placeholder="Enter your address or suburb" placeholderTextColor={Colors.GRAY} />
         </View>
       </View>
 
-      <View >
+      {/* Title */}
+      <View>
         <Text style={styles.Title}>What Do you need?</Text>
       </View>
 
+      {/* Call to Action Buttons */}
       <View style={styles.ContainerCTA}>
-        <TouchableOpacity style={styles.ContainerBtnPetSitter}>
+        {/* Pet Sitter Button */}
+        <TouchableOpacity 
+            style={styles.ContainerBtnPetSitter}
+            onPress={() => router.push('/screens/Petsitterlist')}
+           >
           <View>
             <Image style={styles.Icon} source={require('../../../assets/icons/kitten_face.png')} />
           </View>
-
           <View>
             <Text style={styles.BtnTitle}>Pet Sitter</Text>
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.ContainerBtnDogWalk}>
+        {/* Dog Walk Button */}
+        <TouchableOpacity 
+          style={styles.ContainerBtnDogWalk}
+          onPress={() => router.push('/screens/Petsitterlist')}
+        >
           <View>
             <Image style={styles.Icon} source={require('../../../assets/icons/paw.png')} />
           </View>
-
           <View>
             <Text style={styles.BtnTitle}>Dog Walk</Text>
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.ContainerBtnPetWash}>
+        {/* Pet Wash Button */}
+        <TouchableOpacity 
+          style={styles.ContainerBtnPetWash}
+          onPress={() => router.push('/screens/Petsitterlist')}
+        >
           <View>
             <Image style={styles.Icon} source={require('../../../assets/icons/shower.png')} />
           </View>
-
           <View>
             <Text style={styles.BtnTitle}>Pet Wash</Text>
           </View>
         </TouchableOpacity>
-
       </View>
-
-
-      
     </SafeAreaView>
-
   );
 }
 
 const styles = StyleSheet.create({
   ContainerSafeArea: {
     flex: 1,
-    justifyContent:"flex-start",
+    justifyContent: "flex-start",
     alignItems: 'center',
-
-    paddingTop: 50
+    paddingTop: 50,
   },
-
   ContainerSearchBar: {
     width: 327,
     height: 38,
-
     paddingLeft: 15,
-
     justifyContent: "center",
-
     borderWidth: 2,
     borderColor: Colors.GRAY_200,
     borderRadius: 9,
-
-    marginBottom: 80
-
+    marginBottom: 80,
   },
-  SearchBar:{
-
-    flexDirection:"row",
+  SearchBar: {
+    flexDirection: "row",
     alignItems: "center",
-    gap: 20
-
+    gap: 20,
   },
-
-  SearchIcon:{
-    tintColor: Colors.TURQUOISE_GREEN
+  SearchIcon: {
+    tintColor: Colors.TURQUOISE_GREEN,
   },
-
   TxtInput: {
     fontFamily: Font_Family.BOLD,
-    color: Colors.TURQUOISE_GREEN
-
+    color: Colors.TURQUOISE_GREEN,
   },
-
-  Title:{
+  Title: {
     color: Colors.GRAY_600,
-
     fontSize: Font_Size.XXL,
     fontFamily: Font_Family.BLACK,
-
-    marginBottom: 65
-
+    marginBottom: 65,
   },
-
-  ContainerCTA:{
+  ContainerCTA: {
     height: 300,
-
-    justifyContent: "space-between"
+    justifyContent: "space-between",
   },
-
-  ContainerBtnPetSitter:{
+  ContainerBtnPetSitter: {
     backgroundColor: Colors.BRIGHT_BLUE,
-
     width: 304,
     height: 75,
-
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap:20,
-
+    gap: 20,
     borderRadius: 5,
-
   },
-
-  ContainerBtnDogWalk:{
+  ContainerBtnDogWalk: {
     backgroundColor: Colors.CORAL_PINK,
-
     width: 304,
     height: 75,
-
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap:20,
-
+    gap: 20,
     borderRadius: 5,
-
   },
-
-  ContainerBtnPetWash:{
+  ContainerBtnPetWash: {
     backgroundColor: Colors.TURQUOISE_GREEN,
-
     width: 304,
     height: 75,
-
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap:20,
-
+    gap: 20,
     borderRadius: 5,
-
   },
-
-  Icon:{
+  Icon: {
     width: 30,
     height: 31,
     resizeMode: "contain",
   },
-
-  BtnTitle:{
+  BtnTitle: {
     color: Colors.WHITE,
-
     fontSize: Font_Size.XXL,
-    fontFamily: Font_Family.BLACK
-
-  }
-
+    fontFamily: Font_Family.BLACK,
+  },
 });
+

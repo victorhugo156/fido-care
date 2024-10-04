@@ -13,7 +13,7 @@ const inboxData = [
   { id: '2', userName: 'Jane Smith', 
     lastMessage: 'Can you walk Bella this weekend?', 
     time: 'Yesterday', 
-    avatar: 'https://i.pravatar.cc/150?img=2' },
+    avatar: 'https://media.istockphoto.com/id/1350689855/photo/portrait-of-an-asian-man-holding-a-young-dog.jpg?s=612x612&w=0&k=20&c=Iw0OedGHrDViIM_6MipHmPLlo83O59by-LGcsDPyzwU=' },
 ];
 
 const Inbox = () => {

@@ -49,6 +49,13 @@ export default function Rootlayout() {
                     }}
                 />
 
+                <Stack.Screen
+                    name="screens/Petsitterlist/index"
+                    options={{
+                        title: "Pet Sitter List",  // Title for pet sitter list screen
+                    }}
+                />
+
             </Stack>
         </SafeAreaView>
     );

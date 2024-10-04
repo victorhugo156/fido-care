@@ -1,24 +1,52 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import Colors from '../../../constants/Colors'; // Adjust import based on your project structure
+import { useLocalSearchParams } from 'expo-router'; // Correct hook for getting query params
+import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 
+// Example data for demonstration purposes
+const petSittersData = [
+  {
+    id: '1',
+    name: 'Stephen',
+    location: 'Darlinghurst',
+    about: 'Unleash joy for your furry friend with me, Stephen! I have over 5 years of experience in pet care and training.',
+    experience: '5+ years of experience',
+    rating: 4.8,
+    reviews: 20,
+    services: [
+      { title: 'Dog Walking', price: 25 },
+      { title: 'One home visit per day', price: 25 },
+      { title: 'Two home visits per day', price: 50 },
+    ],
+    availability: ['2024-09-21', '2024-09-22', '2024-09-23'],
+    skills: ['Experience as a volunteer with animal welfare', 'Experience with rescue pets', 'Familiar with dog training techniques'],
+    avatar: 'https://media.istockphoto.com/id/1350689855/photo/portrait-of-an-asian-man-holding-a-young-dog.jpg?s=612x612&w=0&k=20&c=Iw0OedGHrDViIM_6MipHmPLlo83O59by-LGcsDPyzwU=',
+  },
+  // Add more sitters here... 
+];
+
 const PetSitterProfile = () => {
+  const { id } = useLocalSearchParams(); // Use useLocalSearchParams to get the query param
+  const petSitter = petSittersData.find((sitter) => sitter.id === id);
+
+  if (!petSitter) return <Text>No pet sitters found</Text>;
+
   return (
     <ScrollView style={styles.container}>
       {/* Header Image */}
       <View style={styles.headerImageContainer}>
         <Image 
-          source={{ uri: 'https://i.pravatar.cc/300' }} 
+          source={{ uri: 'https://media.istockphoto.com/id/1350689855/photo/portrait-of-an-asian-man-holding-a-young-dog.jpg?s=612x612&w=0&k=20&c=Iw0OedGHrDViIM_6MipHmPLlo83O59by-LGcsDPyzwU=' }} 
           style={styles.headerImage} 
         />
         <View style={styles.imageOverlay}>
           <TouchableOpacity style={styles.imageButton}>
-            <Icon name="heart-o" size={20} color={Colors.BRIGHT_BLUE} />
+            <Icon name="heart-o" size={20} color={Colors.CORAL_PINK} />
           </TouchableOpacity>
           <TouchableOpacity style={styles.imageButton}>
-            <Icon name="share-alt" size={20} color={Colors.BRIGHT_BLUE} />
+            <Icon name="share-alt" size={20} color={Colors.CORAL_PINK} />
           </TouchableOpacity>
         </View>
       </View>
@@ -28,7 +56,7 @@ const PetSitterProfile = () => {
         <Text style={styles.sitterName}>Stephen</Text>
         <Text style={styles.location}>Darlinghurst</Text>
         <View style={styles.ratingContainer}>
-          <Icon name="star" size={16} color={Colors.GOLD} />
+          <Icon name="star" size={16} color={Colors.CORAL_PINK} />
           <Text style={styles.ratingText}>4.5</Text>
           <Text style={styles.reviewCount}>(20 Reviews)</Text>
         </View>
@@ -48,7 +76,7 @@ const PetSitterProfile = () => {
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>ABOUT ME</Text>
         <Text style={styles.aboutText}>
-          Hi there! I’m Steve, a 36-year-old dog lover from the UK now enjoying life in Australia as a full-time dog walker. I moved here to follow my passion for animal welfare and have over 5 years of experience in pet sitting and dog training.
+          Hi there! I’m Stephen, a 36-year-old dog lover from the UK now enjoying life in Australia as a full-time dog walker. I moved here to follow my passion for animal welfare and have over 5 years of experience in pet sitting and dog training.
         </Text>
       </View>
 
@@ -118,6 +146,7 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     padding: 10,
     marginLeft: 10,
+    
   },
   profileInfoContainer: {
     padding: 20,
@@ -128,10 +157,13 @@ const styles = StyleSheet.create({
   sitterName: {
     fontSize: 26,
     fontWeight: 'bold',
+    fontFamily: Font_Family.BOLD,
+    color: Colors.GRAY,
   },
   location: {
     fontSize: 18,
     color: Colors.GRAY,
+    fontFamily: Font_Family.REGULAR,
   },
   ratingContainer: {
     flexDirection: 'row',
@@ -141,11 +173,15 @@ const styles = StyleSheet.create({
   ratingText: {
     fontSize: 16,
     marginLeft: 5,
+    fontFamily: Font_Family.BOLD,
+    color: Colors.CORAL_PINK,    
   },
   reviewCount: {
     fontSize: 14,
     marginLeft: 5,
     color: Colors.GRAY,
+    fontFamily: Font_Family.BOLD,
+    color: Colors.CORAL_PINK,    
   },
   actionButtonsContainer: {
     flexDirection: 'row',
@@ -158,17 +194,20 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center',
     margin: 5,
+    
   },
   meetButton: {
     backgroundColor: Colors.TURQUOISE_GREEN,
+    
   },
   messageButton: {
     backgroundColor: Colors.BRIGHT_BLUE,
   },
   buttonText: {
     color: '#FFF',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
+    fontFamily: Font_Family.BOLD,
   },
   sectionContainer: {
     padding: 20,
@@ -184,14 +223,18 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     lineHeight: 24,
+    fontFamily: Font_Family.REGULAR,
   },
   serviceItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginVertical: 10,
+    fontFamily: Font_Family.REGULAR,
   },
   serviceTitle: {
     fontSize: 16,
+    fontFamily: Font_Family.REGULAR,
+    color: Colors.BOLD,
   },
   servicePrice: {
     fontSize: 16,
@@ -216,8 +259,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
     marginVertical: 5,
+    fontFamily: Font_Family.REGULAR,
   },
 });
 
 export default PetSitterProfile;
+
+
 
