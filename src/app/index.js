@@ -11,6 +11,9 @@ import { useFonts,
 import { Loading } from "../components/loading";
 import TabLayout from "./(tabs)/_layout";
 import Login from "../app/screens/Login"
+//import Chat from "./(tabs)/Chat";
+//import Petsitterprofile from "./screens/Petsitterprofile/Petsitterprofile";
+//import Home from "../app/screens/Home";
 
 
 export default function index() {

@@ -9,13 +9,6 @@ export default function Rootlayout() {
         <SafeAreaView style={{ flex: 1 }}>
             <Stack>
 
-            <Stack.Screen
-                    name="screens/Login/index"
-                    options={{
-                        headerShown: false,  // No header for login
-                    }}
-                />
-                
                 <Stack.Screen
                     name="(tabs)"
                     options={{
@@ -24,23 +17,37 @@ export default function Rootlayout() {
                 />
 
                 <Stack.Screen
-                    name="screens/Chat/chat"
+                    name="screens/Petsitterprofile/Petsitterprofile"
                     options={{
+                        title: "Pet Sitter Profile",  // Title for pet sitter profile screen
+                    }}
+                /> 
+
+
+                <Stack.Screen
+                    name="screens/Chat/chat"
+                        options={{
                         title: "Inbox",  // Title for chat screen
                     }}
-                />   
+                />  
 
                 <Stack.Screen
-                name="screens/Petsitterprofile/Petsitterprofile"
-                options={{
-                    title: "Pet Sitter Profile",  // Title for pet sitter profile screen
-                }}
-                />     
+                    name="screens/Login/index"
+                    options={{
+                    headerShown: false,  // No header for login
+                    }}
+                />      
 
                 <Stack.Screen
-                    name="Welcome/(tabs)" options={{headerShown: false}}
-                />   
+                    name="screens/Welcome" options={{headerShown: false}}
+                />  
 
+                <Stack.Screen
+                    name="index"
+                    options={{
+                        headerShown: false,  // No header for index
+                    }}
+                />
 
             </Stack>
         </SafeAreaView>
