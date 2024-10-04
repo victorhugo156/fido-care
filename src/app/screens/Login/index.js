@@ -35,7 +35,7 @@ export default function LoginScreen() {
             style={styles.input} />
         </View>
 
-        <Link href="/Home">
+        <Link href="screens/Welcome/(tabs)">
           <Text style={styles.recoverPasswordLink}>Forgot your password?</Text>
         </Link>
       </View>
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
   recoverPasswordLink: {
     fontSize: Font_Size.LG,
     fontFamily: Font_Family.BOLD,
-    color: Colors.GRAY_700,
+    color: Colors.WHITE,
   },
 
   containerButtons:{
@@ -131,7 +131,7 @@ const styles = StyleSheet.create({
   textGeneral:{
     fontSize: Font_Size.LG,
     fontFamily: Font_Family.BOLD,
-    color: Colors.GRAY_700,
+    color: Colors.WHITE,
   }
 
 });

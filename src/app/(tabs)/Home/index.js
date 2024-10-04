@@ -10,9 +10,13 @@ export default function Home() {
   return (
     <SafeAreaView style={styles.ContainerSafeArea}>
 
-      <View>
-        <TextInput>dfdf</TextInput>
+      <View style={styles.ContainerSearchBar}>
+        <View style={styles.SearchBar}>
+          <Image style={styles.SearchIcon} source={require("../../../assets/icons/map-pin-line.png")} />
+          <TextInput style={styles.TxtInput}>Enter your address or suburb</TextInput>
+        </View>
       </View>
+
       <View >
         <Text style={styles.Title}>What Do you need?</Text>
       </View>
@@ -60,15 +64,50 @@ export default function Home() {
 const styles = StyleSheet.create({
   ContainerSafeArea: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent:"flex-start",
     alignItems: 'center',
+
+    paddingTop: 50
+  },
+
+  ContainerSearchBar: {
+    width: 327,
+    height: 38,
+
+    paddingLeft: 15,
+
+    justifyContent: "center",
+
+    borderWidth: 2,
+    borderColor: Colors.GRAY_200,
+    borderRadius: 9,
+
+    marginBottom: 80
+
+  },
+  SearchBar:{
+
+    flexDirection:"row",
+    alignItems: "center",
+    gap: 20
+
+  },
+
+  SearchIcon:{
+    tintColor: Colors.TURQUOISE_GREEN
+  },
+
+  TxtInput: {
+    fontFamily: Font_Family.BOLD,
+    color: Colors.TURQUOISE_GREEN
+
   },
 
   Title:{
-    color: Colors.GRAY_200,
+    color: Colors.GRAY_600,
 
     fontSize: Font_Size.XXL,
-    fontFamily: Font_Family.BOLD,
+    fontFamily: Font_Family.BLACK,
 
     marginBottom: 65
 

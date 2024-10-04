@@ -37,6 +37,10 @@ export default function Rootlayout() {
                 }}
                 />     
 
+                <Stack.Screen
+                    name="Welcome/(tabs)" options={{headerShown: false}}
+                />   
+
 
             </Stack>
         </SafeAreaView>

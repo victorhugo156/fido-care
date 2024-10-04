@@ -79,8 +79,8 @@ export default function TabLayout() {
             <Tabs.Screen name="Menu/index"
                 options={{
                     path: 'Menu',
-                    tabBarLabel: "Profile",
-                    tabBarIcon: ({ color }) => <FontAwesome name="user" size={32} color={color} />
+                    tabBarLabel: "Menu",
+                    tabBarIcon: ({ color }) => <FontAwesome name="gear" size={32} color={color} />
                 }}
             />
         </Tabs>
