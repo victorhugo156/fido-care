@@ -1,5 +1,5 @@
 import { StyleSheet, SafeAreaView, ActivityIndicator } from "react-native";
-
+import { useSegments } from 'expo-router';
 import React from "react";
 import Colors from "../constants/Colors";
 import { useFonts,
@@ -10,10 +10,7 @@ import { useFonts,
 
 import { Loading } from "../components/loading";
 import TabLayout from "./(tabs)/_layout";
-import Login from "../app/screens/Login"
-//import Chat from "./(tabs)/Chat";
-//import Petsitterprofile from "./screens/Petsitterprofile/Petsitterprofile";
-//import Home from "../app/screens/Home";
+import Rootlayout from "./_layout";
 
 
 export default function index() {
@@ -28,10 +25,9 @@ export default function index() {
     )
   }
 
-
   return (
     <SafeAreaView style={styles.Container}>
-      <Login />
+      <Rootlayout />
     </SafeAreaView>
   );
 }
