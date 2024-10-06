@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from 'expo-router';
+import { useRouter } from 'expo-router'; // Import useRouter for navigation
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 import Font_Size from '../../../constants/Font_Size';
@@ -20,73 +20,72 @@ const menuItems = [
 ];
 
 const Menu = () => {
-  const router = useRouter();
+  const router = useRouter(); // Initialize the router
 
+  // Navigation handler function for menu options
   const handleNavigation = async (screenName) => {
     if (screenName === 'Log Out') {
       Alert.alert('Log Out', 'Are you sure you want to log out?', [
         { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Yes',
-          onPress: async () => {
+        { text: 'Yes', onPress: async () => {
             try {
               await AsyncStorage.removeItem('userToken'); // Clear user session or token storage
-              router.push('screens/Login'); // Use router.push to navigate to Login screen
+              router.push('screens/EntryPoint'); // Use router.push to navigate to Login screen
             } catch (error) {
               Alert.alert('Error', 'An error occurred while logging out.');
             }
-          },
+          }
         },
       ]);
     } else {
-      router.push(`/${screenName}`);
+      router.push(`/${screenName}`); // Navigate to the selected screen using router.push
     }
   };
 
   return (
     <ScrollView style={styles.container}>
-      {menuItems.map((item) => (
-        <TouchableOpacity
-          key={item.name}
-          style={styles.menuItem}
-          onPress={() => handleNavigation(item.name)}
-        >
-          <View style={styles.iconContainer}>
-            <Icon name={item.icon} size={20} color={item.color} />
-          </View>
-          <Text style={styles.menuText}>{item.label}</Text>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
-  );
+    {menuItems.map((item) => (
+      <TouchableOpacity
+        key={item.name}
+        style={styles.menuItem}
+        onPress={() => handleNavigation(item.name)}
+      >
+        <View style={styles.iconContainer}>
+          <Icon name={item.icon} size={20} color={item.color} />
+        </View>
+        <Text style={styles.menuText}>{item.label}</Text>
+      </TouchableOpacity>
+    ))}
+  </ScrollView>
+);
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingVertical: 20,
-    paddingHorizontal: 10,
-    backgroundColor: Colors.TURQUOISE_GREEN,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-  },
-  iconContainer: {
-    width: 30, 
-    alignItems: 'center', 
-  },
-  menuText: {
-    flex: 1,
-    fontSize: 18,
-    color: 'white',
-    fontFamily: Font_Family.BOLD,
-    marginLeft: 10, 
-    textAlignVertical: 'center',
-  },
+container: {
+  flex: 1,
+  paddingVertical: 20,
+  paddingHorizontal: 10,
+  backgroundColor: Colors.TURQUOISE_GREEN,
+},
+menuItem: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  padding: 15,
+  borderBottomWidth: 1,
+  borderBottomColor: '#ddd',
+},
+iconContainer: {
+  width: 30, // Set a fixed width for the icon container
+  alignItems: 'center', // Center the icon within the container
+},
+menuText: {
+  flex: 1,
+  fontSize: 18,
+  color: 'white',
+  fontFamily: Font_Family.BOLD,
+  marginLeft: 10, // Adjust margin to ensure proper spacing
+  textAlignVertical: 'center',
+},
 });
 
 export default Menu;

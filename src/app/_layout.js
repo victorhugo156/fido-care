@@ -165,11 +165,16 @@ export default function Rootlayout() {
                         headerTintColor: '#fff', // Set the title color
                     }}
                 />
+
+                <Stack.Screen
+                    name="screens/EntryPoint/index"
+                    options={{
+                        headerShown: false,  // No header for login
+                        }}
+                    /> 
             
         </Stack>
     </SafeAreaView>
 
-
     );
 }
-
