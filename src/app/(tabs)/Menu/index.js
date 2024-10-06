@@ -30,8 +30,8 @@ const Menu = () => {
           text: 'Yes',
           onPress: async () => {
             try {
-              await AsyncStorage.removeItem('userToken');
-              router.push('screens/Login');
+              await AsyncStorage.removeItem('userToken'); // Clear user session or token storage
+              router.push('screens/Login'); // Use router.push to navigate to Login screen
             } catch (error) {
               Alert.alert('Error', 'An error occurred while logging out.');
             }

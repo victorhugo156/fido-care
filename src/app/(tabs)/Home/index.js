@@ -30,7 +30,7 @@ export default function Home() {
         {/* Pet Sitter Button */}
         <TouchableOpacity 
             style={styles.ContainerBtnPetSitter}
-            onPress={() => router.push('/screens/Petsitterlist')}
+            onPress={() => router.push('/screens/Feed')}
            >
           <View>
             <Image style={styles.Icon} source={require('../../../assets/icons/kitten_face.png')} />

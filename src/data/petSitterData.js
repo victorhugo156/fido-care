@@ -1,0 +1,65 @@
+
+const petSittersData = [
+    {
+      id: '1',
+      name: 'Stephen',
+      location: 'Darlinghurst',
+      experience: '5+ years of experience',
+      rating: 4.5,
+      avatar: 'https://media.istockphoto.com/id/1350689855/photo/portrait-of-an-asian-man-holding-a-young-dog.jpg?s=612x612&w=0&k=20&c=Iw0OedGHrDViIM_6MipHmPLlo83O59by-LGcsDPyzwU=',
+      services: ['Dog Walking', 'Home Visit'],
+      pricePerNight: '120.00 / night',
+    },
+    {
+      id: '2',
+      name: 'Jane Doe',
+      location: 'Surry Hills',
+      experience: '3+ years of experience',
+      rating: 4.5,
+      avatar: 'https://media.istockphoto.com/id/1350689855/photo/portrait-of-an-asian-man-holding-a-young-dog.jpg?s=612x612&w=0&k=20&c=Iw0OedGHrDViIM_6MipHmPLlo83O59by-LGcsDPyzwU=',
+      services: ['Pet Boarding', 'Pet Grooming'],
+      pricePerNight: '110.00 / night',
+    },
+    {
+      id: '3',
+      name: 'John Smith',
+      location: 'Sydney CBD',
+      experience: '7+ years of experience',
+      rating: 4.9,
+      avatar: 'https://media.istockphoto.com/id/1350689855/photo/portrait-of-an-asian-man-holding-a-young-dog.jpg?s=612x612&w=0&k=20&c=Iw0OedGHrDViIM_6MipHmPLlo83O59by-LGcsDPyzwU=',
+      services: ['Dog Walking', 'Pet Training'],
+      pricePerNight: '130.00 / night',
+    },
+    {
+        id: '4',
+        name: 'Sarah Brown',
+        location: 'Bondi Beach',
+        experience: '4+ years of experience',
+        rating: 4.7,
+        avatar: 'https://media.istockphoto.com/id/1350689855/photo/portrait-of-an-asian-man-holding-a-young-dog.jpg?s=612x612&w=0&k=20&c=Iw0OedGHrDViIM_6MipHmPLlo83O59by-LGcsDPyzwU=',
+        services: ['Pet Boarding', 'Dog Walking'],
+        pricePerNight: '115.00 / night',
+      },
+      {
+        id: '5',
+        name: 'Michael Lee',
+        location: 'Paddington',
+        experience: '6+ years of experience',
+        rating: 4.8,
+        avatar: 'https://media.istockphoto.com/id/1350689855/photo/portrait-of-an-asian-man-holding-a-young-dog.jpg?s=612x612&w=0&k=20&c=Iw0OedGHrDViIM_6MipHmPLlo83O59by-LGcsDPyzwU=',
+        services: ['Dog Walking', 'Pet Grooming'],
+        pricePerNight: '120.00 / night',
+      },
+      {
+        id: '6',
+        name: 'Emily Johnson',
+        location: 'Manly',
+        experience: '5+ years of experience',
+        rating: 4.6,
+        avatar: 'https://media.istockphoto.com/id/1350689855/photo/portrait-of-an-asian-man-holding-a-young-dog.jpg?s=612x612&w=0&k=20&c=Iw0OedGHrDViIM_6MipHmPLlo83O59by-LGcsDPyzwU=',
+        services: ['Pet Boarding', 'Dog Walking'],
+        pricePerNight: '125.00 / night',
+      }
+  ];
+
+  export default petSittersData;

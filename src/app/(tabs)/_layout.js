@@ -1,4 +1,4 @@
-import { Image, SafeAreaView, View, StyleSheet } from 'react-native';
+import { Image, SafeAreaView, View, StyleSheet, TouchableOpacity } from 'react-native';
 import React from 'react';
 import { Tabs } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
@@ -58,10 +58,11 @@ export default function TabLayout() {
                     path: 'Home',
                     tabBarLabel: "Home",
 
-                    tabBarIcon: ({ color }) => <FontAwesome name="home" size={32} color={color} />
-                }}
+                    tabBarIcon: ({ color }) => <FontAwesome name="home" size={32} color={color} />,
+                }} 
 
             />
+
             <Tabs.Screen name="Bookings/index"
                 options={{
                     path: 'Bookings',
@@ -104,11 +105,19 @@ const styles = StyleSheet.create({
         resizeMode: "contain"
     },
     HeaderLeftContainer: {
-        marginLeft: 20, // Add margin for the left part of the header
+        marginLeft: 20,
     },
 
     Paw:{
         width: 50,
         resizeMode: "contain"
+    },
+
+    HeaderRightContainer:{
+        height: "80%",
+
+        marginRight: 20,
+
+        justifyContent:"flex-end"
     }
 });

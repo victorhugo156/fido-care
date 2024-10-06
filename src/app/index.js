@@ -9,8 +9,9 @@ import { useFonts,
 
 import { Loading } from "../components/loading";
 
-import Rootlayout from "./_layout";
+import EntryPoint from "./screens/EntryPoint";
 import LoginScreen from "./screens/Login";
+import FeedScreen from "./screens/Feed";
 
 
 
@@ -27,8 +28,7 @@ export default function index() {
 
   return (
     <SafeAreaView style={styles.Container}>
-
-      <LoginScreen />
+      <EntryPoint />
     </SafeAreaView>
   );
 }
