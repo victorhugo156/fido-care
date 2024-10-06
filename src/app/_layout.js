@@ -6,7 +6,6 @@ import { useNavigation } from "@react-navigation/native";
 import Colors from "../constants/Colors";
 
 
-
 export default function Rootlayout() {
     const navigation = useNavigation(); // For custom back button 
     return (
@@ -87,6 +86,20 @@ export default function Rootlayout() {
                 }}
             />
 
+            <Stack.Screen
+                name="screens/Rateservice/index"
+                options={{
+                    title: "Rate Service", // Title for rate service screen
+                    headerStyle: {
+                      backgroundColor: '#3772FF', // Set background color here
+                    },
+                    headerTitleAlign: 'center', // Center the title
+                    headerTintColor: '#fff', // Set the title color
+                }}
+            />
+            
+
+
                 <Stack.Screen
                     name="screens/Feed/index"
                     options={{
@@ -147,3 +160,4 @@ export default function Rootlayout() {
 
     );
 }
+
