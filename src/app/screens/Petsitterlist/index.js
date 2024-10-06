@@ -54,7 +54,7 @@ const PetSitterList = () => {
   const renderPetSitterItem = ({ item }) => (
     <TouchableOpacity
       style={styles.sitterItem}
-      onPress={() => router.push(`/screens/Petsitterprofile/Petsitterprofile?id=1`)} // Hardcoded to always show profile with ID = 1 (Stephen)
+      onPress={() => router.push(`/screens/Petsitterprofile?id=1`)} // Hardcoded to always show profile with ID = 1 (Stephen)
     >
       {/* Avatar Image */}
       <View style={styles.avatarContainer}>

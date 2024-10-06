@@ -4,6 +4,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
+import Font_Size from '../../../constants/Font_Size';
 
 const inboxData = [
   { id: '1', userName: 'John Doe', 
@@ -37,7 +38,7 @@ const Inbox = () => {
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.chatItem}
-      onPress={() => router.push(`/screens/Chat/chat?id=${item.id}`)}
+      onPress={() => router.push(`/screens/Chat?id=${item.id}`)}
     >
       <Image source={{ uri: item.avatar }} style={styles.avatar} />
       <View style={styles.chatContent}>
@@ -81,7 +82,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F9F9F9',
   },
   header: {
-    height: 80,
+    //height: 80,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#FFF',
@@ -89,10 +90,12 @@ const styles = StyleSheet.create({
     borderBottomColor: '#E0E0E0',
   },
   headerText: {
-    fontSize: 24,
-    fontWeight: '600',
+    fontSize: Font_Size.XXL,
+    fontFamily: Font_Family.BLACK,
     color: Colors.BRIGHT_BLUE,
-    fontFamily: Font_Family.BOLD,
+    textAlign: 'center',
+    marginTop: 10,
+    marginBottom: 5,
   },
   searchContainer: {
     flexDirection: 'row',

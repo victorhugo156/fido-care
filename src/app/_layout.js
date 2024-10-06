@@ -28,30 +28,63 @@ export default function Rootlayout() {
                 name="screens/Petsitterprofile/index"
                 options={{
                     title: "Pet Sitter Profile",  // Title for pet sitter profile screen
-                }}
-            /> 
+                    headerStyle: {
+                        backgroundColor: '#3772FF', // Set your desired background color here
+                      },
+                      headerTitleAlign: 'center', // Center the title
+                      headerTintColor: '#fff', // Set the title color
+                  }}
+              />
 
 
             <Stack.Screen
                 name="screens/Chat/index"
                     options={{
                     title: "Inbox",  // Title for chat screen
-                }}
-            />       
+                    headerStyle: {
+                        backgroundColor: '#3772FF', // Set your desired background color here
+                      },
+                      headerTitleAlign: 'center', // Center the title
+                      headerTintColor: '#fff', // Set the title color
+                  }}
+              />     
 
             <Stack.Screen
                 name="index"
                 options={{
                     headerShown: false,  // No header for index
-                }}
-            />
+                    headerStyle: {
+                        backgroundColor: '#3772FF', // Set your desired background color here
+                      },
+                      headerTitleAlign: 'center', // Center the title
+                      headerTintColor: '#fff', // Set the title color
+                  }}
+              />
 
             <Stack.Screen
                 name="screens/Petsitterlist/index"
                 options={{
                     title: "Pet Sitter List",  // Title for pet sitter list screen
+                    headerStyle: {
+                        backgroundColor: '#3772FF', // Set your desired background color here
+                      },
+                      headerTitleAlign: 'center', // Center the title
+                      headerTintColor: '#fff', // Set the title color
+                  }}
+              />
+
+            <Stack.Screen
+                name="screens/Bookingdetail/index"  
+                options={{
+                    title: "Booking Detail", // Title for booking detail screen
+                    headerStyle: {
+                      backgroundColor: '#3772FF', // Set your desired background color here
+                    },
+                    headerTitleAlign: 'center', // Center the title
+                    headerTintColor: '#fff', // Set the title color
                 }}
             />
+            
 
         </Stack>
     </SafeAreaView>
