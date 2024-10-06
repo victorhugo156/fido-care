@@ -125,6 +125,16 @@ const BookingDetail = () => {
         <Text style={styles.messageButtonText}>Message Sitter</Text>
         <Icon name="envelope" size={20} color={Colors.WHITE} style={styles.buttonIcon} />
       </TouchableOpacity>
+
+      {/* Rate the Service Button - Shown only if status is "Confirmed" */}
+      {booking.status === 'Confirmed' && (
+        <TouchableOpacity
+          style={styles.rateButton}
+          onPress={() => router.push(`/screens/Rateservice?id=${booking.id}`)}
+        >
+          <Text style={styles.rateButtonText}>Rate the Service</Text>
+        </TouchableOpacity>
+      )}
     </ScrollView>
   );
 };
@@ -184,12 +194,12 @@ const styles = StyleSheet.create({
   infoLabel: {
     fontSize: Font_Size.LG,
     fontFamily: Font_Family.BOLD,
-    color: Colors.DARK_TEXT,
+    color: Colors.GRAY_700,
   },
   infoValue: {
     fontSize: Font_Size.MD,
     fontFamily: Font_Family.REGULAR,
-    color: Colors.GRAY,
+    color: Colors.GRAY_600,
     textAlign: 'right',
     flex: 1,
     marginLeft: 10,
@@ -250,6 +260,21 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontFamily: Font_Family.BOLD,
   },
+
+  rateButton: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    backgroundColor: Colors.TURQUOISE_GREEN,
+    padding: 15, borderRadius: 10, 
+    marginHorizontal: 20, 
+    marginBottom: 20 
+},
+  rateButtonText: { 
+    fontSize: Font_Size.LG, 
+    color: Colors.WHITE, 
+    fontWeight: 'bold', 
+    fontFamily: Font_Family.BOLD },
 });
 
 export default BookingDetail;

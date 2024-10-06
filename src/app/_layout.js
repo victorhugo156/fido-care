@@ -84,6 +84,18 @@ export default function Rootlayout() {
                     headerTintColor: '#fff', // Set the title color
                 }}
             />
+
+            <Stack.Screen
+                name="screens/Rateservice/index"
+                options={{
+                    title: "Rate Service", // Title for rate service screen
+                    headerStyle: {
+                      backgroundColor: '#3772FF', // Set background color here
+                    },
+                    headerTitleAlign: 'center', // Center the title
+                    headerTintColor: '#fff', // Set the title color
+                }}
+            />
             
 
         </Stack>

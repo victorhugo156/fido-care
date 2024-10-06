@@ -135,7 +135,7 @@ const getStatusStyle = (status) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.LIGHT_GRAY,
+    backgroundColor: '#FFF',
   },
   screenTitle: {
     fontSize: Font_Size.XXL,
@@ -143,7 +143,9 @@ const styles = StyleSheet.create({
     color: Colors.BRIGHT_BLUE,
     textAlign: 'center',
     marginTop: 10,
-    marginBottom: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+    paddingBottom: 5,
   },
   searchContainer: {
     flexDirection: 'row',
@@ -199,7 +201,7 @@ const styles = StyleSheet.create({
   petName: {
     fontSize: Font_Size.XL,
     fontFamily: Font_Family.BOLD,
-    color: Colors.DARK_TEXT,
+    color: Colors.GRAY_600,
   },
   statusContainer: {
     paddingHorizontal: 12,
@@ -215,7 +217,7 @@ const styles = StyleSheet.create({
     fontSize: Font_Size.MD,
     fontFamily: Font_Family.BOLD,
     marginBottom: 8,
-    color: Colors.DARK_TEXT,
+    color: Colors.BRIGHT_BLUE,
   },
   detailRow: {
     flexDirection: 'row',
@@ -227,24 +229,25 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: Font_Size.MD,
-    fontFamily: Font_Family.REGULAR,
-    color: Colors.DARK_TEXT,
+    fontFamily: Font_Family.BLACK,
+    color: Colors.GRAY_600,
     marginRight: 6,
   },
   date: {
     fontSize: Font_Size.MD,
     fontFamily: Font_Family.REGULAR,
-    color: Colors.DARK_TEXT,
+    color: Colors.GRAY_600,
+    
   },
   price: {
     fontSize: Font_Size.MD,
     fontFamily: Font_Family.BOLD,
-    color: Colors.DARK_TEXT,
+    color: Colors.GRAY_600,
   },
   service: {
     fontSize: Font_Size.MD,
     fontFamily: Font_Family.REGULAR,
-    color: Colors.DARK_TEXT,
+    color: Colors.GRAY_600,
   },
   detailsButton: {
     flexDirection: 'row',
