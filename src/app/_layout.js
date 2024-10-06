@@ -29,7 +29,7 @@ export default function Rootlayout() {
                 options={{
                     title: "Pet Sitter Profile",  // Title for pet sitter profile screen
                     headerStyle: {
-                        backgroundColor: '#3772FF', // Set your desired background color here
+                        backgroundColor: '#3772FF', // Set background color here
                       },
                       headerTitleAlign: 'center', // Center the title
                       headerTintColor: '#fff', // Set the title color
@@ -42,7 +42,7 @@ export default function Rootlayout() {
                     options={{
                     title: "Inbox",  // Title for chat screen
                     headerStyle: {
-                        backgroundColor: '#3772FF', // Set your desired background color here
+                        backgroundColor: '#3772FF', // Set background color here
                       },
                       headerTitleAlign: 'center', // Center the title
                       headerTintColor: '#fff', // Set the title color
@@ -54,7 +54,7 @@ export default function Rootlayout() {
                 options={{
                     headerShown: false,  // No header for index
                     headerStyle: {
-                        backgroundColor: '#3772FF', // Set your desired background color here
+                        backgroundColor: '#3772FF', // Set background color here
                       },
                       headerTitleAlign: 'center', // Center the title
                       headerTintColor: '#fff', // Set the title color
@@ -66,7 +66,7 @@ export default function Rootlayout() {
                 options={{
                     title: "Pet Sitter List",  // Title for pet sitter list screen
                     headerStyle: {
-                        backgroundColor: '#3772FF', // Set your desired background color here
+                        backgroundColor: '#3772FF', // Set background color here
                       },
                       headerTitleAlign: 'center', // Center the title
                       headerTintColor: '#fff', // Set the title color
@@ -78,7 +78,7 @@ export default function Rootlayout() {
                 options={{
                     title: "Booking Detail", // Title for booking detail screen
                     headerStyle: {
-                      backgroundColor: '#3772FF', // Set your desired background color here
+                      backgroundColor: '#3772FF', // Set background color here
                     },
                     headerTitleAlign: 'center', // Center the title
                     headerTintColor: '#fff', // Set the title color

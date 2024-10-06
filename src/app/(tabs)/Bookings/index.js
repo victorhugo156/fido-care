@@ -98,7 +98,7 @@ export default function BookingList() {
 
       {/* Search Input */}
       <View style={styles.searchContainer}>
-        <Icon name="search" size={20} color={Colors.DARK_TEXT} style={styles.searchIcon} />
+        <Icon name="search" size={20} color={Colors.BRIGHT_BLUE} style={styles.searchIcon} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search by pet name, sitter, or service..."
@@ -149,21 +149,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.WHITE,
-    borderRadius: 20,
     paddingHorizontal: 15,
-    paddingVertical: 8,
-    margin: 16,
-    borderWidth: 1,
-    borderColor: Colors.GRAY_200,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
   },
   searchIcon: {
     marginRight: 8,
   },
   searchInput: {
     flex: 1,
-    fontSize: Font_Size.MD,
-    fontFamily: Font_Family.REGULAR,
-    color: Colors.DARK_TEXT,
+    height: 40,
+    backgroundColor: '#F1F1F1',
+    borderRadius: 20,
+    paddingHorizontal: 15,
   },
   listContainer: {
     padding: 16,

@@ -79,7 +79,7 @@ const Inbox = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F9F9F9',
+    backgroundColor: Colors.LIGHT_GRAY,
   },
   header: {
     //height: 80,
