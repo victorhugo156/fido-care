@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useRouter } from 'expo-router'; // Import useRouter for navigation
+import { useRouter } from 'expo-router';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 import Font_Size from '../../../constants/Font_Size';
@@ -20,38 +20,40 @@ const menuItems = [
 ];
 
 const Menu = () => {
-  const router = useRouter(); // Initialize the router
+  const router = useRouter();
 
-  // Navigation handler function for menu options
   const handleNavigation = async (screenName) => {
     if (screenName === 'Log Out') {
       Alert.alert('Log Out', 'Are you sure you want to log out?', [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Yes', onPress: async () => {
+        {
+          text: 'Yes',
+          onPress: async () => {
             try {
-              await AsyncStorage.removeItem('userToken'); // Clear user session or token storage
-              router.push('screens/Login'); // Use router.push to navigate to Login screen
+              await AsyncStorage.removeItem('userToken');
+              router.push('screens/Login');
             } catch (error) {
               Alert.alert('Error', 'An error occurred while logging out.');
             }
-          }
+          },
         },
       ]);
     } else {
-      router.push(`/${screenName}`); // Navigate to the selected screen using router.push
+      router.push(`/${screenName}`);
     }
   };
 
   return (
     <ScrollView style={styles.container}>
-      {/* Iterate through the menu items to create the navigation buttons */}
       {menuItems.map((item) => (
         <TouchableOpacity
           key={item.name}
           style={styles.menuItem}
           onPress={() => handleNavigation(item.name)}
         >
-          <Icon name={item.icon} size={20} color={item.color} />
+          <View style={styles.iconContainer}>
+            <Icon name={item.icon} size={20} color={item.color} />
+          </View>
           <Text style={styles.menuText}>{item.label}</Text>
         </TouchableOpacity>
       ))}
@@ -73,15 +75,25 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
   },
+  iconContainer: {
+    width: 30, 
+    alignItems: 'center', 
+  },
   menuText: {
+    flex: 1,
     fontSize: 18,
-    marginLeft: 15,
     color: 'white',
     fontFamily: Font_Family.BOLD,
+    marginLeft: 10, 
+    textAlignVertical: 'center',
   },
 });
 
 export default Menu;
+
+
+
+
 
 
 

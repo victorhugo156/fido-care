@@ -14,10 +14,10 @@ const petSittersData = [
     name: 'Stephen',
     location: 'Darlinghurst',
     experience: '5+ years of experience',
-    rating: 4.5,
+    rating: 4.3,
     avatar: 'https://media.istockphoto.com/id/1350689855/photo/portrait-of-an-asian-man-holding-a-young-dog.jpg?s=612x612&w=0&k=20&c=Iw0OedGHrDViIM_6MipHmPLlo83O59by-LGcsDPyzwU=',
     services: ['Dog Walking', 'Home Visit'],
-    pricePerNight: '120.00 / night',
+    pricePerNight: '30 / Hour',
   },
   {
     id: '2',
@@ -27,7 +27,7 @@ const petSittersData = [
     rating: 4.5,
     avatar: 'https://us.images.westend61.de/0001193741pw/black-woman-holding-dog-in-city-BLEF04793.jpg',
     services: ['Pet Boarding', 'Pet Grooming'],
-    pricePerNight: '110.00 / night',
+    pricePerNight: '32 / Hour',
   },
   {
     id: '3',
@@ -37,7 +37,7 @@ const petSittersData = [
     rating: 4.9,
     avatar: 'https://www.dailypaws.com/thmb/3vRjo6plM5FG2-68rVrK94hDexk=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/dachshund-dogs-with-long-snouts-1139706566-2000-1eb6fd444a0e4671be7ea2e0dae9bf79.jpg',
     services: ['Dog Walking', 'Pet Training'],
-    pricePerNight: '130.00 / night',
+    pricePerNight: '35 / Hour',
   },
 ];
 

@@ -96,6 +96,18 @@ export default function Rootlayout() {
                     headerTintColor: '#fff', // Set the title color
                 }}
             />
+
+            <Stack.Screen
+                name="screens/Reviews/index"
+                options={{
+                    title: "Reviews", // Title for reviews screen
+                    headerStyle: {
+                      backgroundColor: '#3772FF', // Set background color here
+                    },
+                    headerTitleAlign: 'center', // Center the title
+                    headerTintColor: '#fff', // Set the title color
+                }}
+            />
             
 
         </Stack>

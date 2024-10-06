@@ -1,9 +1,10 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome';
-import { useLocalSearchParams } from 'expo-router'; // Correct hook for getting query params
+import Ionicons from 'react-native-vector-icons/Ionicons'; // Import Ionicons
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
+
 
 // Example data for demonstration purposes
 const petSittersData = [
@@ -13,12 +14,12 @@ const petSittersData = [
     location: 'Darlinghurst',
     about: 'Unleash joy for your furry friend with me, Stephen! I have over 5 years of experience in pet care and training.',
     experience: '5+ years of experience',
-    rating: 4.8,
-    reviews: 20,
+    rating: 4.3,
+    reviews: 3,
     services: [
-      { title: 'Dog Walking', price: 25 },
-      { title: 'One home visit per day', price: 25 },
-      { title: 'Two home visits per day', price: 50 },
+      { title: 'Dog Walking', price: 30 },
+      { title: 'Pet Sitting', price: 32 },
+      { title: 'One home visit per day', price: 50 },
     ],
     availability: ['2024-09-21', '2024-09-22', '2024-09-23'],
     skills: ['Experience as a volunteer with animal welfare', 'Experience with rescue pets', 'Familiar with dog training techniques'],
@@ -30,37 +31,44 @@ const petSittersData = [
 const PetSitterProfile = () => {
   const { id } = useLocalSearchParams(); // Use useLocalSearchParams to get the query param
   const petSitter = petSittersData.find((sitter) => sitter.id === id);
+  const router = useRouter();
 
   if (!petSitter) return <Text>No pet sitters found</Text>;
 
+   // Navigate to Reviews screen
+   const handleReviewNavigation = () => {
+    router.push(`/screens/Reviews?id=${petSitter.id}`);
+  };
+
   return (
     <ScrollView style={styles.container}>
-      {/* Header Image */}
-      <View style={styles.headerImageContainer}>
-        <Image 
-          source={{ uri: 'https://media.istockphoto.com/id/1350689855/photo/portrait-of-an-asian-man-holding-a-young-dog.jpg?s=612x612&w=0&k=20&c=Iw0OedGHrDViIM_6MipHmPLlo83O59by-LGcsDPyzwU=' }} 
-          style={styles.headerImage} 
-        />
-        <View style={styles.imageOverlay}>
-          <TouchableOpacity style={styles.imageButton}>
-            <Icon name="heart-o" size={20} color={Colors.CORAL_PINK} />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.imageButton}>
-            <Icon name="share-alt" size={20} color={Colors.CORAL_PINK} />
-          </TouchableOpacity>
-        </View>
+    {/* Header Image */}
+    <View style={styles.headerImageContainer}>
+      <Image source={{ uri: petSitter.avatar }} style={styles.headerImage} />
+      <View style={styles.imageOverlay}>
+        <TouchableOpacity style={styles.imageButton}>
+          <Ionicons name="heart-outline" size={20} color={Colors.CORAL_PINK} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.imageButton}>
+          <Ionicons name="share-outline" size={20} color={Colors.CORAL_PINK} />
+        </TouchableOpacity>
       </View>
+    </View>
 
-      {/* Profile Information */}
-      <View style={styles.profileInfoContainer}>
-        <Text style={styles.sitterName}>Stephen</Text>
-        <Text style={styles.location}>Darlinghurst</Text>
-        <View style={styles.ratingContainer}>
-          <Icon name="star" size={16} color={Colors.CORAL_PINK} />
-          <Text style={styles.ratingText}>4.5</Text>
-          <Text style={styles.reviewCount}>(20 Reviews)</Text>
-        </View>
+    {/* Profile Information */}
+    <View style={styles.profileInfoContainer}>
+      <Text style={styles.sitterName}>{petSitter.name}</Text>
+      <Text style={styles.location}>{petSitter.location}</Text>
+      <View style={styles.ratingContainer}>
+        <Ionicons name="star" size={16} color={Colors.CORAL_PINK} />
+        <TouchableOpacity onPress={handleReviewNavigation}>
+          <Text style={styles.ratingText}>{petSitter.rating.toFixed(1)}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={handleReviewNavigation}>
+          <Text style={styles.reviewCount}>({petSitter.reviews} Reviews)</Text>
+        </TouchableOpacity>
       </View>
+    </View>
 
       {/* Action Buttons */}
       <View style={styles.actionButtonsContainer}>
@@ -85,19 +93,19 @@ const PetSitterProfile = () => {
         <Text style={styles.sectionTitle}>SERVICES</Text>
         <View style={styles.serviceItem}>
           <Text style={styles.serviceTitle}>Dog Walking</Text>
-          <Text style={styles.servicePrice}>A$25 / walk</Text>
+          <Text style={styles.servicePrice}>AU$30 / hour</Text>
+        </View>
+        <Text style={styles.enquiryText}>Send Enquiry</Text>
+
+        <View style={styles.serviceItem}>
+          <Text style={styles.serviceTitle}>Pet Sitting</Text>
+          <Text style={styles.servicePrice}>AU$32 / hour</Text>
         </View>
         <Text style={styles.enquiryText}>Send Enquiry</Text>
 
         <View style={styles.serviceItem}>
           <Text style={styles.serviceTitle}>One home visit per day</Text>
-          <Text style={styles.servicePrice}>A$25 / day</Text>
-        </View>
-        <Text style={styles.enquiryText}>Send Enquiry</Text>
-
-        <View style={styles.serviceItem}>
-          <Text style={styles.serviceTitle}>Two home visits per day</Text>
-          <Text style={styles.servicePrice}>A$50 / day</Text>
+          <Text style={styles.servicePrice}>AU$300 / day</Text>
         </View>
         <Text style={styles.enquiryText}>Send Enquiry</Text>
       </View>
