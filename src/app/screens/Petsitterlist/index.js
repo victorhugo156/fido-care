@@ -1,82 +1,66 @@
-import React from 'react';
-import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, TextInput, Dimensions } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, TextInput, Dimensions, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../../../../firebaseConfig';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 
 const { width } = Dimensions.get('window');
 
-// Example Pet Sitter Data
-const petSittersData = [
-  {
-    id: '1',
-    name: 'Stephen',
-    location: 'Darlinghurst',
-    experience: '5+ years of experience',
-    rating: 4.3,
-    avatar: 'https://media.istockphoto.com/id/1350689855/photo/portrait-of-an-asian-man-holding-a-young-dog.jpg?s=612x612&w=0&k=20&c=Iw0OedGHrDViIM_6MipHmPLlo83O59by-LGcsDPyzwU=',
-    services: ['Dog Walking', 'Home Visit'],
-    pricePerNight: '30 / Hour',
-  },
-  {
-    id: '2',
-    name: 'Jane Doe',
-    location: 'Surry Hills',
-    experience: '3+ years of experience',
-    rating: 4.5,
-    avatar: 'https://us.images.westend61.de/0001193741pw/black-woman-holding-dog-in-city-BLEF04793.jpg',
-    services: ['Pet Boarding', 'Pet Grooming'],
-    pricePerNight: '32 / Hour',
-  },
-  {
-    id: '3',
-    name: 'John Smith',
-    location: 'Sydney CBD',
-    experience: '7+ years of experience',
-    rating: 4.9,
-    avatar: 'https://www.dailypaws.com/thmb/3vRjo6plM5FG2-68rVrK94hDexk=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/dachshund-dogs-with-long-snouts-1139706566-2000-1eb6fd444a0e4671be7ea2e0dae9bf79.jpg',
-    services: ['Dog Walking', 'Pet Training'],
-    pricePerNight: '35 / Hour',
-  },
-];
-
 const PetSitterList = () => {
-  const [searchTerm, setSearchTerm] = React.useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [petSitters, setPetSitters] = useState([]);
+  const [loading, setLoading] = useState(true); 
   const router = useRouter();
 
-  // Filter pet sitters based on search term
-  const filteredPetSitters = petSittersData.filter((sitter) =>
-    sitter.name.toLowerCase().includes(searchTerm.toLowerCase())
+  useEffect(() => {
+    const fetchPetSitters = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'PetSitterProfile'));
+        const fetchedPetSitters = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setPetSitters(fetchedPetSitters);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching pet sitters: ", error);
+        setLoading(false);
+      }
+    };
+    fetchPetSitters();
+  }, []);
+
+  const filteredPetSitters = petSitters.filter((sitter) =>
+    sitter.Name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Render individual Pet Sitter Card
   const renderPetSitterItem = ({ item }) => (
     <TouchableOpacity
       style={styles.sitterItem}
-      onPress={() => router.push(`/screens/Petsitterprofile?id=1`)} // Hardcoded to always show profile with ID = 1 (Stephen)
+      onPress={() => router.push(`/screens/Petsitterprofile?id=${item.id}`)}
     >
-      {/* Avatar Image */}
       <View style={styles.avatarContainer}>
-        <Image source={{ uri: item.avatar }} style={styles.avatar} />
-        {/* Rating Information below Avatar */}
+        <Image source={{ uri: item.Avatar }} style={styles.avatar} />
         <View style={styles.sitterRatingContainer}>
           <Icon name="star" size={16} color={Colors.TURQUOISE_GREEN} />
-          <Text style={styles.sitterRatingText}>{item.rating}</Text>
+          <Text style={styles.sitterRatingText}>{item.Rating}</Text>
         </View>
       </View>
-      {/* Details */}
       <View style={styles.sitterDetails}>
         <View style={styles.sitterInfo}>
-          <Text style={styles.sitterName}>{item.name}</Text>
+          <Text style={styles.sitterName}>{item.Name}</Text>
           <Text style={styles.sitterLocation}>
-            <Icon name="map-marker" size={16} color={Colors.PRIMARY} /> {item.location}
+            <Icon name="map-marker" size={16} color={Colors.PRIMARY} /> {item.Location}
           </Text>
         </View>
-        <Text style={styles.sitterExperience}>{item.experience}</Text>
-        <Text style={styles.sitterServices}>Services: {item.services.join(', ')}</Text>
-        {/* Price Information on the right side below services */}
-        <Text style={styles.sitterPrice}>{`$${item.pricePerNight}`}</Text>
+        <Text style={styles.sitterExperience}>{`${item.Experience} years of experience`}</Text>
+        <Text style={styles.sitterServices}>
+          Services: {item.Services?.map(service => service.title).join(', ')}
+        </Text>
+        <Text style={styles.sitterPrice}>{`$${item.Services?.[0]?.price ?? 0} / Hour`}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -93,13 +77,17 @@ const PetSitterList = () => {
           onChangeText={(text) => setSearchTerm(text)}
         />
       </View>
-      <FlatList
-        data={filteredPetSitters}
-        keyExtractor={(item) => item.id}
-        renderItem={renderPetSitterItem}
-        contentContainerStyle={styles.listContainer}
-        ListEmptyComponent={<Text style={styles.noResultsText}>No pet sitters found</Text>}
-      />
+      {loading ? (
+        <ActivityIndicator size="large" color={Colors.PRIMARY} />
+      ) : (
+        <FlatList
+          data={filteredPetSitters}
+          keyExtractor={(item) => item.id}
+          renderItem={renderPetSitterItem}
+          contentContainerStyle={styles.listContainer}
+          ListEmptyComponent={<Text style={styles.noResultsText}>No pet sitters found</Text>}
+        />
+      )}
     </View>
   );
 };
@@ -159,7 +147,7 @@ const styles = StyleSheet.create({
   avatarContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingRight: 10, // Added space to the right of the avatar
+    paddingRight: 10,
   },
   avatar: {
     width: 70,
@@ -190,7 +178,7 @@ const styles = StyleSheet.create({
   sitterDetails: { 
     flex: 1,
     justifyContent: 'space-between',
-    marginLeft: 15, // Add space between avatar and details
+    marginLeft: 15,
   },
   sitterInfo: {
     flexDirection: 'column',
@@ -228,6 +216,10 @@ const styles = StyleSheet.create({
 });
 
 export default PetSitterList;
+
+
+
+
 
 
 

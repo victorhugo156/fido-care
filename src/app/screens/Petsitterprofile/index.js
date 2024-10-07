@@ -1,74 +1,82 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons'; // Import Ionicons
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../../../firebaseConfig';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 
-
-// Example data for demonstration purposes
-const petSittersData = [
-  {
-    id: '1',
-    name: 'Stephen',
-    location: 'Darlinghurst',
-    about: 'Unleash joy for your furry friend with me, Stephen! I have over 5 years of experience in pet care and training.',
-    experience: '5+ years of experience',
-    rating: 4.3,
-    reviews: 3,
-    services: [
-      { title: 'Dog Walking', price: 30 },
-      { title: 'Pet Sitting', price: 32 },
-      { title: 'One home visit per day', price: 50 },
-    ],
-    availability: ['2024-09-21', '2024-09-22', '2024-09-23'],
-    skills: ['Experience as a volunteer with animal welfare', 'Experience with rescue pets', 'Familiar with dog training techniques'],
-    avatar: 'https://media.istockphoto.com/id/1350689855/photo/portrait-of-an-asian-man-holding-a-young-dog.jpg?s=612x612&w=0&k=20&c=Iw0OedGHrDViIM_6MipHmPLlo83O59by-LGcsDPyzwU=',
-  },
-  // Add more sitters here... 
-];
-
 const PetSitterProfile = () => {
   const { id } = useLocalSearchParams(); // Use useLocalSearchParams to get the query param
-  const petSitter = petSittersData.find((sitter) => sitter.id === id);
   const router = useRouter();
+  const [petSitter, setPetSitter] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  if (!petSitter) return <Text>No pet sitters found</Text>;
+  useEffect(() => {
+    const fetchPetSitter = async () => {
+      try {
+        const docRef = doc(db, 'PetSitterProfile', id);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setPetSitter(docSnap.data());
+        } else {
+          console.error('No such document found in the database!');
+        }
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching pet sitter data:', error);
+        setLoading(false);
+      }
+    };
+    if (id) {
+      fetchPetSitter();
+    }
+  }, [id]);
 
-   // Navigate to Reviews screen
-   const handleReviewNavigation = () => {
-    router.push(`/screens/Reviews?id=${petSitter.id}`);
+  if (loading) {
+    return <ActivityIndicator size="large" color={Colors.PRIMARY} />;
+  }
+
+  if (!petSitter) {
+    return <Text>No pet sitters found</Text>;
+  }
+
+  // Navigate to Reviews screen
+  const handleReviewNavigation = () => {
+    router.push(`/screens/Reviews?id=${id}`);
   };
 
   return (
     <ScrollView style={styles.container}>
-    {/* Header Image */}
-    <View style={styles.headerImageContainer}>
-      <Image source={{ uri: petSitter.avatar }} style={styles.headerImage} />
-      <View style={styles.imageOverlay}>
-        <TouchableOpacity style={styles.imageButton}>
-          <Ionicons name="heart-outline" size={20} color={Colors.CORAL_PINK} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.imageButton}>
-          <Ionicons name="share-outline" size={20} color={Colors.CORAL_PINK} />
-        </TouchableOpacity>
+      {/* Header Image */}
+      <View style={styles.headerImageContainer}>
+        <Image source={{ uri: petSitter.Avatar }} style={styles.headerImage} />
+        <View style={styles.imageOverlay}>
+          <TouchableOpacity style={styles.imageButton}>
+            <Ionicons name="heart-outline" size={20} color={Colors.CORAL_PINK} />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.imageButton}>
+            <Ionicons name="share-outline" size={20} color={Colors.CORAL_PINK} />
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
 
-    {/* Profile Information */}
-    <View style={styles.profileInfoContainer}>
-      <Text style={styles.sitterName}>{petSitter.name}</Text>
-      <Text style={styles.location}>{petSitter.location}</Text>
-      <View style={styles.ratingContainer}>
-        <Ionicons name="star" size={16} color={Colors.CORAL_PINK} />
-        <TouchableOpacity onPress={handleReviewNavigation}>
-          <Text style={styles.ratingText}>{petSitter.rating.toFixed(1)}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={handleReviewNavigation}>
-          <Text style={styles.reviewCount}>({petSitter.reviews} Reviews)</Text>
-        </TouchableOpacity>
+      {/* Profile Information */}
+      <View style={styles.profileInfoContainer}>
+        <Text style={styles.sitterName}>{petSitter.Name}</Text>
+        <Text style={styles.location}>{petSitter.Location}</Text>
+        <View style={styles.ratingContainer}>
+          <Ionicons name="star" size={16} color={Colors.CORAL_PINK} />
+          <TouchableOpacity onPress={handleReviewNavigation}>
+            {/* Ensure Rating is defined before calling toFixed */}
+            <Text style={styles.ratingText}>{petSitter.Rating ? petSitter.Rating.toFixed(1) : 'N/A'}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleReviewNavigation}>
+            <Text style={styles.reviewCount}>({petSitter.Reviews} Reviews)</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
 
       {/* Action Buttons */}
       <View style={styles.actionButtonsContainer}>
@@ -83,51 +91,41 @@ const PetSitterProfile = () => {
       {/* About Me Section */}
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>ABOUT ME</Text>
-        <Text style={styles.aboutText}>
-          Hi there! I’m Stephen, a 36-year-old dog lover from the UK now enjoying life in Australia as a full-time dog walker. I moved here to follow my passion for animal welfare and have over 5 years of experience in pet sitting and dog training.
-        </Text>
+        <Text style={styles.aboutText}>{petSitter.About}</Text>
       </View>
 
       {/* Services Section */}
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>SERVICES</Text>
-        <View style={styles.serviceItem}>
-          <Text style={styles.serviceTitle}>Dog Walking</Text>
-          <Text style={styles.servicePrice}>AU$30 / hour</Text>
-        </View>
-        <Text style={styles.enquiryText}>Send Enquiry</Text>
-
-        <View style={styles.serviceItem}>
-          <Text style={styles.serviceTitle}>Pet Sitting</Text>
-          <Text style={styles.servicePrice}>AU$32 / hour</Text>
-        </View>
-        <Text style={styles.enquiryText}>Send Enquiry</Text>
-
-        <View style={styles.serviceItem}>
-          <Text style={styles.serviceTitle}>One home visit per day</Text>
-          <Text style={styles.servicePrice}>AU$300 / day</Text>
-        </View>
-        <Text style={styles.enquiryText}>Send Enquiry</Text>
+        {petSitter.Services && petSitter.Services.map((service, index) => (
+          <View key={index} style={styles.serviceItem}>
+            <Text style={styles.serviceTitle}>{service.title}</Text>
+            <Text style={styles.servicePrice}>AU${service.price} / hour</Text>
+          </View>
+        ))}
       </View>
 
       {/* Availability Section */}
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>AVAILABILITY</Text>
         <View style={styles.availabilityCalendar}>
-          <Text style={styles.calendarText}>Calendar Component Placeholder</Text>
+          {petSitter.Availability && petSitter.Availability.map((date, index) => (
+            <Text key={index} style={styles.calendarText}>{date}</Text>
+          ))}
         </View>
       </View>
 
       {/* Skills Section */}
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>SKILLS</Text>
-        <Text style={styles.skillText}>✔️ Experience as a volunteer with animal welfare</Text>
-        <Text style={styles.skillText}>✔️ Experience with rescue pets</Text>
-        <Text style={styles.skillText}>✔️ Familiar with dog training techniques</Text>
+        {petSitter.Skills && petSitter.Skills.map((skill, index) => (
+          <Text key={index} style={styles.skillText}>✔️ {skill}</Text>
+        ))}
       </View>
     </ScrollView>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
