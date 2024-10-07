@@ -63,7 +63,7 @@ const BecomePetSitter = () => {
       });
 
       Alert.alert('Success', 'You have successfully registered as a pet sitter.');
-      router.push('/screens/Petsitterlist');
+      router.push('/Home');
     } catch (error) {
       console.error('Error adding document: ', error);
       Alert.alert('Error', 'An error occurred while submitting the form.');
