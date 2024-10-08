@@ -116,7 +116,19 @@ export default function Rootlayout() {
                     options={{
                         headerShown: false,  // No header for login
                         }}
-                    /> 
+                /> 
+
+                <Stack.Screen
+                    name="screens/BecomePetSitter/index"
+                    options={{
+                        title: "Become a Pet Sitter", // Title for booking detail screen
+                        headerStyle: {
+                            backgroundColor: '#3772FF', // Set background color here
+                        },
+                        headerTitleAlign: 'center', // Center the title
+                        headerTintColor: '#fff', // Set the title color
+                    }}
+                />
             
         </Stack>
     </SafeAreaView>
