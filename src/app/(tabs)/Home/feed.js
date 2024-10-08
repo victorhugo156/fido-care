@@ -3,12 +3,12 @@ import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, TextInput, D
 import { useRouter } from 'expo-router';
 
 import petSittersData from '../../../data/petSitterData';
-import Colors from '../../../constants/Colors';
+
 import CardFeed from '../../../components/CardFeed';
 
 export default function FeedScreen(){
     return(
-        <SafeAreaView style={styles.Container}>
+        <SafeAreaView style={styles.Container}> 
             <View style={styles.ContainerFlatList}>
                 <FlatList
                     data={petSittersData}

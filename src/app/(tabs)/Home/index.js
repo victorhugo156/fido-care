@@ -1,13 +1,14 @@
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, Image, TextInput } from 'react-native';
 import React from 'react';
-import { useRouter } from 'expo-router'; // Use useRouter hook
+import { useRouter, useLocalSearchParams } from 'expo-router'; // Use useRouter hook
 
-import Colors from '../../../constants/Colors';
+import Colors from "../../../constants/Colors"
 import Font_Family from "../../../constants/Font_Family";
 import Font_Size from "../../../constants/Font_Size";
 
 
 export default function Home() {
+  
   const router = useRouter(); // Initialize router
 
   return (
@@ -30,7 +31,12 @@ export default function Home() {
         {/* Pet Sitter Button */}
         <TouchableOpacity 
             style={styles.ContainerBtnPetSitter}
-            onPress={() => router.push('/screens/Feed')}
+            onPress={() => {
+              router.push({
+                pathname: "Home/feed",  // Navigate to the feed screen
+                params: { service: "Pet Sitter" },  // Pass service param to feed screen
+              });
+            }}
            >
           <View>
             <Image style={styles.Icon} source={require('../../../assets/icons/kitten_face.png')} />
@@ -43,7 +49,10 @@ export default function Home() {
         {/* Dog Walk Button */}
         <TouchableOpacity 
           style={styles.ContainerBtnDogWalk}
-          onPress={() => router.push('/screens/Petsitterlist')}
+          onPress={() => {()=>router.push({
+            pathname: "Home/filter",
+            params:{service: "Dog Walk"}
+        })}}
         >
           <View>
             <Image style={styles.Icon} source={require('../../../assets/icons/paw.png')} />

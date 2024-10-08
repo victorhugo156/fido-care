@@ -111,61 +111,6 @@ export default function Rootlayout() {
             />
             
 
-
-                <Stack.Screen
-                    name="screens/Feed/index"
-                    options={{
-                        title: "Feed Detail", // Title for booking detail screen
-                        headerStyle: {
-                            height: 290,
-                            backgroundColor: Colors.TURQUOISE_GREEN, // Set background color here
-                        },
-                        headerTitleAlign: 'center', // Center the title
-                        headerTintColor: '#fff', // Set the title color
-
-                        headerRight: () => (
-                            <Image
-                                source={require('../assets/icons/Filter.png')}
-                            />
-                        ),
-
-                        // Add custom logo in the middle
-                        headerTitle: () => (
-                            <SafeAreaView>
-                                <Image
-                                    source={require('../assets/images/fido_logo_cream.png')} // Add your logo here
-                                    style={{ width: 100, height: 50, resizeMode: 'contain' }}
-                                />
-                            </SafeAreaView>
-),
-
-                        // Custom back button
-                        headerLeft: () => (
-                            <TouchableOpacity onPress={() => navigation.goBack()}>
-                                <Image
-                                    source={require('../assets/icons/arrow-circle-left.png')} // Add your back icon
-                                    style={{ width: 30, height: 30 }}
-                                />
-                            </TouchableOpacity>
-                        ),
-                        headerBackVisible: false,
-
-                        
-                    }}
-                />
-
-                <Stack.Screen
-                    name="screens/Filter/index"
-                    options={{
-                        title: "Filter Detail", // Title for booking detail screen
-                        headerStyle: {
-                            backgroundColor: '#3772FF', // Set background color here
-                        },
-                        headerTitleAlign: 'center', // Center the title
-                        headerTintColor: '#fff', // Set the title color
-                    }}
-                />
-
                 <Stack.Screen
                     name="screens/EntryPoint/index"
                     options={{

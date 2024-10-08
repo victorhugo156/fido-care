@@ -11,8 +11,9 @@ import { Loading } from "../components/loading";
 
 import EntryPoint from "./screens/EntryPoint";
 import LoginScreen from "./screens/Login";
-import FeedScreen from "./screens/Feed";
-
+import FilterService from "./(tabs)/Home/filterService";
+import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 
 export default function index() {
@@ -27,9 +28,14 @@ export default function index() {
   }
 
   return (
-    <SafeAreaView style={styles.Container}>
-      <EntryPoint />
-    </SafeAreaView>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <BottomSheetModalProvider>
+        <SafeAreaView style={styles.Container}>
+          <EntryPoint />
+        </SafeAreaView>
+      </BottomSheetModalProvider>
+    </GestureHandlerRootView>
+
   );
 }
 

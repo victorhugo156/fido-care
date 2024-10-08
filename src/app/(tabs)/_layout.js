@@ -9,7 +9,6 @@ import Font_Family from "../../constants/Font_Family";
 import Font_Size from "../../constants/Font_Size";
 
 
-
 export default function TabLayout() {
     return (
         <Tabs screenOptions={{
@@ -29,37 +28,17 @@ export default function TabLayout() {
                 fontFamily: Font_Family.REGULAR,
             },
 
-            headerStyle:{
-                backgroundColor: Colors.TURQUOISE_GREEN,
-                height: 90
-            },
-            headerTitleAlign: "center",
-            headerTitle:()=>(
-                <SafeAreaView style={styles.ContainerSafeArea}>
-                    <View style={styles.HeaderContainer}>
-                        <Image style={styles.Logo}
-                            source={require('../../assets/images/fido_logo_cream.png')}
-                        />
-                    </View>
-                </SafeAreaView>
-            ),
-            headerLeft: () => (
-            <SafeAreaView style={styles.ContainerSafeArea}>
-                <View style={styles.HeaderLeftContainer}>
-                    <Image style={styles.Paw}
-                        source={require('../../assets/icons/paw_filled.png')}
-                    />
-                </View>
-            </SafeAreaView>)
+            headerShown: true,
         }}
         >
-            <Tabs.Screen name='Home/index'
+            <Tabs.Screen name='Home'
                 options={{
-                    path: 'Home',
+                    path: 'Home/index',
                     tabBarLabel: "Home",
+                    headerShown: false,
 
                     tabBarIcon: ({ color }) => <FontAwesome name="home" size={32} color={color} />,
-                }} 
+                }}
 
             />
 
