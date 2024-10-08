@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { collection, addDoc } from 'firebase/firestore';
 import { db } from '../../../../firebaseConfig';
+import { Picker } from '@react-native-picker/picker';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 
@@ -23,6 +24,16 @@ const BecomePetSitter = () => {
   const [availability, setAvailability] = useState([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
+
+  // Predefined services options
+  const serviceOptions = [
+    'Dog boarding',
+    'Doggy day care',
+    'Dog walking',
+    '1x Home visit',
+    '2x Home visits',
+    'House sitting',
+  ];
 
   // Handle Date Selection
   const onDateChange = (event, selectedDate) => {
@@ -70,7 +81,7 @@ const BecomePetSitter = () => {
     }
   };
 
-  // Dynamic addition of services
+  // Dynamic addition of services with dropdown
   const handleServiceChange = (index, field, value) => {
     const updatedServices = [...services];
     updatedServices[index][field] = value;
@@ -79,6 +90,11 @@ const BecomePetSitter = () => {
 
   const addService = () => {
     setServices([...services, { title: '', price: '' }]);
+  };
+
+  const removeService = (index) => {
+    const updatedServices = services.filter((_, serviceIndex) => serviceIndex !== index);
+    setServices(updatedServices);
   };
 
   // Dynamic addition of skills
@@ -90,6 +106,11 @@ const BecomePetSitter = () => {
 
   const addSkill = () => {
     setSkills([...skills, '']);
+  };
+
+  const removeSkill = (index) => {
+    const updatedSkills = skills.filter((_, skillIndex) => skillIndex !== index);
+    setSkills(updatedSkills);
   };
 
   return (
@@ -111,8 +132,14 @@ const BecomePetSitter = () => {
       {/* Reviews Input */}
       <TextInput style={styles.input} placeholder="Number of Reviews" keyboardType="numeric" value={reviews} onChangeText={setReviews} />
 
-      {/* About Input */}
-      <TextInput style={styles.input} placeholder="About Me" value={about} onChangeText={setAbout} multiline />
+      {/* About Input with increased height */}
+      <TextInput
+        style={[styles.input, styles.aboutInput]}
+        placeholder="About Me"
+        value={about}
+        onChangeText={setAbout}
+        multiline
+      />
 
       {/* Avatar URL Input */}
       <TextInput style={styles.input} placeholder="Avatar URL" value={avatar} onChangeText={setAvatar} />
@@ -121,19 +148,26 @@ const BecomePetSitter = () => {
       <Text style={styles.sectionTitle}>Services</Text>
       {services.map((service, index) => (
         <View key={index} style={styles.serviceRow}>
+          <Picker
+            selectedValue={service.title}
+            style={[styles.input, { flex: 1 }]}
+            onValueChange={(itemValue) => handleServiceChange(index, 'title', itemValue)}
+          >
+            <Picker.Item label="Select Service" value="" />
+            {serviceOptions.map((option, idx) => (
+              <Picker.Item key={idx} label={option} value={option} />
+            ))}
+          </Picker>
           <TextInput
-            style={[styles.input, { flex: 1, marginRight: 5 }]}
-            placeholder="Eg Dog Walking..."
-            value={service.title}
-            onChangeText={(text) => handleServiceChange(index, 'title', text)}
-          />
-          <TextInput
-            style={[styles.input, { width: 100 }]}
+            style={[styles.input, { width: '100%' }]}
             placeholder="Price"
             keyboardType="numeric"
             value={service.price.toString()}
             onChangeText={(text) => handleServiceChange(index, 'price', text)}
           />
+          <TouchableOpacity style={styles.removeButton} onPress={() => removeService(index)}>
+            <Text style={styles.removeButtonText}>Remove</Text>
+          </TouchableOpacity>
         </View>
       ))}
       <TouchableOpacity style={styles.addButton} onPress={addService}>
@@ -143,13 +177,17 @@ const BecomePetSitter = () => {
       {/* Skills Section */}
       <Text style={styles.sectionTitle}>Skills</Text>
       {skills.map((skill, index) => (
-        <TextInput
-          key={index}
-          style={styles.input}
-          placeholder="Eg Familiar with dog training techniques..."
-          value={skill}
-          onChangeText={(text) => handleSkillChange(index, text)}
-        />
+        <View key={index} style={styles.skillRow}>
+          <TextInput
+            style={styles.input}
+            placeholder="Eg Familiar with dog training techniques..."
+            value={skill}
+            onChangeText={(text) => handleSkillChange(index, text)}
+          />
+          <TouchableOpacity style={styles.removeButton} onPress={() => removeSkill(index)}>
+            <Text style={styles.removeButtonText}>Remove</Text>
+          </TouchableOpacity>
+        </View>
       ))}
       <TouchableOpacity style={styles.addButton} onPress={addSkill}>
         <Text style={styles.addButtonText}>Add Skill</Text>
@@ -161,12 +199,7 @@ const BecomePetSitter = () => {
         <Text style={styles.addButtonText}>Add Availability Date</Text>
       </TouchableOpacity>
       {showDatePicker && (
-        <DateTimePicker
-          value={currentDate}
-          mode="date"
-          display="default"
-          onChange={onDateChange}
-        />
+        <DateTimePicker value={currentDate} mode="date" display="default" onChange={onDateChange} />
       )}
       {availability.length > 0 && (
         <View style={styles.dateContainer}>
@@ -205,34 +238,54 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   sectionTitle: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 10,
     color: Colors.DARK_TEXT,
+    fontFamily: Font_Family.BOLD,
+    alignItems: 'center',
   },
   input: {
     borderColor: '#ddd',
     borderWidth: 1,
     borderRadius: 10,
     padding: 12,
-    marginBottom: 15,
+    marginBottom: 10,
     fontSize: 16,
     backgroundColor: '#FFF',
   },
+  aboutInput: {
+    height: 100, // Increase height to make it clear that it’s meant for longer text
+    textAlignVertical: 'top', // Ensure text starts at the top
+  },
   serviceRow: {
-    flexDirection: 'row',
-    marginBottom: 10,
+    marginBottom: 20,
+  },
+  skillRow: {
+    marginBottom: 20,
   },
   addButton: {
     backgroundColor: Colors.BRIGHT_BLUE,
-    padding: 12,
+    padding: 8,
     borderRadius: 5,
     alignItems: 'center',
-    marginVertical: 10,
+    marginVertical: 5,
   },
   addButtonText: {
     color: '#FFF',
     fontSize: 16,
+    fontWeight: 'bold',
+  },
+  removeButton: {
+    backgroundColor: Colors.CORAL_PINK,
+    padding: 8,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 5,
+  },
+  removeButtonText: {
+    color: '#FFF',
+    fontSize: 14,
     fontWeight: 'bold',
   },
   submitButton: {
@@ -252,9 +305,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   dateItem: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     marginVertical: 5,
     padding: 10,
     backgroundColor: '#eaeaea',
