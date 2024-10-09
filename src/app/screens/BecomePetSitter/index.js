@@ -1,16 +1,16 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, ScrollView, Alert, TouchableOpacity, FlatList } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, StyleSheet, Alert, TouchableOpacity, FlatList } from 'react-native';
 import { useRouter } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import MapView, { Marker } from 'react-native-maps';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { collection, addDoc } from 'firebase/firestore';
+import * as Location from 'expo-location';
 import { db } from '../../../../firebaseConfig';
 import { Picker } from '@react-native-picker/picker';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 import 'react-native-get-random-values';
-
 
 const BecomePetSitter = () => {
   const router = useRouter();
@@ -18,8 +18,8 @@ const BecomePetSitter = () => {
   // Form state variables
   const [name, setName] = useState('');
   const [location, setLocation] = useState('');
-  const [latitude, setLatitude] = useState(-33.8688);
-  const [longitude, setLongitude] = useState(151.2093);
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
   const [experience, setExperience] = useState('');
   const [rating, setRating] = useState('');
   const [reviews, setReviews] = useState('');
@@ -30,186 +30,223 @@ const BecomePetSitter = () => {
   const [availability, setAvailability] = useState([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [locationPermission, setLocationPermission] = useState(null);
+  const [region, setRegion] = useState({
+    latitude: -33.8688,
+    longitude: 151.2093,
+    latitudeDelta: 0.01,
+    longitudeDelta: 0.01,
+  });
 
-// Predefined services options
-const serviceOptions = [
-  'Dog boarding',
-  'Doggy day care',
-  'Dog walking',
-  '1x Home visit',
-  '2x Home visits',
-  'House sitting',
-];
+  // Predefined services options
+  const serviceOptions = [
+    'Dog boarding',
+    'Doggy day care',
+    'Dog walking',
+    '1x Home visit',
+    '2x Home visits',
+    'House sitting',
+  ];
 
-// Handle Date Selection
-const onDateChange = (event, selectedDate) => {
-  const date = selectedDate || currentDate;
-  setShowDatePicker(false);
-  setCurrentDate(date);
-  if (!availability.includes(date.toLocaleDateString())) {
-    setAvailability([...availability, date.toLocaleDateString()]);
-  } else {
-    Alert.alert('Duplicate', 'This date is already added.');
-  }
-};
+  // Request permission for location access and set initial location
+  useEffect(() => {
+    (async () => {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      setLocationPermission(status);
 
-// Remove date from availability array
-const handleRemoveDate = (dateToRemove) => {
-  setAvailability(availability.filter((date) => date !== dateToRemove));
-};
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Location permission is required to use this feature.');
+        return;
+      }
 
-// Handle form submission
-const handleSubmit = async () => {
-  if (!name || !location || !experience || !about || !avatar || availability.length === 0) {
-    Alert.alert('Error', 'Please fill in all required fields.');
-    return;
-  }
+      let userLocation = await Location.getCurrentPositionAsync({});
+      setLatitude(userLocation.coords.latitude);
+      setLongitude(userLocation.coords.longitude);
+      setRegion({
+        latitude: userLocation.coords.latitude,
+        longitude: userLocation.coords.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      });
+    })();
+  }, []);
 
-  try {
-    await addDoc(collection(db, 'PetSitterProfile'), {
-      Name: name,
-      Location: location,
-      Latitude: latitude,
-      Longitude: longitude,
-      Experience: experience,
-      Rating: parseFloat(rating) || 0,
-      Reviews: reviews,
-      About: about,
-      Avatar: avatar,
-      Services: services,
-      Skills: skills,
-      Availability: availability,
-    });
+  // Handle Date Selection
+  const onDateChange = (event, selectedDate) => {
+    const date = selectedDate || currentDate;
+    setShowDatePicker(false);
+    setCurrentDate(date);
+    if (!availability.includes(date.toLocaleDateString())) {
+      setAvailability([...availability, date.toLocaleDateString()]);
+    } else {
+      Alert.alert('Duplicate', 'This date is already added.');
+    }
+  };
 
-    Alert.alert('Success', 'You have successfully registered as a pet sitter.');
-    router.push('/Home');
-  } catch (error) {
-    console.error('Error adding document: ', error);
-    Alert.alert('Error', 'An error occurred while submitting the form.');
-  }
-};
+  // Remove date from availability array
+  const handleRemoveDate = (dateToRemove) => {
+    setAvailability(availability.filter((date) => date !== dateToRemove));
+  };
 
-// Dynamic addition of services with dropdown
-const handleServiceChange = (index, field, value) => {
-  const updatedServices = [...services];
-  updatedServices[index][field] = value;
-  setServices(updatedServices);
-};
+  // Handle form submission
+  const handleSubmit = async () => {
+    if (!name || !location || !experience || !about || !avatar || availability.length === 0) {
+      Alert.alert('Error', 'Please fill in all required fields.');
+      return;
+    }
 
-const addService = () => {
-  setServices([...services, { title: '', price: '' }]);
-};
+    try {
+      await addDoc(collection(db, 'PetSitterProfile'), {
+        Name: name,
+        Location: location,
+        Latitude: latitude,
+        Longitude: longitude,
+        Experience: experience,
+        Rating: parseFloat(rating) || 0,
+        Reviews: reviews,
+        About: about,
+        Avatar: avatar,
+        Services: services,
+        Skills: skills,
+        Availability: availability,
+      });
 
-const removeService = (index) => {
-  const updatedServices = services.filter((_, serviceIndex) => serviceIndex !== index);
-  setServices(updatedServices);
-};
+      Alert.alert('Success', 'You have successfully registered as a pet sitter.');
+      router.push('/Home');
+    } catch (error) {
+      console.error('Error adding document: ', error);
+      Alert.alert('Error', 'An error occurred while submitting the form.');
+    }
+  };
 
-// Dynamic addition of skills
-const handleSkillChange = (index, value) => {
-  const updatedSkills = [...skills];
-  updatedSkills[index] = value;
-  setSkills(updatedSkills);
-};
+  // Dynamic addition of services with dropdown
+  const handleServiceChange = (index, field, value) => {
+    const updatedServices = [...services];
+    updatedServices[index][field] = value;
+    setServices(updatedServices);
+  };
 
-const addSkill = () => {
-  setSkills([...skills, '']);
-};
+  const addService = () => {
+    setServices([...services, { title: '', price: '' }]);
+  };
 
-const removeSkill = (index) => {
-  const updatedSkills = skills.filter((_, skillIndex) => skillIndex !== index);
-  setSkills(updatedSkills);
-};
+  const removeService = (index) => {
+    const updatedServices = services.filter((_, serviceIndex) => serviceIndex !== index);
+    setServices(updatedServices);
+  };
 
-return (
-  <View style={styles.container}>
-    <FlatList
-      data={[]}
-      ListHeaderComponent={
-        <View style={styles.contentContainer}>
-          <Text style={styles.header}>Form to Become a Pet Sitter</Text>
+  // Dynamic addition of skills
+  const handleSkillChange = (index, value) => {
+    const updatedSkills = [...skills];
+    updatedSkills[index] = value;
+    setSkills(updatedSkills);
+  };
 
-          {/* Name Input */}
-          <TextInput style={styles.input} placeholder="Name and Surname" value={name} onChangeText={setName} />
+  const addSkill = () => {
+    setSkills([...skills, '']);
+  };
 
-          {/* Location Input */}
-          <Text style={styles.sectionTitle}>Select Your Location</Text>
-          <GooglePlacesAutocomplete
-            placeholder="Search for a location"
-            onPress={(data, details = null) => {
-              const { lat, lng } = details.geometry.location;
-              setLatitude(lat);
-              setLongitude(lng);
-              setLocation(data.description);
-            }}
-            query={{
-              key: 'AIzaSyBQJUBHGQfNam1-_zUiAFVMYIg8jQ5Vvdo',
-              language: 'en',
-            }}
-            fetchDetails={true}
-          />
-          <MapView
-            style={styles.map}
-            region={{
-              latitude: latitude,
-              longitude: longitude,
-              latitudeDelta: 0.0922,
-              longitudeDelta: 0.0421,
-            }}
-          >
-            <Marker coordinate={{ latitude: latitude, longitude: longitude }} />
-          </MapView>
+  const removeSkill = (index) => {
+    const updatedSkills = skills.filter((_, skillIndex) => skillIndex !== index);
+    setSkills(updatedSkills);
+  };
 
-          {/* Experience Input */}
-          <TextInput style={styles.input} placeholder="Your Experience (in years)" value={experience} onChangeText={setExperience} />
+  return (
+    <View style={styles.container}>
+      <FlatList
+        data={[]}
+        ListHeaderComponent={
+          <View style={styles.contentContainer}>
+            <Text style={styles.header}>Form to Become a Pet Sitter</Text>
 
-          {/* Rating Input */}
-          <TextInput style={styles.input} placeholder="Rating" keyboardType="numeric" value={rating} onChangeText={setRating} />
+            {/* Name Input */}
+            <TextInput style={styles.input} placeholder="Name and Surname" value={name} onChangeText={setName} />
 
-          {/* Reviews Input */}
-          <TextInput style={styles.input} placeholder="Number of Reviews" keyboardType="numeric" value={reviews} onChangeText={setReviews} />
+            {/* Location Input */}
+            <Text style={styles.sectionTitle}>Select Your Location</Text>
+            <GooglePlacesAutocomplete
+              placeholder="Search for a location"
+              onPress={(data, details) => {
+                if (details) {
+                  const { lat, lng } = details.geometry.location;
+                  setLatitude(lat);
+                  setLongitude(lng);
+                  setLocation(data.description);
+                  setRegion({
+                    latitude: lat,
+                    longitude: lng,
+                    latitudeDelta: 0.01,
+                    longitudeDelta: 0.01,
+                  });
+                }
+              }}
+              query={{ key: 'AIzaSyBQJUBHGQfNam1-_zUiAFVMYIg8jQ5Vvdo', language: 'en' }}
+              fetchDetails={true}
+              enablePoweredByContainer={false}
+              minLength={3}
+              debounce={200}
+              styles={{
+                container: styles.autocompleteContainer,
+                textInput: styles.textInput,
+                predefinedPlacesDescription: styles.predefinedPlacesDescription,
+              }}
+            />
 
-          {/* About Input */}
-          <TextInput
-            style={[styles.input, styles.aboutInput]}
-            placeholder="About Me"
-            value={about}
-            onChangeText={setAbout}
-            multiline
-          />
+            {/* Map View */}
+            <MapView style={styles.map} region={region}>
+              {latitude && longitude && <Marker coordinate={{ latitude, longitude }} />}
+            </MapView>
 
-          {/* Avatar URL Input */}
-          <TextInput style={styles.input} placeholder="Avatar URL" value={avatar} onChangeText={setAvatar} />
+            {/* Experience Input */}
+            <TextInput style={styles.input} placeholder="Your Experience (in years)" value={experience} onChangeText={setExperience} />
 
-          {/* Services Section */}
-          <Text style={styles.sectionTitle}>Services</Text>
-          {services.map((service, index) => (
-            <View key={index} style={styles.serviceRow}>
-              <Picker
-                selectedValue={service.title}
-                style={[styles.input, { flex: 1 }]}
-                onValueChange={(itemValue) => handleServiceChange(index, 'title', itemValue)}
-              >
-                <Picker.Item label="Select Service" value="" />
-                {serviceOptions.map((option, idx) => (
-                  <Picker.Item key={idx} label={option} value={option} />
-                ))}
-              </Picker>
-              <TextInput
-                style={[styles.input, { width: '100%' }]}
-                placeholder="Price"
-                keyboardType="numeric"
-                value={service.price.toString()}
-                onChangeText={(text) => handleServiceChange(index, 'price', text)}
-              />
-              <TouchableOpacity style={styles.removeButton} onPress={() => removeService(index)}>
-                <Text style={styles.removeButtonText}>Remove</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-          <TouchableOpacity style={styles.addButton} onPress={addService}>
-            <Text style={styles.addButtonText}>Add Service</Text>
-          </TouchableOpacity>
+            {/* Rating Input */}
+            <TextInput style={styles.input} placeholder="Rating" keyboardType="numeric" value={rating} onChangeText={setRating} />
+
+            {/* Reviews Input */}
+            <TextInput style={styles.input} placeholder="Number of Reviews" keyboardType="numeric" value={reviews} onChangeText={setReviews} />
+
+            {/* About Input */}
+            <TextInput
+              style={[styles.input, styles.aboutInput]}
+              placeholder="About Me"
+              value={about}
+              onChangeText={setAbout}
+              multiline
+            />
+
+            {/* Avatar URL Input */}
+            <TextInput style={styles.input} placeholder="Avatar URL" value={avatar} onChangeText={setAvatar} />
+
+            {/* Services Section */}
+            <Text style={styles.sectionTitle}>Services</Text>
+            {services.map((service, index) => (
+              <View key={index} style={styles.serviceRow}>
+                <Picker
+                  selectedValue={service.title}
+                  style={[styles.input, { flex: 1 }]}
+                  onValueChange={(itemValue) => handleServiceChange(index, 'title', itemValue)}
+                >
+                  <Picker.Item label="Select Service" value="" />
+                  {serviceOptions.map((option, idx) => (
+                    <Picker.Item key={idx} label={option} value={option} />
+                  ))}
+                </Picker>
+                <TextInput
+                  style={[styles.input, { width: '100%' }]}
+                  placeholder="Price"
+                  keyboardType="numeric"
+                  value={service.price.toString()}
+                  onChangeText={(text) => handleServiceChange(index, 'price', text)}
+                />
+                <TouchableOpacity style={styles.removeButton} onPress={() => removeService(index)}>
+                  <Text style={styles.removeButtonText}>Remove</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+            <TouchableOpacity style={styles.addButton} onPress={addService}>
+              <Text style={styles.addButtonText}>Add Service</Text>
+            </TouchableOpacity>
 
           {/* Skills Section */}
           <Text style={styles.sectionTitle}>Skills</Text>
