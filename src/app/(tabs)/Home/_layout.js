@@ -70,7 +70,7 @@ export default function HomeLayout() {
                     ),
 
                     headerRight: () => (
-                        <TouchableOpacity onPress={() => navigation.navigate("filter")}>
+                        <TouchableOpacity onPress={() => navigation.navigate("screens/Filter/index")}>
                             <Image
                                 source={require('../../../assets/icons/Filter.png')}
                             />
@@ -81,7 +81,7 @@ export default function HomeLayout() {
                 }}
             />
 
-            {/* Feed screen */}
+{/* 
             <Stack.Screen
                 name="filter"
                 options={{
@@ -114,10 +114,10 @@ export default function HomeLayout() {
 
                     headerBackVisible: false,
                 }}
-            />
+            /> */}
 
-            {/* Filter Service Screen */}
-            <Stack.Screen
+
+            {/* <Stack.Screen
                 name="filterService"
                 options={{
                     title: "Service Detail", // Title for booking detail screen
@@ -149,7 +149,7 @@ export default function HomeLayout() {
 
                     headerBackVisible: false,
                 }}
-            />
+            /> */}
         </Stack>
     );
 }

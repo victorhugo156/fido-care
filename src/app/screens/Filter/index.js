@@ -18,7 +18,7 @@ export default function FilterScreen(){
             <View style={styles.ContainerCard}>
 
                 {/*Card Service */}
-                <TouchableOpacity style={styles.ContainerRow} onPress={() => router.push('Home/filterService')}>
+                <TouchableOpacity style={styles.ContainerRow} onPress={() => router.push('screens/FilterService')}>
                     <Image style={styles.Icon} source={require("../../../assets/icons/suitcase.png")} />
                     <View style={styles.ContainerLabels}>
                         <Text style={styles.ServiceLabel}>Service</Text>
@@ -28,7 +28,7 @@ export default function FilterScreen(){
 
                 {/*Card Location */}
                 <TouchableOpacity style={styles.ContainerRow}>
-                    <Image style={styles.Icon} source={require("../../../assets/icons/map-pin-line.png")} />
+                    <Image style={styles.Icon} source={require("../../../assets/icons//map-pin-line.png")} />
                     <View style={styles.ContainerLabels}>
                         <Text style={styles.ServiceLabel}>Location</Text>
                         <Text style={styles.ResultLabel}>Result Service</Text>

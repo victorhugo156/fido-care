@@ -111,7 +111,7 @@ export default function FilterService() {
                             </View>
 
                             <ButtonApply btnTitle={"Save"} bgColor={Colors.CORAL_PINK} onPress={()=>router.push({
-                                pathname: "Home/filter",
+                                pathname: "screens/Filter/index",
                                 params:{size: petSizes[currentIndex].size}
                             })} />
                         </View>

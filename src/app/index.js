@@ -11,7 +11,6 @@ import { Loading } from "../components/loading";
 
 import EntryPoint from "./screens/EntryPoint";
 import LoginScreen from "./screens/Login";
-import FilterService from "./(tabs)/Home/filterService";
 import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 

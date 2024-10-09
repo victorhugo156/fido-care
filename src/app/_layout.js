@@ -129,6 +129,72 @@ export default function Rootlayout() {
                         headerTintColor: '#fff', // Set the title color
                     }}
                 />
+
+                <Stack.Screen
+                    name="screens/Filter/index"
+                    options={{
+                        title: "Filter Detail", // Title for booking detail screen
+                    headerStyle: {
+                        backgroundColor: Colors.TURQUOISE_GREEN,
+                    },
+                    headerShown: true,
+                    headerTitleAlign: 'center', // Center the title
+                    headerTintColor: Colors.TURQUOISE_GREEN, // Set the title color
+
+                    // Add custom logo in the middle
+                    headerTitle: () => (
+                        <SafeAreaView>
+                            <Image
+                                source={require('../assets/images/fido_logo_cream.png')} // Add your logo here
+                                style={{ width: 100, height: 50, resizeMode: 'contain' }}
+                            />
+                        </SafeAreaView>),
+
+                    // Custom back button
+                    headerLeft: () => (
+                        <TouchableOpacity onPress={() => navigation.navigate("feed")}>
+                            <Image
+                                source={require('../assets/icons/arrow-circle-left.png')} // Add your back icon
+                                style={{ width: 30, height: 30 }}
+                            />
+                        </TouchableOpacity>
+                    ),
+
+                    headerBackVisible: false,
+                    }}
+                />
+
+                <Stack.Screen
+                    name="screens/FilterService/index"
+                    options={{
+                        title: "Service Detail", // Title for booking detail screen
+                        headerStyle: {
+                            backgroundColor: Colors.TURQUOISE_GREEN,
+                        },
+                        headerShown: true,
+                        headerTitleAlign: 'center', // Center the title
+                        headerTintColor: Colors.TURQUOISE_GREEN, // Set the title color
+    
+                        // Add custom logo in the middle
+                        headerTitle: () => (
+                            <SafeAreaView>
+                                <Image
+                                    source={require('../assets/images/fido_logo_cream.png')} // Add your logo here
+                                    style={{ width: 100, height: 50, resizeMode: 'contain' }}
+                                />
+                            </SafeAreaView>),
+    
+                        // Custom back button
+                        headerLeft: () => (
+                            <TouchableOpacity onPress={() => navigation.navigate("screens/Filter/index")}>
+                                <Image
+                                    source={require('../assets/icons/arrow-circle-left.png')} // Add your back icon
+                                    style={{ width: 30, height: 30 }}
+                                />
+                            </TouchableOpacity>
+                        ),
+                    }}
+                />
             
         </Stack>
     </SafeAreaView>
