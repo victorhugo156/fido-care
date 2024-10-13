@@ -2,7 +2,9 @@ import React, { useContext, useEffect, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, TextInput, Dimensions, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
+
 import Slider from '@react-native-community/slider';
+
 
 import { useFilterServiceContext } from '../../hook/useFilterServiceContext';
 import ButtonApply from '../../../components/ButtonApply/idex';
@@ -14,7 +16,9 @@ export default function FilterScreen() {
 
     const { service } = useFilterServiceContext();
 
-    const [price, setPrice] = useState(0)
+    const [price, setPrice] = useState(0);
+
+
 
     // useEffect(() => {
 
@@ -73,7 +77,7 @@ export default function FilterScreen() {
                 </View>
 
                 {/*Card Location */}
-                <TouchableOpacity style={styles.ContainerRow}>
+                <TouchableOpacity style={styles.ContainerRow} onPress={() => router.push('screens/Location')}>
                     <Image style={styles.Icon} source={require("../../../assets/icons//map-pin-line.png")} />
                     <View style={styles.ContainerLabels}>
                         <Text style={styles.ServiceLabel}>Location</Text>
