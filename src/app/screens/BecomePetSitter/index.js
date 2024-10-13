@@ -1,35 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, Alert, TouchableOpacity, FlatList } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, FlatList } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Formik } from 'formik';
+import * as Yup from 'yup';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import MapView, { Marker } from 'react-native-maps';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
 import { collection, addDoc } from 'firebase/firestore';
 import * as Location from 'expo-location';
 import { db } from '../../../../firebaseConfig';
-import { Picker } from '@react-native-picker/picker';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
-import 'react-native-get-random-values';
+import { Picker } from '@react-native-picker/picker';
 
 const BecomePetSitter = () => {
   const router = useRouter();
-
-  // Form state variables
-  const [name, setName] = useState('');
-  const [location, setLocation] = useState('');
-  const [latitude, setLatitude] = useState(null);
-  const [longitude, setLongitude] = useState(null);
-  const [experience, setExperience] = useState('');
-  const [rating, setRating] = useState('');
-  const [reviews, setReviews] = useState('');
-  const [about, setAbout] = useState('');
-  const [avatar, setAvatar] = useState('');
-  const [services, setServices] = useState([{ title: '', price: '' }]);
-  const [skills, setSkills] = useState(['']);
-  const [availability, setAvailability] = useState([]);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [latitude, setLatitude] = useState(-33.8688);
+  const [longitude, setLongitude] = useState(151.2093);
   const [locationPermission, setLocationPermission] = useState(null);
   const [region, setRegion] = useState({
     latitude: -33.8688,
@@ -37,6 +24,9 @@ const BecomePetSitter = () => {
     latitudeDelta: 0.01,
     longitudeDelta: 0.01,
   });
+  const [availability, setAvailability] = useState([]);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   // Predefined services options
   const serviceOptions = [
@@ -46,6 +36,20 @@ const BecomePetSitter = () => {
     '1x Home visit',
     '2x Home visits',
     'House sitting',
+  ];
+
+  // Predefined skills options
+  const skillOptions = [
+    'Experience as volunteer with animal welfare',
+    'Experience with behavioural problems',
+    'Experience with rescue pets',
+    'Familiar with dog training techniques',
+    'Constant supervision',
+    'Emergency transport',
+    'I can administer oral medications',
+    'I can administer injected medications',
+    'First Aid and CPR for pets',
+    'Grooming',
   ];
 
   // Request permission for location access and set initial location
@@ -71,6 +75,24 @@ const BecomePetSitter = () => {
     })();
   }, []);
 
+  // Form validation schema
+  const validationSchema = Yup.object().shape({
+    name: Yup.string().required('Name is required'),
+    location: Yup.string().required('Location is required'),
+    experience: Yup.string().required('Experience is required'),
+    rating: Yup.number().min(0).max(5, 'Rating must be between 0 and 5').required('Rating is required'),
+    reviews: Yup.number().min(0).required('Number of reviews is required'),
+    about: Yup.string().required('About is required'),
+    avatar: Yup.string().url('Must be a valid URL').required('Avatar URL is required'),
+    services: Yup.array().of(
+      Yup.object().shape({
+        title: Yup.string().required('Service title is required'),
+        price: Yup.number().required('Service price is required'),
+      })
+    ),
+    skills: Yup.array().of(Yup.string().required('Skill is required')),
+  });
+
   // Handle Date Selection
   const onDateChange = (event, selectedDate) => {
     const date = selectedDate || currentDate;
@@ -89,25 +111,25 @@ const BecomePetSitter = () => {
   };
 
   // Handle form submission
-  const handleSubmit = async () => {
-    if (!name || !location || !experience || !about || !avatar || availability.length === 0) {
-      Alert.alert('Error', 'Please fill in all required fields.');
+  const handleSubmit = async (values) => {
+    if (!latitude || !longitude) {
+      Alert.alert('Error', 'Please select a valid location.');
       return;
     }
 
     try {
       await addDoc(collection(db, 'PetSitterProfile'), {
-        Name: name,
-        Location: location,
+        Name: values.name,
+        Location: values.location,
         Latitude: latitude,
         Longitude: longitude,
-        Experience: experience,
-        Rating: parseFloat(rating) || 0,
-        Reviews: reviews,
-        About: about,
-        Avatar: avatar,
-        Services: services,
-        Skills: skills,
+        Experience: values.experience,
+        Rating: parseFloat(values.rating) || 0,
+        Reviews: parseInt(values.reviews) || 0,
+        About: values.about,
+        Avatar: values.avatar,
+        Services: values.services,
+        Skills: values.skills,
         Availability: availability,
       });
 
@@ -119,185 +141,239 @@ const BecomePetSitter = () => {
     }
   };
 
-  // Dynamic addition of services with dropdown
-  const handleServiceChange = (index, field, value) => {
-    const updatedServices = [...services];
-    updatedServices[index][field] = value;
-    setServices(updatedServices);
-  };
-
-  const addService = () => {
-    setServices([...services, { title: '', price: '' }]);
-  };
-
-  const removeService = (index) => {
-    const updatedServices = services.filter((_, serviceIndex) => serviceIndex !== index);
-    setServices(updatedServices);
-  };
-
-  // Dynamic addition of skills
-  const handleSkillChange = (index, value) => {
-    const updatedSkills = [...skills];
-    updatedSkills[index] = value;
-    setSkills(updatedSkills);
-  };
-
-  const addSkill = () => {
-    setSkills([...skills, '']);
-  };
-
-  const removeSkill = (index) => {
-    const updatedSkills = skills.filter((_, skillIndex) => skillIndex !== index);
-    setSkills(updatedSkills);
-  };
-
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={[]}
-        ListHeaderComponent={
-          <View style={styles.contentContainer}>
-            <Text style={styles.header}>Form to Become a Pet Sitter</Text>
+    <FlatList
+      data={[]}
+      ListHeaderComponent={
+        <Formik
+          initialValues={{
+            name: '',
+            location: '',
+            experience: '',
+            rating: '',
+            reviews: '',
+            about: '',
+            avatar: '',
+            services: [{ title: '', price: '' }],
+            skills: [''],
+          }}
+          validationSchema={validationSchema}
+          onSubmit={handleSubmit}
+        >
+          {({ handleChange, handleBlur, handleSubmit, values, errors, touched, setFieldValue }) => (
+            <View style={styles.contentContainer}>
+              <Text style={styles.header}>Form to Become a Pet Sitter</Text>
 
-            {/* Name Input */}
-            <TextInput style={styles.input} placeholder="Name and Surname" value={name} onChangeText={setName} />
-
-            {/* Location Input */}
-            <Text style={styles.sectionTitle}>Select Your Location</Text>
-            <GooglePlacesAutocomplete
-              placeholder="Search for a location"
-              onPress={(data, details) => {
-                if (details) {
-                  const { lat, lng } = details.geometry.location;
-                  setLatitude(lat);
-                  setLongitude(lng);
-                  setLocation(data.description);
-                  setRegion({
-                    latitude: lat,
-                    longitude: lng,
-                    latitudeDelta: 0.01,
-                    longitudeDelta: 0.01,
-                  });
-                }
-              }}
-              query={{ key: 'AIzaSyBQJUBHGQfNam1-_zUiAFVMYIg8jQ5Vvdo', language: 'en' }}
-              fetchDetails={true}
-              enablePoweredByContainer={false}
-              minLength={3}
-              debounce={200}
-              styles={{
-                container: styles.autocompleteContainer,
-                textInput: styles.textInput,
-                predefinedPlacesDescription: styles.predefinedPlacesDescription,
-              }}
-            />
-
-            {/* Map View */}
-            <MapView style={styles.map} region={region}>
-              {latitude && longitude && <Marker coordinate={{ latitude, longitude }} />}
-            </MapView>
-
-            {/* Experience Input */}
-            <TextInput style={styles.input} placeholder="Your Experience (in years)" value={experience} onChangeText={setExperience} />
-
-            {/* Rating Input */}
-            <TextInput style={styles.input} placeholder="Rating" keyboardType="numeric" value={rating} onChangeText={setRating} />
-
-            {/* Reviews Input */}
-            <TextInput style={styles.input} placeholder="Number of Reviews" keyboardType="numeric" value={reviews} onChangeText={setReviews} />
-
-            {/* About Input */}
-            <TextInput
-              style={[styles.input, styles.aboutInput]}
-              placeholder="About Me"
-              value={about}
-              onChangeText={setAbout}
-              multiline
-            />
-
-            {/* Avatar URL Input */}
-            <TextInput style={styles.input} placeholder="Avatar URL" value={avatar} onChangeText={setAvatar} />
-
-            {/* Services Section */}
-            <Text style={styles.sectionTitle}>Services</Text>
-            {services.map((service, index) => (
-              <View key={index} style={styles.serviceRow}>
-                <Picker
-                  selectedValue={service.title}
-                  style={[styles.input, { flex: 1 }]}
-                  onValueChange={(itemValue) => handleServiceChange(index, 'title', itemValue)}
-                >
-                  <Picker.Item label="Select Service" value="" />
-                  {serviceOptions.map((option, idx) => (
-                    <Picker.Item key={idx} label={option} value={option} />
-                  ))}
-                </Picker>
-                <TextInput
-                  style={[styles.input, { width: '100%' }]}
-                  placeholder="Price"
-                  keyboardType="numeric"
-                  value={service.price.toString()}
-                  onChangeText={(text) => handleServiceChange(index, 'price', text)}
-                />
-                <TouchableOpacity style={styles.removeButton} onPress={() => removeService(index)}>
-                  <Text style={styles.removeButtonText}>Remove</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-            <TouchableOpacity style={styles.addButton} onPress={addService}>
-              <Text style={styles.addButtonText}>Add Service</Text>
-            </TouchableOpacity>
-
-          {/* Skills Section */}
-          <Text style={styles.sectionTitle}>Skills</Text>
-          {skills.map((skill, index) => (
-            <View key={index} style={styles.skillRow}>
+              {/* Name Input */}
               <TextInput
                 style={styles.input}
-                placeholder="Eg Familiar with dog training techniques..."
-                value={skill}
-                onChangeText={(text) => handleSkillChange(index, text)}
+                placeholder="Name and Surname"
+                onChangeText={handleChange('name')}
+                onBlur={handleBlur('name')}
+                value={values.name}
               />
-              <TouchableOpacity style={styles.removeButton} onPress={() => removeSkill(index)}>
-                <Text style={styles.removeButtonText}>Remove</Text>
-              </TouchableOpacity>
-            </View>
-          ))}
-          <TouchableOpacity style={styles.addButton} onPress={addSkill}>
-            <Text style={styles.addButtonText}>Add Skill</Text>
-          </TouchableOpacity>
+              {touched.name && errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
 
-          {/* Availability Section */}
-          <Text style={styles.sectionTitle}>Availability</Text>
-          <TouchableOpacity style={styles.addButton} onPress={() => setShowDatePicker(true)}>
-            <Text style={styles.addButtonText}>Add Availability Date</Text>
-          </TouchableOpacity>
-          {showDatePicker && (
-            <DateTimePicker value={currentDate} mode="date" display="default" onChange={onDateChange} />
-          )}
-          {availability.length > 0 && (
-            <View style={styles.dateContainer}>
-              {availability.map((date, index) => (
-                <View key={index} style={styles.dateItem}>
-                  <Text>{date}</Text>
-                  <TouchableOpacity onPress={() => handleRemoveDate(date)}>
-                    <Text style={styles.removeText}>Remove</Text>
+              {/* Location Input */}
+              <Text style={styles.sectionTitle}>Select Your Location</Text>
+              <GooglePlacesAutocomplete
+                placeholder="Search for a location"
+                onPress={(data, details) => {
+                  if (details) {
+                    const { lat, lng } = details.geometry.location;
+                    setLatitude(lat);
+                    setLongitude(lng);
+                    setRegion({
+                      latitude: lat,
+                      longitude: lng,
+                      latitudeDelta: 0.01,
+                      longitudeDelta: 0.01,
+                    });
+                    setFieldValue('location', data.description);
+                  }
+                }}
+                query={{ key: 'YOUR_GOOGLE_API_KEY', language: 'en' }}
+                fetchDetails={true}
+                enablePoweredByContainer={false}
+                minLength={3}
+                debounce={200}
+                styles={{
+                  container: styles.autocompleteContainer,
+                  textInput: styles.textInput,
+                  predefinedPlacesDescription: styles.predefinedPlacesDescription,
+                }}
+              />
+              {touched.location && errors.location && <Text style={styles.errorText}>{errors.location}</Text>}
+
+              {/* Map View */}
+              <MapView style={styles.map} region={region}>
+                {latitude && longitude && <Marker coordinate={{ latitude, longitude }} />}
+              </MapView>
+
+              {/* Experience Input */}
+              <TextInput
+                style={styles.input}
+                placeholder="Your Experience (in years)"
+                onChangeText={handleChange('experience')}
+                onBlur={handleBlur('experience')}
+                value={values.experience}
+              />
+              {touched.experience && errors.experience && <Text style={styles.errorText}>{errors.experience}</Text>}
+
+              {/* Rating Input */}
+              <TextInput
+                style={styles.input}
+                placeholder="Rating (0-5)"
+                keyboardType="numeric"
+                onChangeText={handleChange('rating')}
+                onBlur={handleBlur('rating')}
+                value={values.rating}
+              />
+              {touched.rating && errors.rating && <Text style={styles.errorText}>{errors.rating}</Text>}
+
+              {/* Reviews Input */}
+              <TextInput
+                style={styles.input}
+                placeholder="Number of Reviews"
+                keyboardType="numeric"
+                onChangeText={handleChange('reviews')}
+                onBlur={handleBlur('reviews')}
+                value={values.reviews}
+              />
+              {touched.reviews && errors.reviews && <Text style={styles.errorText}>{errors.reviews}</Text>}
+
+              {/* About Input */}
+              <TextInput
+                style={[styles.input, styles.aboutInput]}
+                placeholder="About Me"
+                onChangeText={handleChange('about')}
+                onBlur={handleBlur('about')}
+                value={values.about}
+                multiline
+              />
+              {touched.about && errors.about && <Text style={styles.errorText}>{errors.about}</Text>}
+
+              {/* Avatar URL Input */}
+              <TextInput
+                style={styles.input}
+                placeholder="Avatar URL"
+                onChangeText={handleChange('avatar')}
+                onBlur={handleBlur('avatar')}
+                value={values.avatar}
+              />
+              {touched.avatar && errors.avatar && <Text style={styles.errorText}>{errors.avatar}</Text>}
+
+              {/* Services Section */}
+              <Text style={styles.sectionTitle}>Services</Text>
+              {values.services.map((service, index) => (
+                <View key={index} style={styles.serviceRow}>
+                  <Picker
+                    selectedValue={service.title}
+                    style={styles.input}
+                    onValueChange={(itemValue) => setFieldValue(`services[${index}].title`, itemValue)}
+                  >
+                    <Picker.Item label="Select Service" value="" />
+                    {serviceOptions.map((option, idx) => (
+                      <Picker.Item key={idx} label={option} value={option} />
+                    ))}
+                  </Picker>
+                  {touched.services?.[index]?.title && errors.services?.[index]?.title && (
+                    <Text style={styles.errorText}>{errors.services[index].title}</Text>
+                  )}
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Price"
+                    keyboardType="numeric"
+                    onChangeText={handleChange(`services[${index}].price`)}
+                    onBlur={handleBlur(`services[${index}].price`)}
+                    value={service.price}
+                  />
+                  {touched.services?.[index]?.price && errors.services?.[index]?.price && (
+                    <Text style={styles.errorText}>{errors.services[index].price}</Text>
+                  )}
+                  <TouchableOpacity
+                    style={styles.removeButton}
+                    onPress={() => {
+                      const updatedServices = values.services.filter((_, serviceIndex) => serviceIndex !== index);
+                      setFieldValue('services', updatedServices);
+                    }}
+                  >
+                    <Text style={styles.removeButtonText}>Remove</Text>
                   </TouchableOpacity>
                 </View>
               ))}
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => setFieldValue('services', [...values.services, { title: '', price: '' }])}
+              >
+                <Text style={styles.addButtonText}>Add Service</Text>
+              </TouchableOpacity>
+
+              {/* Skills Section */}
+              <Text style={styles.sectionTitle}>Skills</Text>
+              {values.skills.map((skill, index) => (
+                <View key={index} style={styles.skillRow}>
+                  <Picker
+                    selectedValue={skill}
+                    style={styles.input}
+                    onValueChange={(itemValue) => setFieldValue(`skills[${index}]`, itemValue)}
+                  >
+                    <Picker.Item label="Select Skill" value="" />
+                    {skillOptions.map((option, idx) => (
+                      <Picker.Item key={idx} label={option} value={option} />
+                    ))}
+                  </Picker>
+                  {touched.skills?.[index] && errors.skills?.[index] && (
+                    <Text style={styles.errorText}>{errors.skills[index]}</Text>
+                  )}
+                  <TouchableOpacity
+                    style={styles.removeButton}
+                    onPress={() => {
+                      const updatedSkills = values.skills.filter((_, skillIndex) => skillIndex !== index);
+                      setFieldValue('skills', updatedSkills);
+                    }}
+                  >
+                    <Text style={styles.removeButtonText}>Remove</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+              <TouchableOpacity
+                style={styles.addButton}
+                onPress={() => setFieldValue('skills', [...values.skills, ''])}
+              >
+                <Text style={styles.addButtonText}>Add Skill</Text>
+              </TouchableOpacity>
+
+              {/* Availability Section */}
+              <Text style={styles.sectionTitle}>Availability</Text>
+              <TouchableOpacity style={styles.addButton} onPress={() => setShowDatePicker(true)}>
+                <Text style={styles.addButtonText}>Add Availability Date</Text>
+              </TouchableOpacity>
+              {showDatePicker && (
+                <DateTimePicker value={currentDate} mode="date" display="default" onChange={onDateChange} />
+              )}
+              {availability.length > 0 && (
+                <View style={styles.dateContainer}>
+                  {availability.map((date, index) => (
+                    <View key={index} style={styles.dateItem}>
+                      <Text>{date}</Text>
+                      <TouchableOpacity onPress={() => handleRemoveDate(date)}>
+                        <Text style={styles.removeText}>Remove</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              {/* Submit Button */}
+              <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+                <Text style={styles.submitButtonText}>Submit</Text>
+              </TouchableOpacity>
             </View>
           )}
-
-      {/* Submit Button */}
-      <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-        
-        <Text style={styles.submitButtonText}>Submit</Text>
-            </TouchableOpacity>
-          </View>
-        }
-        keyExtractor={() => 'dummy'} // FlatList requires a keyExtractor
-      />
-    </View>
+        </Formik>
+      }
+    />
   );
 };
 
@@ -308,6 +384,10 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    margin: 10,
+    elevation: 3,
   },
   header: {
     fontSize: 28,
@@ -317,12 +397,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   sectionTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 10,
     color: Colors.DARK_TEXT,
     fontFamily: Font_Family.BOLD,
-    alignItems: 'center',
   },
   input: {
     borderColor: '#ddd',
@@ -334,54 +413,33 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
   },
   aboutInput: {
-    height: 100, // Increase height to make it clear that it’s meant for longer text
-    textAlignVertical: 'top', // Ensure text starts at the top
-  },
-  serviceRow: {
-    marginBottom: 20,
-  },
-  skillRow: {
-    marginBottom: 20,
+    height: 100,
+    textAlignVertical: 'top',
   },
   map: {
     width: '100%',
     height: 200,
     marginBottom: 15,
+    borderRadius: 10,
   },
-  autocompleteList: {
-    borderColor: '#ddd',
-    borderWidth: 1,
-    backgroundColor: '#FFF',
-    marginVertical: 5,
-    zIndex: 1,
+  autocompleteContainer: {
+    marginBottom: 10,
   },
   addButton: {
     backgroundColor: Colors.BRIGHT_BLUE,
-    padding: 8,
+    paddingVertical: 12,
     borderRadius: 5,
     alignItems: 'center',
-    marginVertical: 5,
+    marginVertical: 10,
   },
   addButtonText: {
     color: '#FFF',
     fontSize: 16,
     fontWeight: 'bold',
   },
-  removeButton: {
-    backgroundColor: Colors.CORAL_PINK,
-    padding: 8,
-    borderRadius: 5,
-    alignItems: 'center',
-    marginTop: 5,
-  },
-  removeButtonText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
   submitButton: {
     backgroundColor: Colors.TURQUOISE_GREEN,
-    padding: 15,
+    paddingVertical: 15,
     borderRadius: 5,
     alignItems: 'center',
     marginTop: 20,
@@ -396,9 +454,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   dateItem: {
-    flexDirection: 'column',
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'space-between',
     marginVertical: 5,
     padding: 10,
     backgroundColor: '#eaeaea',
@@ -408,9 +466,45 @@ const styles = StyleSheet.create({
     color: Colors.DANGER,
     fontWeight: 'bold',
   },
+  errorText: {
+    color: 'red',
+    fontSize: 12,
+    marginBottom: 10,
+  },
+  serviceRow: {
+    marginBottom: 20,
+    backgroundColor: Colors.SOFT_CREAM,
+    padding: 10,
+    borderRadius: 10,
+    elevation: 2,
+  },
+  skillRow: {
+    marginBottom: 20,
+    backgroundColor: Colors.SOFT_CREAM,
+    padding: 10,
+    borderRadius: 10,
+    elevation: 2,
+  },
+  removeButton: {
+    backgroundColor: Colors.CORAL_PINK,
+    paddingVertical: 8,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  removeButtonText: {
+    color: '#FFF',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
 });
 
 export default BecomePetSitter;
+
+
+
+
+
 
 
 
