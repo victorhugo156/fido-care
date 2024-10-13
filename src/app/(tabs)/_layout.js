@@ -60,6 +60,7 @@ export default function TabLayout() {
                 options={{
                     path: 'Menu',
                     tabBarLabel: "Menu",
+                    headerShown: false,
                     tabBarIcon: ({ color }) => <FontAwesome name="gear" size={32} color={color} />
                 }}
             />
