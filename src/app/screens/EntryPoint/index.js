@@ -1,8 +1,11 @@
 import { View, Text, StyleSheet, Image, TextInput, SafeAreaView, TouchableOpacity, Dimensions } from 'react-native';
 import React from 'react';
+import { useContext, useEffect } from 'react';
 import { Link } from 'expo-router';
 import { useRouter } from 'expo-router'; 
 
+
+import { FilterServiceContext } from '../../Context/filterServiceContext';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 import Font_Size from '../../../constants/Font_Size';
@@ -14,6 +17,11 @@ const { height, width} = Dimensions.get("window");
 export default function EntryPoint(){
 
     const router = useRouter(); // Initialize router
+    // const { service } = useContext(FilterServiceContext);
+
+    // useEffect(() => {
+    //   console.log("Service in EntryPoint: ", service);
+    // }, [service]);
 
     return(
 

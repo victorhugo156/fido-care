@@ -8,7 +8,6 @@ import Font_Size from '../../constants/Font_Size';
 
 export default function CardFeed({img, location, name, description, services, price, rate}){
 
-    console.log('Image URL:', img);
     return(
         <View style={styles.Container}>
             <View style={styles.ContainerCard}>

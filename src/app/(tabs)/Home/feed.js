@@ -1,12 +1,20 @@
-import React from 'react';
+import React, { useEffect} from 'react';
 import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, TextInput, Dimensions, SafeAreaView } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
 
 import petSittersData from '../../../data/petSitterData';
-
 import CardFeed from '../../../components/CardFeed';
+import { useFilterServiceContext } from '../../hook/useFilterServiceContext';
 
 export default function FeedScreen(){
+    const { service } = useFilterServiceContext();
+
+    useEffect(() => {
+      console.log("Service in Feed Screen:", service); // This should print the updated service value
+    }, [service]);
+
+
     return(
         <SafeAreaView style={styles.Container}> 
             <View style={styles.ContainerFlatList}>

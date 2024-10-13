@@ -6,12 +6,12 @@ Install library for React Native Bottom Sheet:
 */
 
 import { View, Text, StyleSheet, Image, SafeAreaView, TouchableOpacity, Button } from 'react-native';
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useContext, useEffect } from 'react';
 import { Link, useRouter } from 'expo-router';
 import { BottomSheetModalProvider, BottomSheetModal, useBottomSheetModal } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-
+import { FilterServiceContext } from '../../Context/filterServiceContext';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 import Font_Size from '../../../constants/Font_Size';
@@ -21,6 +21,16 @@ import petSizes from '../../../data/petFilter';
 
 
 export default function FilterService() {
+    // const { service } = useContext(FilterServiceContext);
+
+    // useEffect(() => {
+    //   console.log("Service in Filter Service: ", service);
+    // }, [service]);
+
+
+
+
+
 
     const router = useRouter();
 
@@ -47,6 +57,8 @@ export default function FilterService() {
             return (prevIndex - 1 + petSizes.length) % petSizes.length;
         });
     }
+
+
 
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
