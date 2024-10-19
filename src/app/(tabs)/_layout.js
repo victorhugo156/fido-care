@@ -24,7 +24,8 @@ export default function TabLayout() {
                     backgroundColor: Colors.TURQUOISE_GREEN,
                     borderTopColor: 'transparent',
                     elevation: 0,
-                    height: 70
+                    height: 70,
+                    alignItems: " center",
                 },
 
                 tabBarLabelStyle: {

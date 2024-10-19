@@ -2,6 +2,7 @@ import { Stack } from "expo-router";
 import { SafeAreaView, Image, TouchableOpacity } from "react-native";
 import React, { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
+import { StatusBar } from 'expo-status-bar';
 
 
 import { ContextProvider } from "./Context/globalContext";
@@ -15,6 +16,7 @@ export default function Rootlayout() {
     return (
         <ContextProvider>
             <SafeAreaView style={{ flex: 1 }}>
+            <StatusBar style="auto" /> 
                 <Stack>
                     <Stack.Screen
                         name="screens/Login/index"

@@ -14,9 +14,14 @@
     },
     "ios": {
       "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app requires access to your location to provide better services.",
+        "NSLocationAlwaysUsageDescription": "This app needs access to your location to track your movements in the background."
+      },
       "config": {
         "googleMapsApiKey": "AIzaSyBQJUBHGQfNam1-_zUiAFVMYIg8jQ5Vvdo"
-      }
+      },
+      "bundleIdentifier": "au.com.fidocare"
     },
     "android": {
       "adaptiveIcon": {
