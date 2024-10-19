@@ -3,8 +3,8 @@ import { SafeAreaView, Image, TouchableOpacity } from "react-native";
 import React, { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 
-import { FilterServiceContext } from "./Context/filterServiceContext";
-import { FilterServiceContextProvider } from "./Context/filterServiceContext";
+
+import { ContextProvider } from "./Context/globalContext";
 import Colors from "../constants/Colors";
 
 
@@ -13,7 +13,7 @@ export default function Rootlayout() {
     // const [service, setService] = useState("Pet Sitter");
 
     return (
-        <FilterServiceContextProvider>
+        <ContextProvider>
             <SafeAreaView style={{ flex: 1 }}>
                 <Stack>
                     <Stack.Screen
@@ -41,7 +41,6 @@ export default function Rootlayout() {
                             headerTintColor: '#fff', // Set the title color
                         }}
                     />
-
 
                     <Stack.Screen
                         name="screens/Chat/index"
@@ -266,7 +265,7 @@ export default function Rootlayout() {
 
                 </Stack>
             </SafeAreaView>
-        </FilterServiceContextProvider>
+        </ContextProvider>
 
     );
 }

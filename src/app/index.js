@@ -12,12 +12,11 @@ import {
 import { Loading } from "../components/loading";
 import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { FilterServiceContext } from "./Context/filterServiceContext";
-import { FilterServiceContextProvider } from "./Context/filterServiceContext";
+
 
 import EntryPoint from "./screens/EntryPoint";
 import LoginScreen from "./screens/Login";
-
+import Calendar from "../components/Calendar"
 
 export default function index() {
   // useEffect(() => {
