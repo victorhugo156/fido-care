@@ -26,20 +26,26 @@ export default function FilterScreen() {
 
     const { service } = UseContextService();
     const { petInfo } = UseContextService();
+    const { filter, setFilter } = UseContextService({servicePicked: null, pricePicked: null, datePicked: null, locationPicked: null});
+
+
 
     const [price, setPrice] = useState(0);
     const [dates, setDates] = useState(null);
+    const [days, setDays] = useState([""]);
     const [userLocation, setUserLocation] = useState(route.params?.location || null);
     // const { location } = useSearchParams()
 
     console.log(petInfo);
     console.log("Location from params: ", route.params?.location); // For debugging
+    console.log(petInfo.service);
 
     const handleOpenPress = () => bottomSheetRef.current?.present();
     const handleClosePress = () => bottomSheetRef.current?.close();
 
     const handleDateValue = (dates) => {
         setDates(dates);
+        //console.log(dates)
 
     }
 
@@ -47,8 +53,22 @@ export default function FilterScreen() {
     const handleApply = () => {
         // This is triggered when the user clicks the Apply button
         console.log("Selected Dates:", dates);
+        const d = Object.keys(dates).map(date=> date.split("-")[2]);
+        setDays(d);
+        console.log("Date Single: ", d);
         handleClosePress();  // Close the bottom sheet
     };
+
+      //This function will update the useContext
+  const handleFilter = () => {
+    setFilter({
+        servicePicked: petInfo.service,
+        pricePicked: price,
+        datePicked: dates,
+        locationPicked: userLocation
+    }); 
+    router.push("Home/feed");
+  };
 
 
     return (
@@ -74,8 +94,8 @@ export default function FilterScreen() {
                         <View style={styles.ContainerLabels}>
                             <Text style={styles.ServiceLabel}>Service</Text>
                             <View style={styles.ContainerLabelsResult}>
-                                <Text style={styles.ResultLabel}>{petInfo.service}</Text>
-                                <Text style={styles.ResultLabelFilter}>{`Pet SIze: ${petInfo.size}`}</Text>
+                                <Text style={styles.ResultLabel}>{petInfo?.service ?? service }</Text>
+                                <Text style={styles.ResultLabelFilter}>{`Pet SIze: ${petInfo?.size ?? ""}`}</Text>
                             </View>
 
                         </View>
@@ -124,7 +144,7 @@ export default function FilterScreen() {
                         <Image style={styles.Icon} source={require("../../../assets/icons/Calendar.png")} />
                         <View style={styles.ContainerLabels}>
                             <Text style={styles.ServiceLabel}>Dates</Text>
-                            <Text style={styles.ResultLabel}>Result Service</Text>
+                            <Text style={styles.ResultLabel}>{`${days[0]} up to ${days[days.length -1]}`}</Text>
                         </View>
                     </TouchableOpacity>
 

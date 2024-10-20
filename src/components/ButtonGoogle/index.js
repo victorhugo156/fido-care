@@ -4,9 +4,9 @@ import Colors from "../../constants/Colors"
 import Font_Family from "../../constants/Font_Family"
 import Font_Size from "../../constants/Font_Size"
 
-export default function ButtonGoogle({btnName}){
+export default function ButtonGoogle({btnName, onPress}){
     return(
-        <TouchableOpacity style={styles.ContainerBtn}>
+        <TouchableOpacity style={styles.ContainerBtn}  onPress={onPress}>
             <Image source={require("../../assets/images/google_logo.png")}/>
             <Text style={styles.BtnTxt}>{btnName}</Text>
         </TouchableOpacity>
