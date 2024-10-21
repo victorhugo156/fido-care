@@ -13,6 +13,9 @@ import ButtonGreen from '../../../components/ButtonGreen';
 import ButtonFacebook from '../../../components/ButtonFaceBook';
 import ButtonGoogle from '../../../components/ButtonGoogle';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { LoginStorage } from '../../../data/storage/loginStorage';
+
+import { useRouter } from 'expo-router';
 
 
 GoogleSignin.configure({
@@ -24,24 +27,34 @@ GoogleSignin.configure({
 
 export default function LoginScreen() {
 
+  const router = useRouter(); // Initialize router
+
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   async function handleGoogleSignIn() {
 
     try{
       setIsAuthenticating(true)
-      const {idToken} = await GoogleSignin.signIn()
+ 
+      const response = await GoogleSignin.signIn();
 
-      if(idToken){
+      const userData = response.data.user;
 
-      }else{
-        Alert.alert("No connection established");
-        setIsAuthenticating(false);
-        
+           // Log user data to verify
+           console.log("This is the user data:", userData);
+
+      if(userData){
+        await LoginStorage(userData);
+        router.push("Home/feed");
+
       }
+      else{
+        Alert.alert("Fail to login");
+        console.log("No user data received from Google Sign-In");
+      }
+
     }catch(error){
       setIsAuthenticating(false);
-
       console.log(error);
       
       Alert.alert("No connection established");
