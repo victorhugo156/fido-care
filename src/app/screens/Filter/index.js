@@ -1,105 +1,171 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useRef } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, TextInput, Dimensions, SafeAreaView } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useRoute } from '@react-navigation/native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import Slider from '@react-native-community/slider';
 
 
-import { useFilterServiceContext } from '../../hook/useFilterServiceContext';
+import { UseContextService } from '../../hook/useContextService';
+import CustomBottomSheet from '../../../components/CustomBottomSheet';
 import ButtonApply from '../../../components/ButtonApply/idex';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 import Font_Size from '../../../constants/Font_Size';
+import CalendarPicker from '../../../components/Calendar';
+
 
 export default function FilterScreen() {
+    const router = useRouter(); // Initialize router
+    const route = useRoute(); // Access route params
 
-    const { service } = useFilterServiceContext();
+    //This will get the reference of the bottom sheet
+    const bottomSheetRef = useRef(null);
+
+    const { service } = UseContextService();
+    const { petInfo } = UseContextService();
+    const { filter, setFilter } = UseContextService({servicePicked: null, pricePicked: null, datePicked: null, locationPicked: null});
+
+
 
     const [price, setPrice] = useState(0);
+    const [dates, setDates] = useState(null);
+    const [days, setDays] = useState([""]);
+    const [userLocation, setUserLocation] = useState(route.params?.location || null);
+    // const { location } = useSearchParams()
+
+    console.log(petInfo);
+    console.log("Location from params: ", route.params?.location); // For debugging
+    console.log(petInfo.service);
+
+    const handleOpenPress = () => bottomSheetRef.current?.present();
+    const handleClosePress = () => bottomSheetRef.current?.close();
+
+    const handleDateValue = (dates) => {
+        setDates(dates);
+        //console.log(dates)
+
+    }
 
 
+    const handleApply = () => {
+        // This is triggered when the user clicks the Apply button
+        console.log("Selected Dates:", dates);
+        const d = Object.keys(dates).map(date=> date.split("-")[2]);
+        setDays(d);
+        console.log("Date Single: ", d);
+        handleClosePress();  // Close the bottom sheet
+    };
 
-    // useEffect(() => {
+      //This function will update the useContext
+  const handleFilter = () => {
+    setFilter({
+        servicePicked: petInfo.service,
+        pricePicked: price,
+        datePicked: dates,
+        locationPicked: userLocation
+    }); 
+    router.push("Home/feed");
+  };
 
-    //     console.log("Service in Filter Screen:", service); // Log whenever Filter Screen is focused
-    // }, [service]);
-
-    const router = useRouter(); // Initialize router
 
     return (
+        <GestureHandlerRootView style={{ flex: 1 }}>
 
-        <SafeAreaView style={styles.Container}>
-            <View style={styles.ContainerCard}>
-                <View style={styles.ContainerTitle}>
-                    <View style={styles.ContainerMagnifyingGlass}>
-                        <Image style={styles.MagnifyingGlass} source={require("../../../assets/icons/magnifiying-glass.png")} />
+            <SafeAreaView style={styles.Container}>
+                <View style={styles.ContainerCard}>
+                    <View style={styles.ContainerTitle}>
+                        <View style={styles.ContainerMagnifyingGlass}>
+                            <Image style={styles.MagnifyingGlass} source={require("../../../assets/icons/magnifiying-glass.png")} />
+                        </View>
+                        <View style={styles.ContainerTxt}>
+                            <Text style={styles.TxtTitle}>Find you Pet Sitter</Text>
+                            <Text style={styles.TxtDescription}>Tell us a bit more about your pet and.{"\n"}
+                                we can help you to find the best Pet Sitter</Text>
+                        </View>
+
                     </View>
-                    <View style={styles.ContainerTxt}>
-                        <Text style={styles.TxtTitle}>Find you Pet Sitter</Text>
-                        <Text style={styles.TxtDescription}>Tell us a bit more about your pet and.{"\n"}
-                            we can help you to find the best Pet Sitter</Text>
+
+                    {/*Card Service */}
+                    <TouchableOpacity style={styles.ContainerRow} onPress={() => router.push('screens/FilterService')}>
+                        <Image style={styles.Icon} source={require("../../../assets/icons/suitcase.png")} />
+                        <View style={styles.ContainerLabels}>
+                            <Text style={styles.ServiceLabel}>Service</Text>
+                            <View style={styles.ContainerLabelsResult}>
+                                <Text style={styles.ResultLabel}>{petInfo?.service ?? service }</Text>
+                                <Text style={styles.ResultLabelFilter}>{`Pet SIze: ${petInfo?.size ?? ""}`}</Text>
+                            </View>
+
+                        </View>
+                    </TouchableOpacity>
+
+                    <View style={styles.ContainerSlider}>
+                        <Slider style={{ width: 200, height: 60 }}
+                            onValueChange={(value) => setPrice(value)}
+                            minimumValue={22}
+                            maximumValue={100}
+                            minimumTrackTintColor={Colors.BRIGHT_BLUE}
+                            maximumTrackTintColor={Colors.GRAY_600}
+                            thumbTintColor={Colors.TURQUOISE_GREEN} // Color for thumb (control)
+                            thumbStyle={{ width: 80, height: 80 }}  // Control thumb size
+                            trackStyle={{ height: 30 }} />
+
+                        <View style={styles.ContainerPrices}>
+                            <View style={styles.ContainerMinPrice}>
+                                <Text style={styles.TxtDescription}>AU$ 22</Text>
+                            </View>
+
+                            <Text style={styles.TxtDescription}>up to</Text>
+
+                            <View style={styles.ContainerMaxPrice}>
+                                <Text style={styles.TxtDescription}>AU$ {Math.floor(price)}</Text>
+                            </View>
+                        </View>
                     </View>
+
+                    {/*Card Location */}
+                    <TouchableOpacity style={styles.ContainerRow} onPress={() => {
+                        router.push('screens/Location')
+                    }
+
+
+                    }>
+                        <Image style={styles.Icon} source={require("../../../assets/icons//map-pin-line.png")} />
+                        <View style={styles.ContainerLabels}>
+                            <Text style={styles.ServiceLabel}>Location</Text>
+                            <Text style={styles.ResultLabel}>{userLocation}</Text>
+                        </View>
+                    </TouchableOpacity>
+
+                    {/*Card Date */}
+                    <TouchableOpacity style={styles.ContainerRow} onPress={handleOpenPress}>
+                        <Image style={styles.Icon} source={require("../../../assets/icons/Calendar.png")} />
+                        <View style={styles.ContainerLabels}>
+                            <Text style={styles.ServiceLabel}>Dates</Text>
+                            <Text style={styles.ResultLabel}>{`${days[0]} up to ${days[days.length -1]}`}</Text>
+                        </View>
+                    </TouchableOpacity>
+
 
                 </View>
 
-                {/*Card Service */}
-                <TouchableOpacity style={styles.ContainerRow} onPress={() => router.push('screens/FilterService')}>
-                    <Image style={styles.Icon} source={require("../../../assets/icons/suitcase.png")} />
-                    <View style={styles.ContainerLabels}>
-                        <Text style={styles.ServiceLabel}>Service</Text>
-                        <Text style={styles.ResultLabel}>{service}</Text>
-                    </View>
-                </TouchableOpacity>
-
-                <View style={styles.ContainerSlider}>
-                    <Slider style={{ width: 200, height: 60 }}
-                        onValueChange={(value) => setPrice(value)}
-                        minimumValue={22}
-                        maximumValue={100}
-                        minimumTrackTintColor={Colors.BRIGHT_BLUE}
-                        maximumTrackTintColor={Colors.GRAY_600}
-                        thumbTintColor={Colors.TURQUOISE_GREEN} // Color for thumb (control)
-                        thumbStyle={{ width: 80, height: 80 }}  // Control thumb size
-                        trackStyle={{ height: 30 }} />
-
-                    <View style={styles.ContainerPrices}>
-                        <View style={styles.ContainerMinPrice}>
-                            <Text style={styles.TxtDescription}>AU$ 22</Text>
-                        </View>
-
-                        <Text style={styles.TxtDescription}>up to</Text>
-
-                        <View style={styles.ContainerMaxPrice}>
-                            <Text style={styles.TxtDescription}>AU$ {Math.floor(price)}</Text>
-                        </View>
-                    </View>
+                <View style={styles.ContainerBtn}>
+                    <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Apply"} />
+                    <ButtonApply bgColor={Colors.GRAY_200} btnTitle={"Clean"} />
                 </View>
 
-                {/*Card Location */}
-                <TouchableOpacity style={styles.ContainerRow} onPress={() => router.push('screens/Location')}>
-                    <Image style={styles.Icon} source={require("../../../assets/icons//map-pin-line.png")} />
-                    <View style={styles.ContainerLabels}>
-                        <Text style={styles.ServiceLabel}>Location</Text>
-                        <Text style={styles.ResultLabel}>Result Service</Text>
+                <CustomBottomSheet ref={bottomSheetRef}>
+                    <View style={styles.ContainerCalendar}>
+                        <CalendarPicker handleDate={handleDateValue} />
+                        <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Apply"} onPress={handleApply} />
                     </View>
-                </TouchableOpacity>
+                </CustomBottomSheet>
+            </SafeAreaView>
 
-                {/*Card Date */}
-                <TouchableOpacity style={styles.ContainerRow}>
-                    <Image style={styles.Icon} source={require("../../../assets/icons/Calendar.png")} />
-                    <View style={styles.ContainerLabels}>
-                        <Text style={styles.ServiceLabel}>Dates</Text>
-                        <Text style={styles.ResultLabel}>Result Service</Text>
-                    </View>
-                </TouchableOpacity>
-            </View>
+        </GestureHandlerRootView>
 
-            <View style={styles.ContainerBtn}>
-                <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Apply"} />
-                <ButtonApply bgColor={Colors.GRAY_200} btnTitle={"Clean"} />
-            </View>
-        </SafeAreaView>
     )
 }
 
@@ -173,7 +239,7 @@ const styles = StyleSheet.create({
 
     },
 
-    ContainerPrices:{
+    ContainerPrices: {
         width: "100%",
 
         flexDirection: "row",
@@ -184,7 +250,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 30
     },
 
-    ContainerMinPrice:{
+    ContainerMinPrice: {
         width: 120,
         height: 40,
 
@@ -195,7 +261,7 @@ const styles = StyleSheet.create({
         borderColor: Colors.GRAY_600,
     },
 
-    ContainerMaxPrice:{
+    ContainerMaxPrice: {
         width: 120,
         height: 40,
 
@@ -220,6 +286,7 @@ const styles = StyleSheet.create({
 
         flexDirection: "row",
         alignItems: "center",
+        justifyContent: "center",
 
         padding: 20,
 
@@ -243,7 +310,8 @@ const styles = StyleSheet.create({
         width: 300,
 
         flexDirection: "row",
-        justifyContent: "space-between"
+        justifyContent: "space-between",
+        alignItems: "center",
 
     },
 
@@ -253,11 +321,29 @@ const styles = StyleSheet.create({
         color: Colors.GRAY_700,
     },
 
+    ContainerLabelsResult: {
+        gap: 5
+
+    },
+
     ResultLabel: {
         fontFamily: Font_Family.BOLD,
         fontSize: Font_Size.MD,
         color: Colors.GRAY_700,
 
     },
+
+    ResultLabelFilter: {
+        fontFamily: Font_Family.REGULAR,
+        fontSize: Font_Size.SM,
+        color: Colors.GRAY_700,
+
+    },
+
+    ContainerCalendar: {
+        width: "100%",
+        alignItems: "center",
+
+    }
 
 })

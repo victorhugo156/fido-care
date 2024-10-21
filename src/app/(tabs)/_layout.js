@@ -7,15 +7,12 @@ import Entypo from '@expo/vector-icons/Entypo';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
 
-import { FilterServiceContext } from '../Context/filterServiceContext';
-import { FilterServiceContextProvider } from '../Context/filterServiceContext';
 import Colors from '../../constants/Colors';
 import Font_Family from "../../constants/Font_Family";
 import Font_Size from "../../constants/Font_Size";
 
 
-export default function TabLayout({ children }) {
-    // const [service, setService] = useState("Pet Sitter");
+export default function TabLayout() {
 
     return (
             <Tabs screenOptions={{
@@ -27,7 +24,8 @@ export default function TabLayout({ children }) {
                     backgroundColor: Colors.TURQUOISE_GREEN,
                     borderTopColor: 'transparent',
                     elevation: 0,
-                    height: 70
+                    height: 70,
+                    alignItems: " center",
                 },
 
                 tabBarLabelStyle: {

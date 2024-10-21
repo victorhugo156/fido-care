@@ -5,7 +5,7 @@ import { Link } from 'expo-router';
 import { useRouter } from 'expo-router'; 
 
 
-import { FilterServiceContext } from '../../Context/filterServiceContext';
+import { FilterServiceContext } from '../../Context/globalContext';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 import Font_Size from '../../../constants/Font_Size';

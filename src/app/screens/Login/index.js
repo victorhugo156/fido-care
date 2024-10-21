@@ -1,6 +1,8 @@
-import { View, Text, StyleSheet, Image, TextInput } from 'react-native';
-import React from 'react';
+import { View, Text, StyleSheet, Image, TextInput, Alert } from 'react-native';
+import React, { useState } from 'react';
 import { Link } from 'expo-router';
+
+import { WEB_CLIENT_ID, IOS_CLIENT_ID } from '@env';
 
 
 import Colors from '../../../constants/Colors';
@@ -10,9 +12,45 @@ import Font_Size from '../../../constants/Font_Size';
 import ButtonGreen from '../../../components/ButtonGreen';
 import ButtonFacebook from '../../../components/ButtonFaceBook';
 import ButtonGoogle from '../../../components/ButtonGoogle';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+
+
+GoogleSignin.configure({
+  scopes: ["email", "profile"],
+  webClientId: WEB_CLIENT_ID,
+  iosClientId: IOS_CLIENT_ID
+})
 
 
 export default function LoginScreen() {
+
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+
+  async function handleGoogleSignIn() {
+
+    try{
+      setIsAuthenticating(true)
+      const {idToken} = await GoogleSignin.signIn()
+
+      if(idToken){
+
+      }else{
+        Alert.alert("No connection established");
+        setIsAuthenticating(false);
+        
+      }
+    }catch(error){
+      setIsAuthenticating(false);
+
+      console.log(error);
+      
+      Alert.alert("No connection established");
+      
+    }
+    
+  }
+
+
   return (
     <View style={styles.container}>
       <View style={styles.containerHeader}>
@@ -50,7 +88,7 @@ export default function LoginScreen() {
 
         <ButtonFacebook btnName="Login with Facebook" />
 
-        <ButtonGoogle btnName="Login with Google" />
+        <ButtonGoogle btnName="Login with Google" onPress={handleGoogleSignIn} />
       </View>
 
 

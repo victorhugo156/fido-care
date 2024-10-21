@@ -6,14 +6,12 @@ import { useRouter, useLocalSearchParams } from 'expo-router'; // Use useRouter 
 import Colors from "../../../constants/Colors"
 import Font_Family from "../../../constants/Font_Family";
 import Font_Size from "../../../constants/Font_Size";
-import { FilterServiceContext } from '../../Context/filterServiceContext';
-import { FilterServiceContextProvider } from '../../Context/filterServiceContext';
-import { useFilterServiceContext } from '../../hook/useFilterServiceContext';
+import { UseContextService } from '../../hook/useContextService';
 
 
 export default function Home() {
 
-  const { service, setService } = useFilterServiceContext();
+  const { service, setService } = UseContextService();
 
   //This function will update the useContext
   const handlePetSitterPress = () => {
