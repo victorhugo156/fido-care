@@ -109,7 +109,7 @@ const Menu = () => {
           <Image style={styles.UserIcon} source={{ uri: userData.photo }} />
         ) : (
           // Display default icon if no user photo is found
-          <Image style={styles.UserIcon} source={require('../../../assets/icons/User.png')} />
+          <Image style={styles.UserIcon} source={require('../../../assets/icons/user.png')} />
         )}
       </View>
 

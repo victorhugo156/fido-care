@@ -12,11 +12,13 @@ import { UseContextService } from '../../hook/useContextService';
 export default function Home() {
 
   const { service, setService } = UseContextService();
+  const { sourceScreen, setSourceScreen } = UseContextService();
 
 
   //This function will update the useContext
   const handlePetSitterPress = () => {
-    setService("Pet Siter"); 
+    setService("Pet Sitting"); 
+    setSourceScreen("Home")
     router.push("Home/feed");
   };
 
