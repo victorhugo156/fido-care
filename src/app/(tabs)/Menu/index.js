@@ -1,10 +1,12 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
+import { GetUserToken } from '../../../data/storage/getUserToken';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 // Define menu items with screen names and icons
 const menuItems = [
@@ -22,6 +24,33 @@ const menuItems = [
 const Menu = () => {
   const router = useRouter();
 
+  const [userAuthenticated, setUserAuthenticated] = useState(false);
+  const [userData, setUserData] = useState({});
+
+  //Verify if user is Authenticated
+  async function getUser() {
+    try {
+      const userToken = await GetUserToken("user_data");
+      const user = userToken ? JSON.parse(userToken) : null;
+
+      if (user) {
+        console.log("User is authenticated", user);
+        setUserAuthenticated(true)
+        setUserData(user)
+        console.log("User name is", userData.photo);
+
+
+      } else {
+        console.log("User is not authenticated");
+        // Redirect to login or handle unauthenticated state
+      }
+
+    } catch (error) {
+      console.log(error);
+    }
+
+  }
+
   // Navigation handler function for menu options
   // Menu.js (or index.js in the Menu folder)
 
@@ -29,9 +58,11 @@ const Menu = () => {
     if (screenName === 'Log Out') {
       Alert.alert('Log Out', 'Are you sure you want to log out?', [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Yes', onPress: async () => {
+        {
+          text: 'Yes', onPress: async () => {
             try {
               await AsyncStorage.removeItem('userToken'); // Clear user session or token storage
+              handleSignOut()
               router.push('screens/EntryPoint'); // Use router.push to navigate to Login screen
             } catch (error) {
               Alert.alert('Error', 'An error occurred while logging out.');
@@ -48,8 +79,40 @@ const Menu = () => {
   };
 
 
+   // Sign out Function from Google
+  async function handleSignOut() {
+    try {
+     
+      await GoogleSignin.signOut();
+  
+      // Clear user data from AsyncStorage
+      await AsyncStorage.removeItem('user_data');
+  
+      console.log("User signed out successfully");
+      
+      router.push('screens/EntryPoint');
+    } catch (error) {
+      console.log("Error signing out: ", error);
+    }
+  }
+
+  useEffect(() => {
+    getUser();
+  }, [])
+
+
   return (
     <ScrollView style={styles.container}>
+      <View style={styles.ContainerUserIcon}>
+        {userData?.photo ? (
+          // Display user photo if available
+          <Image style={styles.UserIcon} source={{ uri: userData.photo }} />
+        ) : (
+          // Display default icon if no user photo is found
+          <Image style={styles.UserIcon} source={require('../../../assets/icons/user.png')} />
+        )}
+      </View>
+
       {menuItems.map((item) => (
         <TouchableOpacity
           key={item.name} // Ensure unique key for each item
@@ -72,6 +135,24 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 10,
     backgroundColor: Colors.TURQUOISE_GREEN,
+  },
+
+  ContainerUserIcon: {
+    backgroundColor: Colors.GRAY_200,
+    width: 80,
+    height: 80,
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    marginBottom: 40
+  },
+
+  UserIcon: {
+    width: 70,
+    height: 70,
+    resizeMode: "contain"
+
   },
   menuItem: {
     flexDirection: 'row',

@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
-import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, TextInput, Dimensions, SafeAreaView } from 'react-native';
+import { View, Text, Image, TouchableOpacity, Alert, StyleSheet, TextInput, Dimensions, SafeAreaView } from 'react-native';
 import { router, useRouter } from 'expo-router';
 import * as LocationExpo from 'expo-location';
 import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
@@ -19,18 +19,44 @@ export default function Location() {
     const [locationSubscription, setLocationSubscription] = useState(null);
     const [currentAddress, setCurrentAddress] = useState(null);
     const [currentCords, setCurrentCords] = useState(null);
+    const [address, setAddress] = useState(null);
+    const [locationServicesEnabled, setLocationServicesEnabled] = useState(false);
 
-    const[address, setAddress] = useState(null);
+    // Check if location services are enabled
+    const checkLocationServices = async () => {
+        const servicesEnabled = await LocationExpo.hasServicesEnabledAsync();
+        if (!servicesEnabled) {
+            Alert.alert('Location services are disabled', 'Please enable location services to use this feature.', [
+                { text: 'OK' },
+            ]);
+        }
+        setLocationServicesEnabled(servicesEnabled);
+    };
 
 
     // When The screen is rendered the useEfect will be trigged and the expo Location
     // will strt to watch the device location
     useEffect(() => {
-        let subscription;
 
-        // Start watching the position if permission is granted
-        if (status?.granted) {
-            LocationExpo.watchPositionAsync(
+        const getLocationPermission = async () => {
+
+            await checkLocationServices();
+
+            if (!locationServicesEnabled) {
+                return;
+            }
+
+            // Request app-level location permission
+            const permission = await requestPermission();
+            if (!permission.granted) {
+                Alert.alert('Location permission not granted', 'We need location permissions to show your location on the map.', [
+                    { text: 'OK' },
+                ]);
+                return;
+            }
+
+
+            let subscription = await LocationExpo.watchPositionAsync(
                 {
                     accuracy: LocationExpo.LocationAccuracy.High,
                     timeInterval: 1000,  // Update interval of the Watch Position
@@ -43,28 +69,23 @@ export default function Location() {
                             setAddress(address)
                         })
                 }
-            ).then((sub) => {
-                subscription = sub;
-                setLocationSubscription(sub); // Store subscription to state
-            });
+            );
+            setLocationSubscription(subscription)
+        }
+
+        // Start watching the position if permission is granted
+        if (status?.granted) {
+            getLocationPermission();
         }
 
         // Cleanup function to unsubscribe from location updates
         return () => {
-            if (subscription) {
-                subscription.remove();
-                setLocationSubscription(null);
+            if (locationSubscription) {
+                locationSubscription.remove();
             }
         };
-    }, [status]);
+    }, [locationServicesEnabled]);
 
-
-    //I need to check why the  exception component is not rendering
-    if (!status?.granted) {
-        return (
-            <ExceptionLocation />
-        )
-    }
 
     async function getAddress({ latitude, longitude }) {
         try {
@@ -78,40 +99,40 @@ export default function Location() {
 
     }
 
-    const geocode = async()=>{
+    const geocode = async () => {
 
-        try{
+        try {
             const geoLocation = await LocationExpo.geocodeAsync(currentAddress);
 
-            if(geoLocation.length > 0){
-                const {latitude, longitude} = geoLocation[0];
+            if (geoLocation.length > 0) {
+                const { latitude, longitude } = geoLocation[0];
 
                 setCurrentCords({
                     latitude,
                     longitude
                 });
 
-                const address = await getAddress({latitude, longitude});
+                const address = await getAddress({ latitude, longitude });
                 setAddress(address);
                 console.log(address);
 
                 setCurrentAddress(null);
-            
+
             }
-            else{
+            else {
                 console.log("Nolocation found for this address")
             }
-            
-        }catch(error){
+
+        } catch (error) {
             console.log("Error during geolocatiing", error)
         }
 
     }
 
-    const handleLocationValue =()=>{
+    const handleLocationValue = () => {
         router.push({
             pathname: "screens/Filter",
-            params: { location: address}
+            params: { location: address }
         })
     }
 
@@ -123,11 +144,11 @@ export default function Location() {
                     <TouchableOpacity onPress={geocode}>
                         <Image style={styles.SearchIcon} source={require("../../../assets/icons/map-pin-line.png")} />
                     </TouchableOpacity>
-                    
-                    <TextInput style={styles.TxtInput} 
-                    placeholder="Enter your suburb" placeholderTextColor={Colors.GRAY}
-                    value={currentAddress}
-                    onChangeText={setCurrentAddress} />
+
+                    <TextInput style={styles.TxtInput}
+                        placeholder="Enter your suburb" placeholderTextColor={Colors.GRAY}
+                        value={currentAddress}
+                        onChangeText={setCurrentAddress} />
                 </View>
             </View>
 
@@ -151,7 +172,7 @@ export default function Location() {
                 <Text style={styles.SubTitle}>{address}</Text>
             </View>
 
-            <ButtonApply btnTitle="Save" bgColor={Colors.CORAL_PINK} onPress={handleLocationValue}/>
+            <ButtonApply btnTitle="Save" bgColor={Colors.CORAL_PINK} onPress={handleLocationValue} />
         </SafeAreaView>
     )
 }
@@ -173,26 +194,26 @@ const styles = StyleSheet.create({
         borderColor: Colors.GRAY_200,
         borderRadius: 9,
         marginBottom: 30,
-      },
-      SearchBar: {
+    },
+    SearchBar: {
         flexDirection: "row",
         alignItems: "center",
         gap: 20,
-      },
+    },
 
     ContainerMap: {
         marginBottom: 20
     },
-    ContainerAddress:{
+    ContainerAddress: {
         justifyContent: "center",
         alignItems: "center"
     },
-    Title:{
+    Title: {
         fontFamily: Font_Family.BOLD,
         fontSize: Font_Size.LG,
         color: Colors.GRAY_700
     },
-    SubTitle:{
+    SubTitle: {
         fontFamily: Font_Family.REGULAR,
         fontSize: Font_Size.LG,
         color: Colors.GRAY_700

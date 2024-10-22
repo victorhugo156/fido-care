@@ -13,14 +13,15 @@ export default function Home() {
 
   const { service, setService } = UseContextService();
 
+
   //This function will update the useContext
   const handlePetSitterPress = () => {
     setService("Pet Siter"); 
     router.push("Home/feed");
   };
 
-
   const router = useRouter(); // Initialize router
+
 
   return (
 

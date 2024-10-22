@@ -28,13 +28,11 @@ export default function FilterScreen() {
     const { petInfo } = UseContextService();
     const { filter, setFilter } = UseContextService({servicePicked: null, pricePicked: null, datePicked: null, locationPicked: null});
 
-
-
     const [price, setPrice] = useState(0);
     const [dates, setDates] = useState(null);
     const [days, setDays] = useState([""]);
     const [userLocation, setUserLocation] = useState(route.params?.location || null);
-    // const { location } = useSearchParams()
+
 
     console.log(petInfo);
     console.log("Location from params: ", route.params?.location); // For debugging
@@ -63,8 +61,8 @@ export default function FilterScreen() {
   const handleFilter = () => {
     setFilter({
         servicePicked: petInfo.service,
-        pricePicked: price,
-        datePicked: dates,
+        pricePicked: Math.floor(price),
+        datePicked: days,
         locationPicked: userLocation
     }); 
     router.push("Home/feed");
@@ -152,7 +150,7 @@ export default function FilterScreen() {
                 </View>
 
                 <View style={styles.ContainerBtn}>
-                    <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Apply"} />
+                    <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Apply"} onPress={handleFilter}/>
                     <ButtonApply bgColor={Colors.GRAY_200} btnTitle={"Clean"} />
                 </View>
 

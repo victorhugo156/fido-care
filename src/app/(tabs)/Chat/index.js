@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image, TextInput } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { useRouter } from 'expo-router';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 import Font_Size from '../../../constants/Font_Size';
+
+import { GetUserToken } from '../../../data/storage/getUserToken';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 const inboxData = [
   { id: '1', userName: 'John Doe', 
@@ -21,6 +24,31 @@ const Inbox = () => {
   const router = useRouter();
   const [searchText, setSearchText] = useState('');
   const [filteredData, setFilteredData] = useState(inboxData);
+
+  //State Authentication
+  const [userData, setUserData] = useState({});
+
+    //Verify if user is Authenticated
+    async function getUser() {
+      try {
+        const userToken = await GetUserToken("user_data");
+        const user = userToken ? JSON.parse(userToken) : null;
+  
+        if (user) {
+          console.log("User is authenticated in the Chat Screen", user);
+          setUserData(user);
+          console.log("User name is", userData.name);
+
+        } else {
+          console.log("User is not authenticated");
+          // Redirect to login or handle unauthenticated state
+        }
+  
+      } catch (error) {
+        console.log(error);
+      }
+  
+    }
 
   const handleSearch = (text) => {
     setSearchText(text);
@@ -51,6 +79,10 @@ const Inbox = () => {
       </View>
     </TouchableOpacity>
   );
+
+  useEffect(() => {
+    getUser();
+  }, [])
 
   return (
     <View style={styles.container}>

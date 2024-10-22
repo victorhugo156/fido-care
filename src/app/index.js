@@ -14,8 +14,6 @@ import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { GoogleSignin } from "@react-native-google-signin/google-signin"
 
-
-
 import EntryPoint from "./screens/EntryPoint";
 import LoginScreen from "./screens/Login";
 import Calendar from "../components/Calendar";
@@ -24,7 +22,6 @@ import Calendar from "../components/Calendar";
 export default function index() {
 
   const [fontsLoaded] = useFonts({ Nunito_300Light, Nunito_400Regular, Nunito_700Bold, Nunito_900Black });
-
 
   //Condition to check if the font was loaded
   if (!fontsLoaded) {
@@ -38,7 +35,7 @@ export default function index() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <BottomSheetModalProvider>
           <SafeAreaView style={styles.Container}>
-            <LoginScreen />
+            <EntryPoint />
           </SafeAreaView>
         </BottomSheetModalProvider>
       </GestureHandlerRootView>
