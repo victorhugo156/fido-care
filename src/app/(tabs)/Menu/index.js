@@ -109,7 +109,7 @@ const Menu = () => {
           <Image style={styles.UserIcon} source={{ uri: userData.photo }} />
         ) : (
           // Display default icon if no user photo is found
-          <Image style={styles.UserIcon} source={require('../../../assets/icons/user.png')} />
+          <Image style={styles.UserIcon} source={require('../../../assets/icons/User.png')} />
         )}
       </View>
 
@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
 
     alignItems: "center",
     justifyContent: "center",
-
+    marginTop: 50,
     marginBottom: 40
   },
 

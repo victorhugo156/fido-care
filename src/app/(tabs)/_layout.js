@@ -51,6 +51,7 @@ export default function TabLayout() {
                 options={{
                     path: 'Bookings',
                     tabBarLabel: "Bookings",
+                    headerShown: false,
                     tabBarIcon: ({ color }) => <Entypo name="calendar" size={32} color={color} />
                 }}
             />
@@ -58,6 +59,7 @@ export default function TabLayout() {
                 options={{
                     path: 'Chat',
                     tabBarLabel: "Chat",
+                    headerShown: false,
                     tabBarIcon: ({ color }) => <Ionicons name="chatbox" size={32} color={color} />
                 }}
             />
@@ -65,6 +67,7 @@ export default function TabLayout() {
                 options={{
                     path: 'Menu',
                     tabBarLabel: "Menu",
+                    headerShown: false,
                     tabBarIcon: ({ color }) => <FontAwesome name="gear" size={32} color={color} />
                 }}
             />

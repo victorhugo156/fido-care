@@ -126,7 +126,7 @@ const styles = StyleSheet.create({
     fontFamily: Font_Family.BLACK,
     color: Colors.BRIGHT_BLUE,
     textAlign: 'center',
-    marginTop: 10,
+    marginTop: 50,
     marginBottom: 5,
   },
   searchContainer: {

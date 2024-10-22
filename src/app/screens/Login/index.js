@@ -57,7 +57,7 @@ export default function LoginScreen() {
       setIsAuthenticating(false);
       console.log(error);
       
-      Alert.alert("No connection established");
+      Alert.alert("No connection established",error.message);
       
     }
     
