@@ -27,39 +27,35 @@ export default function FeedScreen(){
 
     //Fetching data from the DB
     const featchData = async ()=>{
-        let customQuery;
 
         try{
-            if(sourceScreen == "Home"){
-                
-                customQuery = query(
-                    collection(db, "PetSitterProfile"),
-                    where("Services", "array-contains", { title: service })
-
-                )
-            }else if( sourceScreen == "Filter"){
-                customQuery = query(
-                    collection(db, "PetSitterProfile"),
-                    where("Services", "array-contains", { title: filter.servicePicked })
-                );
-            }
-            const querySnapshot = await getDocs(customQuery);
+            const querySnapshot = await getDocs(collection(db, "PetSitterProfile"));
 
             querySnapshot.forEach((doc)=>{
                 const data = doc.data();
 
-                const matchedServices = data.Services.filter(service=>
-                    service.title === filter.servicePicked &&
-                    service.price <= filter.pricePicked
-                )
+                if(sourceScreen == "Home"){
 
-                if(matchedServices.length > 0){
-                    sitters.push({id: doc.id, ...doc.data()});
-                }
+                    const matchedServices = data.Services.filter(serviceItem=>
+                        serviceItem.title === service
+                    )
+                    if(matchedServices.length > 0){
+                        sitters.push({id: doc.id, ...doc.data()});
+                    }
                 
-            })
-            setPetSitters(sitters)
+                }else if( sourceScreen == "Filter"){
 
+                    const matchedServices = data.Services.filter(serviceItem=>
+                        serviceItem.title === filter.servicePicked &&
+                        serviceItem.price <= filter.pricePicked
+                    );
+
+                    if(matchedServices.length > 0){
+                        sitters.push({id: doc.id, ...doc.data()});
+                    }
+                }  
+            });
+            setPetSitters(sitters)
 
         }catch(error){
             console.log("This erros is coming from the catch: ", error)
@@ -107,17 +103,17 @@ export default function FeedScreen(){
         <SafeAreaView style={styles.Container}> 
             <View style={styles.ContainerFlatList}>
                 <FlatList
-                    data={petSittersData}
+                    data={petSitters}
                     KeyExtractor={item => item}
                     renderItem={({ item }) => (
                         <CardFeed
-                            img={item.avatar}
-                            name={item.name}
-                            location={item.location}
-                            description={item.experience}
-                            services={item.services}
-                            price={item.pricePerNight}
-                            rate={item.rating}
+                            img={item.Avatar}
+                            name={item.Name}
+                            location={item.Location}
+                            description={item.Experience}
+                            services={item.Services[0].title}
+                            price={item.Services[0].price}
+                            rate={item.Rating}
                         />
                     )}
 

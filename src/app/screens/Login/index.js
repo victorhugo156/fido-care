@@ -99,8 +99,6 @@ export default function LoginScreen() {
 
         <Text style={styles.textGeneral}>or</Text>
 
-        <ButtonFacebook btnName="Login with Facebook" />
-
         <ButtonGoogle btnName="Login with Google" onPress={handleGoogleSignIn} />
       </View>
 
