@@ -10,7 +10,6 @@ import Font_Family from '../../../constants/Font_Family';
 import Font_Size from '../../../constants/Font_Size';
 
 import ButtonGreen from '../../../components/ButtonGreen';
-import ButtonFacebook from '../../../components/ButtonFaceBook';
 import ButtonGoogle from '../../../components/ButtonGoogle';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { LoginStorage } from '../../../data/storage/loginStorage';

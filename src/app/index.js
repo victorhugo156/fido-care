@@ -14,9 +14,11 @@ import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { GoogleSignin } from "@react-native-google-signin/google-signin"
 
+
 import EntryPoint from "./screens/EntryPoint";
 import LoginScreen from "./screens/Login";
 import Calendar from "../components/Calendar";
+import Register from "./screens/Register";
 
 
 export default function index() {
