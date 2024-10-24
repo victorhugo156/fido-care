@@ -44,7 +44,7 @@ export default function LoginScreen() {
 
       if(userData){
         await LoginStorage(userData);
-        router.push("Home/feed");
+        router.push("Home");
 
       }
       else{

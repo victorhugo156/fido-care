@@ -10,6 +10,7 @@ import { UseContextService } from '../../hook/useContextService';
 
 import petSittersData from '../../../data/petSitterData';
 import CardFeed from '../../../components/CardFeed';
+import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
 
 
 export default function FeedScreen(){
@@ -34,7 +35,10 @@ export default function FeedScreen(){
             querySnapshot.forEach((doc)=>{
                 const data = doc.data();
 
-                if(sourceScreen == "Home"){
+                if(sourceScreen == null){
+                    sitters.push({id: doc.id, ...doc.data()});
+                }
+                else if(sourceScreen == "Home"){
 
                     const matchedServices = data.Services.filter(serviceItem=>
                         serviceItem.title === service
