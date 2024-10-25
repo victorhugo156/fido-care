@@ -69,6 +69,8 @@ const Menu = () => {
     } else if (screenName === 'BecomePetSitter') {
       // Navigate to the BecomePetSitter screen using its exact path
       router.push('/screens/BecomePetSitter'); // Correct path to the screen
+    } else if (screenName === 'PersonalDetails') {
+      router.push('/screens/PersonalDetails'); // Correct path to the screen
     } else {
       router.push(`/${screenName}`); // Navigate to the selected screen using router.push
     }
@@ -102,7 +104,7 @@ const Menu = () => {
           <Image style={styles.UserIcon} source={require('../../../assets/icons/user.png')} />
         )}
         <View>
-          <Text style={styles.welcomeText}>Welcome</Text>
+          <Text style={styles.welcomeText}>Welcome,</Text>
           {userData?.name && (
             <Text style={styles.userName}>{userData.name}</Text>
           )}
@@ -136,7 +138,7 @@ const styles = StyleSheet.create({
   ContainerUserIcon: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.SOFT_CREAM,
+    backgroundColor: Colors.WHITE,
     padding: 10,
     borderRadius: 10,
     marginTop: 50,

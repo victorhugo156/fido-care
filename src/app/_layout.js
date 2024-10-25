@@ -137,6 +137,18 @@ export default function Rootlayout() {
                     />
 
                     <Stack.Screen
+                        name="screens/PersonalDetails/index"
+                        options={{
+                            title: "Personal Details", 
+                            headerStyle: {
+                                backgroundColor: '#3772FF', 
+                            },
+                            headerTitleAlign: 'center', 
+                            headerTintColor: '#fff', 
+                        }}
+                    />
+
+                    <Stack.Screen
                         name="screens/Filter/index"
                         options={{
                             title: "Filter Detail",
