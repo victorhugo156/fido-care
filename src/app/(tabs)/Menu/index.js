@@ -39,7 +39,6 @@ const Menu = () => {
         setUserData(user)
         console.log("User name is", userData.photo);
 
-
       } else {
         console.log("User is not authenticated");
         // Redirect to login or handle unauthenticated state
@@ -48,12 +47,9 @@ const Menu = () => {
     } catch (error) {
       console.log(error);
     }
-
   }
 
   // Navigation handler function for menu options
-  // Menu.js (or index.js in the Menu folder)
-
   const handleNavigation = async (screenName) => {
     if (screenName === 'Log Out') {
       Alert.alert('Log Out', 'Are you sure you want to log out?', [
@@ -62,7 +58,7 @@ const Menu = () => {
           text: 'Yes', onPress: async () => {
             try {
               await AsyncStorage.removeItem('userToken'); // Clear user session or token storage
-              handleSignOut()
+              await handleSignOut();
               router.push('screens/EntryPoint'); // Use router.push to navigate to Login screen
             } catch (error) {
               Alert.alert('Error', 'An error occurred while logging out.');
@@ -78,18 +74,13 @@ const Menu = () => {
     }
   };
 
-
-   // Sign out Function from Google
+  // Sign out Function from Google
   async function handleSignOut() {
     try {
-     
       await GoogleSignin.signOut();
-  
       // Clear user data from AsyncStorage
       await AsyncStorage.removeItem('user_data');
-  
       console.log("User signed out successfully");
-      
       router.push('screens/EntryPoint');
     } catch (error) {
       console.log("Error signing out: ", error);
@@ -99,7 +90,6 @@ const Menu = () => {
   useEffect(() => {
     getUser();
   }, [])
-
 
   return (
     <ScrollView style={styles.container}>
@@ -111,6 +101,12 @@ const Menu = () => {
           // Display default icon if no user photo is found
           <Image style={styles.UserIcon} source={require('../../../assets/icons/user.png')} />
         )}
+        <View>
+          <Text style={styles.welcomeText}>Welcome</Text>
+          {userData?.name && (
+            <Text style={styles.userName}>{userData.name}</Text>
+          )}
+        </View>
       </View>
 
       {menuItems.map((item) => (
@@ -138,22 +134,35 @@ const styles = StyleSheet.create({
   },
 
   ContainerUserIcon: {
-    backgroundColor: Colors.GRAY_200,
-    width: 80,
-    height: 80,
-
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.SOFT_CREAM,
+    padding: 10,
+    borderRadius: 10,
     marginTop: 50,
-    marginBottom: 40
+    marginBottom: 40,
   },
 
   UserIcon: {
     width: 70,
     height: 70,
-    resizeMode: "contain"
-
+    borderRadius: 35,
+    resizeMode: "contain",
+    marginRight: 15,
   },
+
+  welcomeText: {
+    fontSize: 18,
+    color: Colors.BRIGHT_BLUE,
+    fontFamily: Font_Family.BLACK,
+  },
+
+  userName: {
+    fontSize: 20,
+    color: Colors.DARK_TEXT,
+    fontFamily: Font_Family.BOLD,
+  },
+
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -176,6 +185,9 @@ const styles = StyleSheet.create({
 });
 
 export default Menu;
+
+
+
 
 
 
