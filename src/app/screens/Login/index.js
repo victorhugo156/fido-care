@@ -30,9 +30,10 @@ export default function LoginScreen() {
 
     try{
       setIsAuthenticating(true)
-      const {idToken} = await GoogleSignin.signIn()
+      const response= await GoogleSignin.signIn()
+      console.log(response)
 
-      if(idToken){
+      if(response){
 
       }else{
         Alert.alert("No connection established");

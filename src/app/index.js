@@ -38,7 +38,7 @@ export default function index() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <BottomSheetModalProvider>
           <SafeAreaView style={styles.Container}>
-            <LoginScreen />
+            <EntryPoint />
           </SafeAreaView>
         </BottomSheetModalProvider>
       </GestureHandlerRootView>
