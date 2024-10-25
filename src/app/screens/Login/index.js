@@ -10,9 +10,11 @@ import Font_Family from '../../../constants/Font_Family';
 import Font_Size from '../../../constants/Font_Size';
 
 import ButtonGreen from '../../../components/ButtonGreen';
-import ButtonFacebook from '../../../components/ButtonFaceBook';
 import ButtonGoogle from '../../../components/ButtonGoogle';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { LoginStorage } from '../../../data/storage/loginStorage';
+
+import { useRouter } from 'expo-router';
 
 
 GoogleSignin.configure({
@@ -24,28 +26,37 @@ GoogleSignin.configure({
 
 export default function LoginScreen() {
 
+  const router = useRouter(); // Initialize router
+
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   async function handleGoogleSignIn() {
 
     try{
       setIsAuthenticating(true)
-      const response= await GoogleSignin.signIn()
-      console.log(response)
+ 
+      const response = await GoogleSignin.signIn();
 
-      if(response){
+      const userData = response.data.user;
 
-      }else{
-        Alert.alert("No connection established");
-        setIsAuthenticating(false);
-        
+           // Log user data to verify
+           console.log("This is the user data:", userData);
+
+      if(userData){
+        await LoginStorage(userData);
+        router.push("Home");
+
       }
+      else{
+        Alert.alert("Fail to login");
+        console.log("No user data received from Google Sign-In");
+      }
+
     }catch(error){
       setIsAuthenticating(false);
-
       console.log(error);
       
-      Alert.alert("No connection established");
+      Alert.alert("No connection established",error.message);
       
     }
     
@@ -86,8 +97,6 @@ export default function LoginScreen() {
         </Link>
 
         <Text style={styles.textGeneral}>or</Text>
-
-        <ButtonFacebook btnName="Login with Facebook" />
 
         <ButtonGoogle btnName="Login with Google" onPress={handleGoogleSignIn} />
       </View>

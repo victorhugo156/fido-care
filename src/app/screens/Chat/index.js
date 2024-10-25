@@ -4,6 +4,8 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import { useRouter, useLocalSearchParams } from 'expo-router'; // Use useRouter and useLocalSearchParams for navigation and params
 import Colors from '../../../constants/Colors';
 
+
+
 // Dummy chat data for demonstration purposes
 const chatData = [
   { id: '1', sender: 'John Doe', message: 'Hello! Is Max available for pet sitting next week?' },

@@ -5,6 +5,7 @@ export const Context = createContext({});
 export function ContextProvider({children}){
 
     const [service, setService] = useState("Select Service");
+    const [sourceScreen, setSourceScreen] = useState("");
     const [petInfo, setPetInfo] = useState({service: null, size: null})
     const [filter, setFilter]=useState({
         servicePicked: null, 
@@ -13,7 +14,11 @@ export function ContextProvider({children}){
         locationPicked: null})
 
     return(
-        <Context.Provider value={{ service, setService, petInfo, setPetInfo, filter, setFilter }}>
+        <Context.Provider value={{ 
+            service, setService, 
+            petInfo, setPetInfo, 
+            filter, setFilter,
+            sourceScreen, setSourceScreen }}>
             {children}
       </Context.Provider>
 

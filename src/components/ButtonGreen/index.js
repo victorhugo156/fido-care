@@ -5,12 +5,16 @@ import Colors from "../../constants/Colors"
 import Font_Family from "../../constants/Font_Family"
 import Font_Size from "../../constants/Font_Size"
 
-export default function ButtonGreen({btnName}){
-    return(
-        <TouchableOpacity style={styles.ContainerBtn}>
-            <Link href={"/(tabs)/Home"} asChild >
+
+/*
+  <Link href={"/(tabs)/Home"} asChild >
                 <Text style={styles.BtnTxt}>{btnName}</Text>
             </Link>
+*/
+export default function ButtonGreen({btnName, onPress}){
+    return(
+        <TouchableOpacity style={styles.ContainerBtn} onPress={onPress}>
+            <Text style={styles.BtnTxt}>{btnName}</Text>
         </TouchableOpacity>
 
     )

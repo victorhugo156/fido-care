@@ -265,6 +265,8 @@ export default function Rootlayout() {
                         }}
                     />
 
+                    
+
                 </Stack>
             </SafeAreaView>
         </ContextProvider>

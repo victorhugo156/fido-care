@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     fontFamily: Font_Family.BLACK,
     color: Colors.BRIGHT_BLUE,
     textAlign: 'center',
-    marginTop: 10,
+    marginTop: 50,
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
     paddingBottom: 5,

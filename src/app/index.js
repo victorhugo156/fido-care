@@ -15,16 +15,15 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { GoogleSignin } from "@react-native-google-signin/google-signin"
 
 
-
 import EntryPoint from "./screens/EntryPoint";
 import LoginScreen from "./screens/Login";
 import Calendar from "../components/Calendar";
+import Register from "./screens/Register";
 
 
 export default function index() {
 
   const [fontsLoaded] = useFonts({ Nunito_300Light, Nunito_400Regular, Nunito_700Bold, Nunito_900Black });
-
 
   //Condition to check if the font was loaded
   if (!fontsLoaded) {
