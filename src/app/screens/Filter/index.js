@@ -34,9 +34,10 @@ export default function FilterScreen() {
     const [userLocation, setUserLocation] = useState(route.params?.location || null);
 
 
-    console.log(petInfo);
+    console.log("hey this is the pet inf: ", petInfo);
     console.log("Location from params: ", route.params?.location); // For debugging
     console.log(petInfo.service);
+    console.log(service);
 
     const handleOpenPress = () => bottomSheetRef.current?.present();
     const handleClosePress = () => bottomSheetRef.current?.close();

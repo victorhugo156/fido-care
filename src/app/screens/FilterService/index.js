@@ -42,13 +42,18 @@ export default function FilterService() {
     const [serviceChosen, setServiceChosen] = useState(null);
 
     const { petInfo, setPetInfo } = UseContextService({ service: null, size: null });
-
+    const { service, setService } = UseContextService();
 
     //This function will update the useContext
     const handlePetData = () => {
-        setPetInfo({ service: serviceChosen, size: petSizes[currentIndex].size });
+        const petData = { service: serviceChosen };
+        if (["Pet Wash", "Dog Walk"].includes(serviceChosen)) {
+            petData.size = petSizes[currentIndex].size;
+        }
+        setPetInfo(petData);
         router.push("screens/Filter");
-    };
+     };
+
 
     //This function is the next Pet
     const handleNext = function () {
@@ -80,7 +85,8 @@ export default function FilterService() {
                         {/*Card Pet Day Care */}
                         <TouchableOpacity style={styles.ContainerRow} onPress={() => {
                             setServiceChosen("Pet Day Care");
-                            handleOpenPress()
+                            handlePetData()
+                            
                         }} >
                             <Image style={styles.IconDayCare} source={require("../../../assets/icons/sun-horizon.png")} />
                             <View style={styles.ContainerLabels}>
@@ -92,7 +98,8 @@ export default function FilterService() {
                         {/*Card Pet Boarding */}
                         <TouchableOpacity style={styles.ContainerRow} onPress={() => {
                             setServiceChosen("Pet Boarding");
-                            handleOpenPress()
+                            handlePetService()
+                            
                         }}>
                             <Image style={styles.Icon} source={require("../../../assets/icons/moon.png")} />
                             <View style={styles.ContainerLabels}>
@@ -139,7 +146,8 @@ export default function FilterService() {
                         {/*Card Location */}
                         <TouchableOpacity style={styles.ContainerRow} onPress={() => {
                             setServiceChosen("House Sitting");
-                            handleOpenPress()
+                            handlePetService()
+                           
                         }}>
                             <Image style={styles.Icon} source={require("../../../assets/icons/kitten_face.png")} />
                             <View style={styles.ContainerLabels}>
