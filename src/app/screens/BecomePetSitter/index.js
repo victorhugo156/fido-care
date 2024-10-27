@@ -192,7 +192,7 @@ const BecomePetSitter = () => {
                     setFieldValue('location', data.description);
                   }
                 }}
-                query={{ key: 'YOUR_GOOGLE_API_KEY', language: 'en' }}
+                query={{ key: 'AIzaSyBQJUBHGQfNam1-_zUiAFVMYIg8jQ5Vvdo', language: 'en' }}
                 fetchDetails={true}
                 enablePoweredByContainer={false}
                 minLength={3}

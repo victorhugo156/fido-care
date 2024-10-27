@@ -136,6 +136,9 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    fontFamily: Font_Family.BOLD,
+    color: Colors.BRIGHT_BLUE,
+
   },
   headerText: {
     fontSize: 28,
