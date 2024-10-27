@@ -1,6 +1,7 @@
 import { View, Text, StyleSheet, Image, TextInput, Alert } from 'react-native';
 import React, { useState } from 'react';
 import { Link } from 'expo-router';
+import { useForm, Controller } from "react-hook-form"
 
 import { WEB_CLIENT_ID, IOS_CLIENT_ID } from '@env';
 
@@ -9,8 +10,10 @@ import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 import Font_Size from '../../../constants/Font_Size';
 
+import Input from '../../../components/Input';
 import ButtonGreen from '../../../components/ButtonGreen';
 import ButtonGoogle from '../../../components/ButtonGoogle';
+import ButtonTransparent from '../../../components/ButtonTransparent';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { LoginStorage } from '../../../data/storage/loginStorage';
 
@@ -27,39 +30,48 @@ GoogleSignin.configure({
 export default function LoginScreen() {
 
   const router = useRouter(); // Initialize router
+  const { control, handleSubmit, formState: { errors } } = useForm();
 
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
   async function handleGoogleSignIn() {
 
-    try{
+    try {
       setIsAuthenticating(true)
- 
+
       const response = await GoogleSignin.signIn();
 
       const userData = response.data.user;
 
-           // Log user data to verify
-           console.log("This is the user data:", userData);
+      // Log user data to verify
+      console.log("This is the user data:", userData);
 
-      if(userData){
+      if (userData) {
         await LoginStorage(userData);
         router.push("Home");
 
       }
-      else{
+      else {
         Alert.alert("Fail to login");
         console.log("No user data received from Google Sign-In");
       }
 
-    }catch(error){
+    } catch (error) {
       setIsAuthenticating(false);
       console.log(error);
-      
-      Alert.alert("No connection established",error.message);
-      
+
+      Alert.alert("No connection established", error.message);
+
     }
-    
+
+  }
+
+  function handleLogin() {
+    console.log("I am here in Login")
+  }
+
+  function handleRegister() {
+    router.push("screens/Register");
   }
 
 
@@ -74,34 +86,71 @@ export default function LoginScreen() {
 
       <View style={styles.containerForm}>
         <View style={styles.containerInputs}>
-          <TextInput
-            placeholder='Email address'
-            placeholderTextColor={Colors.GRAY_700}
-            style={styles.input} />
 
-          <TextInput
-            placeholder='Password'
-            placeholderTextColor={Colors.GRAY_700}
-            style={styles.input} />
+          <Controller
+            control={control}
+            name='email'
+            rules={{
+              required: "Inform your email",
+    
+            }}
+            render={({ field: { onChange, value } }) => (
+              <Input
+                placeholder='Email address'
+                keyboardType = "email-address"
+                placeholderTextColor={Colors.GRAY_700}
+                style={styles.input}
+                onChangeText={onChange}
+                value={value}
+
+              />
+
+            )}
+          />
+
+          {
+            errors.email?.message &&
+            <Text style={styles.ErrorMsg}>{errors.email?.message}</Text>
+          }
+
+          <Controller
+            control={control}
+            name='password'
+            rules={{
+              required: "Inform your password"
+            }}
+            render={({ field: { onChange, value } }) => (
+              <Input
+                placeholder='Password'
+                placeholderTextColor={Colors.GRAY_700}
+                style={styles.input}
+                onChangeText={onChange}
+                value={value}
+              />
+            )}
+          />
+
+          {errors.password?.message &&
+            <Text style={styles.ErrorMsg}>{errors.password.message}</Text>
+          }
         </View>
 
-        <Link href="screens/Welcome/(tabs)">
-          <Text style={styles.recoverPasswordLink}>Forgot your password?</Text>
-        </Link>
+        <View style={styles.containerBtnLogin}>
+          <Link href="screens/Welcome/(tabs)">
+            <Text style={styles.recoverPasswordLink}>Forgot your password?</Text>
+          </Link>
+
+          <ButtonGreen btnName="LOGIN" onPress={handleSubmit(handleLogin)} />
+        </View>
       </View>
 
       <View style={styles.containerButtons}>
-
-        <Link href="/Home">
-          <ButtonGreen btnName="LOGIN" />
-        </Link>
+        <ButtonTransparent btnName="REGISTER" onPress={handleRegister} />
 
         <Text style={styles.textGeneral}>or</Text>
 
         <ButtonGoogle btnName="Login with Google" onPress={handleGoogleSignIn} />
       </View>
-
-
     </View>
   );
 }
@@ -114,13 +163,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  containerHeader:{
+  containerHeader: {
     alignItems: "center",
 
-    marginBottom: 60
+    marginBottom: 40
   },
 
-  logo:{
+  logo: {
     width: 200,
     resizeMode: "contain"
 
@@ -133,7 +182,7 @@ const styles = StyleSheet.create({
 
   },
 
-  containerForm:{
+  containerForm: {
     width: 350,
     justifyContent: "center",
     alignItems: "center",
@@ -143,25 +192,31 @@ const styles = StyleSheet.create({
     marginBottom: 60
   },
 
-  containerInputs:{
+  containerInputs: {
     width: "100%",
     justifyContent: "center",
 
-    gap: 20,
+    gap: 15,
 
-    marginBottom: 10
+    marginBottom: 20
   },
 
-  input:{
-    backgroundColor: Colors.GRAY_100,
+  ErrorMsg:{
+    fontFamily: Font_Family.BOLD,
+    fontSize: Font_Size.SM,
+    color: Colors.CORAL_PINK,
 
-    width: "100%",
-    height: 58,
+    padding: 0,
+    margin:0
 
-    padding: 10,
+},
 
-    borderRadius: 10,
+  containerBtnLogin: {
+    alignItems: "center",
+    gap: 20
+
   },
+
 
   recoverPasswordLink: {
     fontSize: Font_Size.LG,
@@ -169,14 +224,14 @@ const styles = StyleSheet.create({
     color: Colors.WHITE,
   },
 
-  containerButtons:{
+  containerButtons: {
     alignItems: "center",
 
     gap: 15
 
   },
 
-  textGeneral:{
+  textGeneral: {
     fontSize: Font_Size.LG,
     fontFamily: Font_Family.BOLD,
     color: Colors.WHITE,

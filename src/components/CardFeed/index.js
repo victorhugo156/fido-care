@@ -17,11 +17,11 @@ export default function CardFeed({img, location, name, description, services, pr
                         <Text style={styles.LableName}>{name}</Text>
                         <View style={styles.ContainerLocation}>
                             <Image source={require('../../assets/icons/map-pin-line.png')}/>
-                            <Text style={styles.LableLocation}>{location}</Text>
+                            <Text style={styles.LableLocation}>{`Located at: ${location}`}</Text>
                         </View>
-                        <Text style={styles.LableDescription}>{description}</Text>
-                        <Text style={styles.Services}>{services}</Text>
-                        <Text style={styles.LablePrice}>{price}</Text>
+                        <Text style={styles.LableDescription}>{`Years of experience: ${ description }`}</Text>
+                        <Text style={styles.Services}>{`Services: ${services}`}</Text>
+                        <Text style={styles.LablePrice}>{`Price/h: AU$: ${price}`}</Text>
                     </View>
                 </View>
 
@@ -61,8 +61,8 @@ const styles = StyleSheet.create({
     },
     img:{
         backgroundColor: "blue",
-        width: 150,
-        height: 150,
+        width: 120,
+        height: 120,
 
         borderRadius: 150,
         overflow: "hidden"
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
 
     ContainerImgTxt:{
         width: "100%",
-        height: 150,
+        height: 130,
 
         flexDirection: "row",
         alignItems: "center",
