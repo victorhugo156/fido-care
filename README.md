@@ -7,17 +7,17 @@ Fido Pet Care is an app designed to assist pet owners in finding passionate and 
 
 ## Install Dependencies
 
-## To get started with the Fido Pet Care app, you need to install the necessary dependencies. Run the following command to install all required dependencies:
+To get started with the Fido Pet Care app, you need to install the necessary dependencies. Run the following command to install all required dependencies:
 
 ```bash
 npm install
 ```
 
-# Apart from the standard dependencies installed with npm install, the following dependencies need to be installed manually:
+Apart from the standard dependencies installed with npm install, the following dependencies need to be installed manually:
 
 ## Additional Dependencies
 
-## Run the following commands to install these specific dependencies:
+Run the following commands to install these specific dependencies:
 
 
 @expo-google-fonts/nunito
