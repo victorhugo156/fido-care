@@ -37,20 +37,19 @@ export default function FilterService() {
     //I am getting the index of pets in the swaper
     const [currentIndex, setCurrentIndex] = useState(0);
 
-
-    const [petData, setPetData] = useState({ service: null, size: null });
-    const [serviceChosen, setServiceChosen] = useState(null);
+    const [serviceChosen, setServiceChosen] = useState();
 
     const { petInfo, setPetInfo } = UseContextService({ service: null, size: null });
     const { service, setService } = UseContextService();
 
     //This function will update the useContext
-    const handlePetData = () => {
-        const petData = { service: serviceChosen };
-        if (["Pet Wash", "Dog Walk"].includes(serviceChosen)) {
-            petData.size = petSizes[currentIndex].size;
-        }
-        setPetInfo(petData);
+    const handlePetData = (service) => {
+        setPetInfo({service});
+        router.push("screens/Filter");
+     };
+
+     const handlePetDataMenuBottom = () => {
+        setPetInfo({ service: serviceChosen, size: petSizes[currentIndex].size });
         router.push("screens/Filter");
      };
 
@@ -84,8 +83,7 @@ export default function FilterService() {
 
                         {/*Card Pet Day Care */}
                         <TouchableOpacity style={styles.ContainerRow} onPress={() => {
-                            setServiceChosen("Pet Day Care");
-                            handlePetData()
+                            handlePetData("Pet Day Care")
                             
                         }} >
                             <Image style={styles.IconDayCare} source={require("../../../assets/icons/sun-horizon.png")} />
@@ -97,8 +95,8 @@ export default function FilterService() {
 
                         {/*Card Pet Boarding */}
                         <TouchableOpacity style={styles.ContainerRow} onPress={() => {
-                            setServiceChosen("Pet Boarding");
-                            handlePetService()
+                            //setServiceChosen("Pet Boarding");
+                            handlePetData("Pet Boarding")
                             
                         }}>
                             <Image style={styles.Icon} source={require("../../../assets/icons/moon.png")} />
@@ -133,7 +131,7 @@ export default function FilterService() {
 
                         {/*Card Service */}
                         <TouchableOpacity style={styles.ContainerRow} onPress={() => {
-                            setServiceChosen("DogWalk");
+                            setServiceChosen("Dog Walking");
                             handleOpenPress()
                         }} >
                             <Image style={styles.Icon} source={require("../../../assets/icons/paw.png")} />
@@ -145,8 +143,7 @@ export default function FilterService() {
 
                         {/*Card Location */}
                         <TouchableOpacity style={styles.ContainerRow} onPress={() => {
-                            setServiceChosen("House Sitting");
-                            handlePetService()
+                            handlePetData("House Sitting")
                            
                         }}>
                             <Image style={styles.Icon} source={require("../../../assets/icons/kitten_face.png")} />
@@ -176,7 +173,7 @@ export default function FilterService() {
                                 <Image style={styles.BtnControlPlus} source={require("../../../assets/icons/btn_plus.png")} />
                             </TouchableOpacity>
                         </View>
-                        <ButtonApply btnTitle={"Save"} bgColor={Colors.CORAL_PINK} onPress={handlePetData} />
+                        <ButtonApply btnTitle={"Save"} bgColor={Colors.CORAL_PINK} onPress={handlePetDataMenuBottom} />
                     </View>
                 </CustomBottomSheet>
             </SafeAreaView>

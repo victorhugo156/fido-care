@@ -5,7 +5,7 @@ import { router, useRouter } from 'expo-router';
 import * as LocationExpo from 'expo-location';
 import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
 
-
+import { Loading } from "../../../components/loading";
 import ButtonApply from '../../../components/ButtonApply/idex';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
@@ -21,77 +21,53 @@ export default function Location() {
     const [currentCords, setCurrentCords] = useState(null);
     const [address, setAddress] = useState(null);
     const [locationServicesEnabled, setLocationServicesEnabled] = useState(false);
+    const[isLoadingLoacation, setIsLoadingLocation]= useState(true);
 
-    // Check if location services are enabled
-    const checkLocationServices = async () => {
-        const servicesEnabled = await LocationExpo.hasServicesEnabledAsync();
-        if (!servicesEnabled) {
-            Alert.alert('Location services are disabled', 'Please enable location services to use this feature.', [
-                { text: 'OK' },
-            ]);
-        }
-        setLocationServicesEnabled(servicesEnabled);
-    };
+    useEffect(()=>{
+        requestPermission()
+    },[]);
 
-
-    // When The screen is rendered the useEfect will be trigged and the expo Location
-    // will strt to watch the device location
-    useEffect(() => {
-
-        const getLocationPermission = async () => {
-
-            await checkLocationServices();
-
-            if (!locationServicesEnabled) {
-                return;
-            }
-
-            // Request app-level location permission
-            const permission = await requestPermission();
-            if (!permission.granted) {
-                Alert.alert('Location permission not granted', 'We need location permissions to show your location on the map.', [
-                    { text: 'OK' },
-                ]);
-                return;
-            }
-
-
-            let subscription = await LocationExpo.watchPositionAsync(
-                {
-                    accuracy: LocationExpo.LocationAccuracy.High,
-                    timeInterval: 1000,  // Update interval of the Watch Position
-                    distanceInterval: 1   // Minimum distance change to trigger an update
-                },
-                (location) => {
-                    setCurrentCords(location.coords)
-                    getAddress(location.coords)
-                        .then((address) => {
-                            setAddress(address)
-                        })
-                }
-            );
-            setLocationSubscription(subscription)
+    useEffect(()=>{
+        if(!status?.granted){
+            return;
         }
 
-        // Start watching the position if permission is granted
-        if (status?.granted) {
-            getLocationPermission();
-        }
-
-        // Cleanup function to unsubscribe from location updates
-        return () => {
-            if (locationSubscription) {
-                locationSubscription.remove();
+        const startLocationTracking = async()=>{
+            const subscription = await LocationExpo.watchPositionAsync({
+                accuracy:LocationExpo.LocationAccuracy.High,
+                timeInterval: 1000
+            },(location)=>{
+                getAddress(location.coords)
+                .then((address)=>{
+                    setAddress(address)
+                    console.log(address);
+                })
+                .finally(()=> setIsLoadingLocation(false))
+                setCurrentCords(location.coords);
             }
+        );
+            setLocationSubscription(subscription);
         };
-    }, [locationServicesEnabled]);
 
+        startLocationTracking();
+
+    return() => {
+        if(locationSubscription){
+            console.log("Cleaning up location subscription");
+            locationSubscription.remove();
+            setLocationSubscription(null);
+        }
+    };
+    },[status]);
 
     async function getAddress({ latitude, longitude }) {
         try {
             const addressRespose = await LocationExpo.reverseGeocodeAsync({ latitude, longitude });
 
-            return addressRespose[0]?.street;
+             // Use the `subregion` or `city` as a fallback if `subregion` is not available
+        const suburbOrCity = addressRespose[0]?.subregion || addressRespose[0]?.city;
+        
+        return suburbOrCity || addressRespose[0]?.street; // Fallback to street if neither are available
 
         } catch (error) {
             console.log(error)
@@ -136,6 +112,18 @@ export default function Location() {
         })
     }
 
+    if(!status?.granted){
+        return(
+           console.log("permission not granted")
+        )
+    }
+
+    if(isLoadingLoacation){
+        return(
+            <Loading/>
+        )
+    }
+
     return (
         <SafeAreaView style={styles.Container}>
 
@@ -155,7 +143,7 @@ export default function Location() {
             {currentCords &&
                 <MapView
                     provider={PROVIDER_GOOGLE}
-                    style={{ width: "100%", height: 300, marginBottom: 50 }}
+                    style={{ width: "100%", height: 500, marginBottom: 50 }}
                     region={{
                         latitude: currentCords.latitude,
                         longitude: currentCords.longitude,
@@ -172,10 +160,12 @@ export default function Location() {
                 <Text style={styles.SubTitle}>{address}</Text>
             </View>
 
-            <ButtonApply btnTitle="Save" bgColor={Colors.CORAL_PINK} onPress={handleLocationValue} />
+            <ButtonApply btnTitle="Save" bgColor={Colors.CORAL_PINK} onPress={handleLocationValue}  />
         </SafeAreaView>
     )
 }
+
+//
 
 const styles = StyleSheet.create({
 

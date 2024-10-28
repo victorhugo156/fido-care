@@ -26,17 +26,17 @@ export default function FilterScreen() {
 
     const { service } = UseContextService();
     const { petInfo } = UseContextService();
+    const { sourceScreen, setSourceScreen } = UseContextService();
     const { filter, setFilter } = UseContextService({servicePicked: null, pricePicked: null, datePicked: null, locationPicked: null});
 
     const [price, setPrice] = useState(0);
     const [dates, setDates] = useState(null);
-    const [days, setDays] = useState([""]);
+    const [days, setDays] = useState([]);
     const [userLocation, setUserLocation] = useState(route.params?.location || null);
 
 
     console.log("hey this is the pet inf: ", petInfo);
-    console.log("Location from params: ", route.params?.location); // For debugging
-    console.log(petInfo.service);
+    console.log(petInfo);
     console.log(service);
 
     const handleOpenPress = () => bottomSheetRef.current?.present();
@@ -44,7 +44,7 @@ export default function FilterScreen() {
 
     const handleDateValue = (dates) => {
         setDates(dates);
-        //console.log(dates)
+        console.log("The dates Selectes are: ", dates)
 
     }
 
@@ -52,9 +52,13 @@ export default function FilterScreen() {
     const handleApply = () => {
         // This is triggered when the user clicks the Apply button
         console.log("Selected Dates:", dates);
-        const d = Object.keys(dates).map(date=> date.split("-")[2]);
-        setDays(d);
-        console.log("Date Single: ", d);
+        const formattedDates = Object.keys(dates).map(date=>{
+            const [year, month, day] = date.split("-");
+            return `${day}-${month}-${year}`;
+            
+        });
+        setDays(formattedDates);
+        console.log("Date formatted: ", formattedDates);
         handleClosePress();  // Close the bottom sheet
     };
 
@@ -66,8 +70,18 @@ export default function FilterScreen() {
         datePicked: days,
         locationPicked: userLocation
     }); 
+    setSourceScreen("Filter"),
     router.push("Home/feed");
   };
+
+  useEffect(()=>{
+    const date = new Date();
+    const day = String(date.getDate()).padStart(2, "0") // Get day and add add zero if needed
+    const month = String(date.getMonth() + 1).padStart(2, "0")
+    const year = date.getFullYear();
+    const formattedDefaultDate = `${day}/${month}/${year}`;
+    setDays([formattedDefaultDate]);
+  },[]);
 
 
     return (
@@ -143,7 +157,7 @@ export default function FilterScreen() {
                         <Image style={styles.Icon} source={require("../../../assets/icons/Calendar.png")} />
                         <View style={styles.ContainerLabels}>
                             <Text style={styles.ServiceLabel}>Dates</Text>
-                            <Text style={styles.ResultLabel}>{`${days[0]} up to ${days[days.length -1]}`}</Text>
+                            <Text style={styles.ResultLabel}>{days.length > 1 ? `${days[0]} up to ${days[days.length - 1]}` : `${days[0]}`}</Text>
                         </View>
                     </TouchableOpacity>
 
