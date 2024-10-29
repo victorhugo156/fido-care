@@ -14,5 +14,7 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
+// Set Firestore log level to debug
+
 const db = getFirestore(app);
 export { db };

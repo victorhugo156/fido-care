@@ -1,4 +1,4 @@
-import React, { useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, TextInput, Dimensions, SafeAreaView } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
@@ -13,7 +13,7 @@ import CardFeed from '../../../components/CardFeed';
 import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
 
 
-export default function FeedScreen(){
+export default function FeedScreen() {
 
     //Use Context variable with data from Filter Service stored
     const { filter } = UseContextService();
@@ -23,89 +23,139 @@ export default function FeedScreen(){
 
     //States of Managing DB
     const [petSitters, setPetSitters] = useState([]);
-    const sitters = [];
+
+
+    const [exceptionMsg, setExceptionMsg] = useState("");
+    const [noResult, setNoResult] = useState(false);
 
 
     //Fetching data from the DB
-    const featchData = async ()=>{
+    const featchData = async () => {
+        const sitters = [];
 
-        try{
+
+        try {
             const querySnapshot = await getDocs(collection(db, "PetSitterProfile"));
 
-            querySnapshot.forEach((doc)=>{
+            querySnapshot.forEach((doc) => {
                 const data = doc.data();
 
-                if(sourceScreen == null){
-                    sitters.push({id: doc.id, ...doc.data()});
+                if (sourceScreen == null) {
+                    sitters.push({ id: doc.id, ...doc.data() });
                 }
-                else if(sourceScreen == "Home"){
+                else if (sourceScreen == "Home") {
 
-                    const matchedServices = data.Services.filter(serviceItem=>
+                    const matchedServices = data.Services.filter(serviceItem =>
                         serviceItem.title === service
                     )
-                    if(matchedServices.length > 0){
-                        sitters.push({id: doc.id, ...doc.data()});
+                    if (matchedServices.length > 0) {
+                        sitters.push({ id: doc.id, ...doc.data() });
                     }
-                
-                }else if( sourceScreen == "Filter"){
 
-                    const matchedServices = data.Services.filter(serviceItem=>
-                        serviceItem.title === filter.servicePicked &&
-                        serviceItem.price <= filter.pricePicked
+                } else if (sourceScreen == "Filter") {
+
+                    const matchedServices = data.Services.filter(serviceItem =>{
+                        console.log("Checking service:", serviceItem);
+
+                        return serviceItem.title === filter.servicePicked &&
+                        parseFloat(serviceItem.price) >= parseFloat(filter.pricePicked)
+                    }
+                        
+
                     );
 
-                    if(matchedServices.length > 0){
-                        sitters.push({id: doc.id, ...doc.data()});
-                    }
-                }  
-            });
-            setPetSitters(sitters)
+                    // Additional checks for location and availability outside of the matchedServices filter
+                    const matchedLocation = data.Location === filter.locationPicked;
+                    console.log("Location Check:", data.Location, filter.locationPicked);
 
-        }catch(error){
-            console.log("This erros is coming from the catch: ", error)
+
+                    console.log("Filter dates picked:", filter.datePicked);
+                    console.log("Database availability:", data.Availability);
+                    const matchedAvailability = filter.datePicked.some(datePicked  => {
+                        
+                        const availabilityMatch = data.Availability.includes(datePicked);
+                        console.log("Checking datePicked:", datePicked, "against Availability:", data.Availability, "Match:", availabilityMatch);
+                        return availabilityMatch;
+                    }
+                        
+                    );
+
+                    if (matchedServices.length > 0 && matchedLocation && matchedAvailability) {
+                        sitters.push({ id: doc.id, ...doc.data() });
+                    } else {
+                        console.log(`No match for doc ID ${doc.id}:`, {
+                            matchedServices,
+                            matchedLocation,
+                            matchedAvailability
+                        });
+                    }
+                }
+            });
+            setPetSitters(sitters);
+
+            if (sitters.length === 0) {
+
+                setNoResult(true);
+                setExceptionMsg("No results found for your filter")
+
+                console.log("No results found for your filter");
+            }
+            else {
+                console.log("results found: ", sitters);
+            }
+
+        } catch (error) {
+            return (
+                <View>
+                    <Text>"This erros is coming from the catch: ", {error}</Text>
+                </View>
+            )
         }
 
     }
 
 
     //AsybcStorage retrieving user authentication status
-    async function getUser(){
-        try{
+    async function getUser() {
+        try {
             const isAuthenticated = await GetUserToken();
 
-            if(isAuthenticated){
-                console.log("User is authenticated");
-                
+            if (isAuthenticated) {
+                //console.log("User is authenticated");
+
             } else {
-                console.log("User is not authenticated");
+                //console.log("User is not authenticated");
                 // Redirect to login or handle unauthenticated state
             }
-            
-        }catch(error){
+
+        } catch (error) {
             console.log(error);
         }
 
     }
 
-    useEffect(()=>{
+    useEffect(() => {
         getUser();
-        console.log("this is the service from Home", service);
-        console.log("The user is comign from", sourceScreen);
-    },[])
+    }, [])
 
-    useEffect(()=>{
-        console.log("Fetching:")
+    useEffect(() => {
+        //console.log("Fetching:")
         featchData();
 
-    },[])
+    }, [])
 
-    useEffect(()=>{
-        console.log("this is the service picke from Home Screen : ", petSitters);
+    useEffect(() => {
+        //console.log("The user is coming from: ", sourceScreen);
+        console.log("This is de data to be fetched: ", filter)
+
     }, [petSitters])
 
-    return(
-        <SafeAreaView style={styles.Container}> 
+    return (
+        <SafeAreaView style={styles.Container}>
             <View style={styles.ContainerFlatList}>
+                {
+                    noResult && <Text>{exceptionMsg}</Text>
+                }
                 <FlatList
                     data={petSitters}
                     KeyExtractor={item => item}
@@ -129,13 +179,13 @@ export default function FeedScreen(){
 
 const styles = StyleSheet.create({
 
-    Container:{
+    Container: {
         flex: 1,
         justifyContent: "center",
         alignItems: "center",
     },
 
-    ContainerFlatList:{
+    ContainerFlatList: {
         paddingTop: 40
 
     },
