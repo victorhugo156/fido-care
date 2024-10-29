@@ -1,195 +1,137 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Image, TextInput } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import { StyleSheet, Text, View, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from './../../../../firebaseConfig';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useRouter } from 'expo-router';
+import UserItem from '../../../components/Inbox/UserItem';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
-import Font_Size from '../../../constants/Font_Size';
 
-import { GetUserToken } from '../../../data/storage/getUserToken';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
-const inboxData = [
-  { id: '1', userName: 'John Doe', 
-    lastMessage: 'Hey! Is Max available for pet sitting next week?', 
-    time: '10:45 AM', 
-    avatar: 'https://i.pravatar.cc/150?img=1' },
-  { id: '2', userName: 'Jane Smith', 
-    lastMessage: 'Can you walk Bella this weekend?', 
-    time: 'Yesterday', 
-    avatar: 'https://media.istockphoto.com/id/1350689855/photo/portrait-of-an-asian-man-holding-a-young-dog.jpg?s=612x612&w=0&k=20&c=Iw0OedGHrDViIM_6MipHmPLlo83O59by-LGcsDPyzwU=' },
-];
-
-const Inbox = () => {
-  const router = useRouter();
-  const [searchText, setSearchText] = useState('');
-  const [filteredData, setFilteredData] = useState(inboxData);
-
-  //State Authentication
-  const [userData, setUserData] = useState({});
-
-    //Verify if user is Authenticated
-    async function getUser() {
-      try {
-        const userToken = await GetUserToken("user_data");
-        const user = userToken ? JSON.parse(userToken) : null;
-  
-        if (user) {
-          console.log("User is authenticated in the Chat Screen", user);
-          setUserData(user);
-          console.log("User name is", userData.name);
-
-        } else {
-          console.log("User is not authenticated");
-          // Redirect to login or handle unauthenticated state
-        }
-  
-      } catch (error) {
-        console.log(error);
-      }
-  
-    }
-
-  const handleSearch = (text) => {
-    setSearchText(text);
-    if (text) {
-      const filtered = inboxData.filter(item => 
-        item.userName.toLowerCase().includes(text.toLowerCase()) || 
-        item.lastMessage.toLowerCase().includes(text.toLowerCase())
-      );
-      setFilteredData(filtered);
-    } else {
-      setFilteredData(inboxData);
-    }
-  };
-
-  const renderItem = ({ item }) => (
-    <TouchableOpacity
-      style={styles.chatItem}
-      onPress={() => router.push(`/screens/Chat?id=${item.id}`)}
-    >
-      <Image source={{ uri: item.avatar }} style={styles.avatar} />
-      <View style={styles.chatContent}>
-        <Text style={styles.userName}>{item.userName}</Text>
-        <Text style={styles.lastMessage}>{item.lastMessage}</Text>
-      </View>
-      <View style={styles.timeContainer}>
-        <Text style={styles.time}>{item.time}</Text>
-        <Icon name="chevron-forward" size={20} color="#C7C7CC" />
-      </View>
-    </TouchableOpacity>
-  );
+export default function Chat() {
+  const [user, setUser] = useState(null);
+  const [userList, setUserList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter(); // Using Expo Router's useRouter hook
 
   useEffect(() => {
-    getUser();
-  }, [])
+    const fetchUser = async () => {
+      const currentUser = await GoogleSignin.getCurrentUser();
+      if (currentUser) {
+        setUser(currentUser.user);
+        await GetUserList(currentUser.user.email);
+      } else {
+        setLoading(false); // Stop loading if user is not logged in
+      }
+    };
+    fetchUser();
+  }, []);
+
+  const GetUserList = async (userEmail) => {
+    setLoading(true);
+    const chatQuery = query(
+      collection(db, 'Chat'),
+      where('userIds', 'array-contains', userEmail)
+    );
+
+    const querySnapshot = await getDocs(chatQuery);
+    const users = querySnapshot.docs.map((doc) => {
+      const data = doc.data();
+      const otherUser = data.users.find((u) => u.email !== userEmail);
+      return {
+        docId: doc.id,
+        ...otherUser,
+      };
+    });
+
+    console.log("Fetched user list with docIds:", users.map(user => user.docId));
+
+    setUserList(users);
+    setLoading(false);
+  };
+
+  if (loading) {
+    return <ActivityIndicator size="large" color={Colors.PRIMARY} />;
+  }
+
+  if (!user) {
+    // User is not logged in
+    return (
+      <View style={styles.notLoggedInContainer}>
+        <Text style={styles.notLoggedInText}>You need to log in to view your conversations.</Text>
+        <TouchableOpacity 
+          style={styles.loginButton} 
+          onPress={() => router.push('/screens/Login')}
+        >
+          <Text style={styles.loginButtonText}>Go to Login</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerText}>Messages</Text>
-      </View>
-      <View style={styles.searchContainer}>
-        <Icon name="search" size={20} color={Colors.BRIGHT_BLUE} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search chats..."
-          value={searchText}
-          onChangeText={handleSearch}
-        />
-      </View>
+      <Text style={styles.title}>Conversations</Text>
       <FlatList
-        data={filteredData}
-        keyExtractor={(item) => item.id}
-        renderItem={renderItem}
-        contentContainerStyle={styles.inboxList}
+        data={userList}
+        keyExtractor={(item) => item.docId || `${item.email}-${item.name}`}
+        renderItem={({ item }) => <UserItem userInfo={item} />}
+        refreshing={loading}
+        onRefresh={() => GetUserList(user.email)}
       />
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.LIGHT_GRAY,
-  },
-  header: {
-    //height: 80,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  headerText: {
-    fontSize: Font_Size.XXL,
-    fontFamily: Font_Family.BLACK,
-    color: Colors.BRIGHT_BLUE,
-    textAlign: 'center',
-    marginTop: 50,
-    marginBottom: 5,
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
-  },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    backgroundColor: '#F1F1F1',
-    borderRadius: 20,
-    marginLeft: 10,
-    paddingHorizontal: 15,
-  },
-  inboxList: {
+    backgroundColor: Colors.SOFT_CREAM,
     padding: 20,
   },
-  chatItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFF',
-    padding: 15,
-    borderRadius: 10,
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: Colors.TURQUOISE_GREEN,    
+    marginTop: 15,
+    textAlign: 'center',
     marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 5,
-    elevation: 3,
   },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 15,
-  },
-  chatContent: {
+  notLoggedInContainer: {
     flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.SOFT_CREAM,
+    padding: 20,
   },
-  userName: {
-    fontSize: 18,
-    fontWeight: '500',
-    marginBottom: 5,
+  notLoggedInText: {
+    fontSize: 24,
+    color: Colors.TURQUOISE_GREEN,
+    textAlign: 'center',
+    fontFamily: Font_Family.BLACK,
+    marginBottom: 20,
   },
-  lastMessage: {
-    fontSize: 14,
-    color: '#777',
-  },
-  timeContainer: {
+  loginButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 25,
+    borderWidth: 2,
+    borderColor: Colors.TURQUOISE_GREEN,
+    backgroundColor: Colors.TURQUOISE_GREEN,
     alignItems: 'center',
   },
-  time: {
-    fontSize: 12,
-    color: '#C7C7CC',
-    marginBottom: 5,
+  loginButtonText: {
+    color: Colors.WHITE,
+    fontSize: 18,
+    fontFamily: Font_Family.BOLD,
   },
 });
 
-export default Inbox;
+
+
+
+
+
 
 

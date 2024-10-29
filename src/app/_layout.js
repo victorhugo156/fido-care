@@ -45,7 +45,7 @@ export default function Rootlayout() {
                     />
 
                     <Stack.Screen
-                        name="screens/Chat/index"
+                        name="screens/Inbox/index"
                         options={{
                             title: "Inbox",  // Title for chat screen
                             headerStyle: {
@@ -147,6 +147,20 @@ export default function Rootlayout() {
                             headerTintColor: '#fff', 
                         }}
                     />
+
+                    <Stack.Screen
+                        name="screens/UserPetsitterprofile/index"
+                        options={{
+                            title: "My Pet Sitter Profile", 
+                            headerStyle: {
+                                backgroundColor: '#3772FF', 
+                            },
+                            headerTitleAlign: 'center', 
+                            headerTintColor: '#fff', 
+                        }}
+                    />
+
+
 
                     <Stack.Screen
                         name="screens/Filter/index"

@@ -69,8 +69,11 @@ const Menu = () => {
     } else if (screenName === 'BecomePetSitter') {
       // Navigate to the BecomePetSitter screen using its exact path
       router.push('/screens/BecomePetSitter'); // Correct path to the screen
+    } else if (screenName === 'HelpCenter') {
+      router.push('/screens/UserPetsitterprofile'); // Correct path to the screen
     } else if (screenName === 'PersonalDetails') {
       router.push('/screens/PersonalDetails'); // Correct path to the screen
+
     } else {
       router.push(`/${screenName}`); // Navigate to the selected screen using router.push
     }

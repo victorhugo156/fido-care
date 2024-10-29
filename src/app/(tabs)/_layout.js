@@ -59,7 +59,13 @@ export default function TabLayout() {
                 options={{
                     path: 'Chat',
                     tabBarLabel: "Chat",
-                    headerShown: false,
+                    title: "Inbox",  // 
+                    //headerShown: false,
+                    headerStyle: {
+                        backgroundColor: '#3772FF', // Set background color here
+                    },
+                    headerTitleAlign: 'center', // Center the title
+                    headerTintColor: '#fff', // Set the title color
                     tabBarIcon: ({ color }) => <Ionicons name="chatbox" size={32} color={color} />
                 }}
             />

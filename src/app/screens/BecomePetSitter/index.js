@@ -6,12 +6,15 @@ import * as Yup from 'yup';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import MapView, { Marker } from 'react-native-maps';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, getDoc } from 'firebase/firestore';
 import * as Location from 'expo-location';
 import { db } from '../../../../firebaseConfig';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 import { Picker } from '@react-native-picker/picker';
+import { GetUserToken } from '../../../data/storage/getUserToken';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+
 
 const BecomePetSitter = () => {
   const router = useRouter();
@@ -27,6 +30,9 @@ const BecomePetSitter = () => {
   const [availability, setAvailability] = useState([]);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [loading, setLoading] = useState(true);
+  const [petSitterData, setPetSitterData] = useState({});
+  const [user, setUser] = useState(null);
 
   // Predefined services options
   const serviceOptions = [
@@ -60,6 +66,7 @@ const BecomePetSitter = () => {
 
       if (status !== 'granted') {
         Alert.alert('Permission Denied', 'Location permission is required to use this feature.');
+        setLoading(false);
         return;
       }
 
@@ -73,6 +80,44 @@ const BecomePetSitter = () => {
         longitudeDelta: 0.01,
       });
     })();
+  }, []);
+
+  // Fetch authenticated user data
+  async function getUserData() {
+    try {
+      const currentUser = await GoogleSignin.getCurrentUser();
+      setUser(currentUser?.user || null);
+
+      if (currentUser) {
+        const userId = currentUser.user.id;
+        const docRef = doc(db, 'PetSitterProfile', userId);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          setPetSitterData({ id: userId, ...docSnap.data() });
+          setLatitude(docSnap.data().Latitude);
+          setLongitude(docSnap.data().Longitude);
+          setAvailability(docSnap.data().Availability || []);
+          setRegion({
+            latitude: docSnap.data().Latitude,
+            longitude: docSnap.data().Longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          });
+        }
+      } else {
+        console.log('User is not authenticated');
+        router.push('/screens/EntryPoint');
+      }
+      setLoading(false);
+    } catch (error) {
+      console.log(error);
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    getUserData();
   }, []);
 
   // Form validation schema
@@ -118,7 +163,13 @@ const BecomePetSitter = () => {
     }
 
     try {
-      await addDoc(collection(db, 'PetSitterProfile'), {
+      if (!user) {
+        Alert.alert('Error', 'User not authenticated.');
+        return;
+      }
+
+      const userId = user.id;
+      await setDoc(doc(db, 'PetSitterProfile', userId), {
         Name: values.name,
         Location: values.location,
         Latitude: latitude,
@@ -127,19 +178,28 @@ const BecomePetSitter = () => {
         Rating: parseFloat(values.rating) || 0,
         Reviews: parseInt(values.reviews) || 0,
         About: values.about,
-        Avatar: values.avatar,
+        Avatar: user.photo || values.avatar, // Use user’s photo URL if available
         Services: values.services,
         Skills: values.skills,
         Availability: availability,
+        email: user.email, // Add user's email to the profile
       });
 
-      Alert.alert('Success', 'You have successfully registered as a pet sitter.');
+      Alert.alert('Success', 'Your pet sitter profile has been updated successfully.');
       router.push('/Home');
     } catch (error) {
-      console.error('Error adding document: ', error);
+      console.error('Error updating document: ', error);
       Alert.alert('Error', 'An error occurred while submitting the form.');
     }
   };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
 
   return (
     <FlatList
@@ -147,15 +207,15 @@ const BecomePetSitter = () => {
       ListHeaderComponent={
         <Formik
           initialValues={{
-            name: '',
-            location: '',
-            experience: '',
-            rating: '',
-            reviews: '',
-            about: '',
-            avatar: '',
-            services: [{ title: '', price: '' }],
-            skills: [''],
+            name: petSitterData.Name || '',
+            location: petSitterData.Location || '',
+            experience: petSitterData.Experience || '',
+            rating: petSitterData.Rating?.toString() || '',
+            reviews: petSitterData.Reviews?.toString() || '',
+            about: petSitterData.About || '',
+            avatar: petSitterData.Avatar || '',
+            services: petSitterData.Services || [{ title: '', price: '' }],
+            skills: petSitterData.Skills || [''],
           }}
           validationSchema={validationSchema}
           onSubmit={handleSubmit}
@@ -382,6 +442,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   contentContainer: {
     padding: 20,
     backgroundColor: '#fff',
@@ -500,6 +565,8 @@ const styles = StyleSheet.create({
 });
 
 export default BecomePetSitter;
+
+
 
 
 
