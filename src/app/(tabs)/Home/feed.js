@@ -55,22 +55,25 @@ export default function FeedScreen() {
                 } else if (sourceScreen == "Filter") {
 
                     const matchedServices = data.Services.filter(serviceItem =>{
-                        console.log("Checking service:", serviceItem);
+                        console.log("Checking service:", serviceItem.title);
+                        console.log("User Choice service:", filter.servicePicked);
 
                         return serviceItem.title === filter.servicePicked &&
-                        parseFloat(serviceItem.price) >= parseFloat(filter.pricePicked)
+                        serviceItem.price >= filter.pricePicked;
                     }
                         
-
                     );
 
                     // Additional checks for location and availability outside of the matchedServices filter
                     const matchedLocation = data.Location === filter.locationPicked;
-                    console.log("Location Check:", data.Location, filter.locationPicked);
+                    console.log("Location Check:", filter.locationPicked);
+                    console.log("Database location:", data.Location);
 
 
-                    console.log("Filter dates picked:", filter.datePicked);
-                    console.log("Database availability:", data.Availability);
+                    // console.log("Filter dates picked:", filter.datePicked);
+                    // console.log("Database availability:", data.Availability);
+                    
+                    
                     const matchedAvailability = filter.datePicked.some(datePicked  => {
                         
                         const availabilityMatch = data.Availability.includes(datePicked);
@@ -80,13 +83,14 @@ export default function FeedScreen() {
                         
                     );
 
-                    if (matchedServices.length > 0 && matchedLocation && matchedAvailability) {
+                    if (matchedServices.length > 0 && matchedLocation && matchedAvailability ) {
                         sitters.push({ id: doc.id, ...doc.data() });
                     } else {
                         console.log(`No match for doc ID ${doc.id}:`, {
                             matchedServices,
                             matchedLocation,
                             matchedAvailability
+                            
                         });
                     }
                 }
