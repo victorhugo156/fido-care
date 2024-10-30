@@ -28,95 +28,84 @@ export default function FeedScreen() {
     const [exceptionMsg, setExceptionMsg] = useState("");
     const [noResult, setNoResult] = useState(false);
 
-
     //Fetching data from the DB
     const featchData = async () => {
+
+        //This array will store the colection to be displayed after the filter criteria
         const sitters = [];
-
-
+        
         try {
             const querySnapshot = await getDocs(collection(db, "PetSitterProfile"));
-
+    
             querySnapshot.forEach((doc) => {
+
+                //This variable receives a Colection of Objects from the DB
                 const data = doc.data();
+                //Array that will store the criteria to Fetch the data
+                let matchedServices = [];
 
+                let matchedLocation = false;
+                let matchedAvailability = false;
+    
                 if (sourceScreen == null) {
-                    sitters.push({ id: doc.id, ...doc.data() });
-                }
-                else if (sourceScreen == "Home") {
-
-                    const matchedServices = data.Services.filter(serviceItem =>
-                        serviceItem.title === service
-                    )
+                    sitters.push({ id: doc.id, ...data });
+                } else if (sourceScreen === "Home") {
+                    for (const serviceItem of data.Services) {
+                        if (serviceItem.title === service) {
+                            matchedServices.push(serviceItem);
+                        }
+                    }
+    
                     if (matchedServices.length > 0) {
-                        sitters.push({ id: doc.id, ...doc.data() });
+                        sitters.push({ id: doc.id, ...data });
                     }
-
-                } else if (sourceScreen == "Filter") {
-
-                    const matchedServices = data.Services.filter(serviceItem =>{
-                        console.log("Checking service:", serviceItem.title);
-                        console.log("User Choice service:", filter.servicePicked);
-
-                        return serviceItem.title === filter.servicePicked &&
-                        serviceItem.price >= filter.pricePicked;
+    
+                } else if (sourceScreen === "Filter") {
+                    // Check service match
+                    for (const serviceItem of data.Services) {
+                        if (serviceItem.title === filter.servicePicked && serviceItem.price >= filter.pricePicked) {
+                            matchedServices.push(serviceItem);
+                        }
                     }
-                        
+    
+                    // Check location match
+                    if (data.Location === filter.locationPicked) {
+                        matchedLocation = true;
+                    }
+    
+                    // Check availability match
+                    matchedAvailability = filter.datePicked.some(datePicked =>
+                        data.Availability.includes(datePicked)
                     );
-
-                    // Additional checks for location and availability outside of the matchedServices filter
-                    const matchedLocation = data.Location === filter.locationPicked;
-                    console.log("Location Check:", filter.locationPicked);
-                    console.log("Database location:", data.Location);
-
-
-                    // console.log("Filter dates picked:", filter.datePicked);
-                    // console.log("Database availability:", data.Availability);
-                    
-                    
-                    const matchedAvailability = filter.datePicked.some(datePicked  => {
-                        
-                        const availabilityMatch = data.Availability.includes(datePicked);
-                        console.log("Checking datePicked:", datePicked, "against Availability:", data.Availability, "Match:", availabilityMatch);
-                        return availabilityMatch;
-                    }
-                        
-                    );
-
-                    if (matchedServices.length > 0 && matchedLocation && matchedAvailability ) {
-                        sitters.push({ id: doc.id, ...doc.data() });
+    
+                    // Add sitter if all conditions are met
+                    if (matchedServices.length > 0 && matchedLocation && matchedAvailability) {
+                        sitters.push({ id: doc.id, ...data });
                     } else {
                         console.log(`No match for doc ID ${doc.id}:`, {
                             matchedServices,
                             matchedLocation,
                             matchedAvailability
-                            
                         });
                     }
                 }
             });
+    
             setPetSitters(sitters);
-
+    
             if (sitters.length === 0) {
-
                 setNoResult(true);
-                setExceptionMsg("No results found for your filter")
-
+                setExceptionMsg("No results found for your filter");
                 console.log("No results found for your filter");
-            }
-            else {
+            } else {
                 console.log("results found: ", sitters);
             }
-
+    
         } catch (error) {
-            return (
-                <View>
-                    <Text>"This erros is coming from the catch: ", {error}</Text>
-                </View>
-            )
+            console.error("Error fetching data:", error);
         }
-
-    }
+    };
+    
 
 
     //AsybcStorage retrieving user authentication status

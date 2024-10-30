@@ -62,17 +62,23 @@ export default function Location() {
 
     async function getAddress({ latitude, longitude }) {
         try {
-            const addressRespose = await LocationExpo.reverseGeocodeAsync({ latitude, longitude });
-
-             // Use the `subregion` or `city` as a fallback if `subregion` is not available
-        const suburbOrCity = addressRespose[0]?.subregion || addressRespose[0]?.city;
-        
-        return suburbOrCity || addressRespose[0]?.street; // Fallback to street if neither are available
-
+            const addressResponse = await LocationExpo.reverseGeocodeAsync({ latitude, longitude });
+    
+            // Try fetching suburb, district, or neighborhood fields first
+            let locationName = addressResponse[0]?.subregion || 
+                               addressResponse[0]?.district || 
+                               addressResponse[0]?.neighborhood || 
+                               addressResponse[0]?.city;
+    
+            // Remove terms like 'Council' if they appear
+            if (locationName) {
+                locationName = locationName.replace(/ Council$/i, "").trim(); // Remove 'Council' if it appears
+            }
+    
+            return locationName || addressResponse[0]?.street; // Fallback to street if all else fails
         } catch (error) {
-            console.log(error)
+            console.log("Error fetching address:", error);
         }
-
     }
 
     const geocode = async () => {
@@ -196,7 +202,9 @@ const styles = StyleSheet.create({
     },
     ContainerAddress: {
         justifyContent: "center",
-        alignItems: "center"
+        alignItems: "center",
+
+        marginBottom: 20
     },
     Title: {
         fontFamily: Font_Family.BOLD,
