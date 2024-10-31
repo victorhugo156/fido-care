@@ -129,7 +129,9 @@ export default function Chat() {
         <Image source={{ uri: item.avatar }} style={styles.avatar} />
         <View style={styles.chatContent}>
           <Text style={styles.userName}>{item.name}</Text>
-          <Text style={styles.lastMessage}>{item.lastMessage}</Text>
+          <Text style={styles.lastMessage} numberOfLines={1} ellipsizeMode="tail">
+            {item.lastMessage}
+          </Text>
         </View>
         <View style={styles.timeContainer}>
           <Text style={styles.time}>{item.time}</Text>
@@ -138,6 +140,7 @@ export default function Chat() {
       </TouchableOpacity>
     </Swipeable>
   );
+  
 
   if (loading) {
     return <ActivityIndicator size="large" color={Colors.PRIMARY} />;
