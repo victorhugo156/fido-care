@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: 80,
-    height: '100%',
+    height: '85%',
     borderRadius: 8,
   },
   deleteButtonText: {
