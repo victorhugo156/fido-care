@@ -1,5 +1,6 @@
-import React, { useState, useCallback, useEffect } from 'react'; 
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, FlatList, Image, StyleSheet, Pressable, ActivityIndicator } from 'react-native';
+import Icon from 'react-native-vector-icons/FontAwesome';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import Shared from '../../../components/Shared/index';
 import { doc, getDoc } from 'firebase/firestore';
@@ -10,8 +11,8 @@ import MarkFavSitter from '../../../components/MarkFavSitter/index';
 import { useRouter } from 'expo-router';
 
 export default function Favorites() {
-  const [favList, setFavList] = useState([]); // List of favorite sitter IDs
-  const [favPetSitters, setFavPetSitters] = useState([]); // Pet sitters' details
+  const [favList, setFavList] = useState([]);
+  const [favPetSitters, setFavPetSitters] = useState([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
@@ -20,7 +21,7 @@ export default function Favorites() {
   }, []);
 
   const fetchFavorites = async () => {
-    setLoading(true); // Start loading before fetching favorites
+    setLoading(true);
     const currentUser = await GoogleSignin.getCurrentUser();
     if (currentUser) {
       const favData = await Shared.GetFavList(currentUser.user);
@@ -28,7 +29,7 @@ export default function Favorites() {
       setFavList(favorites);
       await fetchFavoritePetSitters(favorites);
     }
-    setLoading(false); // Stop loading after fetching favorites
+    setLoading(false);
   };
 
   const fetchFavoritePetSitters = async (favoriteIds) => {
@@ -87,7 +88,10 @@ export default function Favorites() {
       <Image source={{ uri: item.Avatar }} style={styles.petSitterImage} />
       <View style={styles.petSitterDetails}>
         <Text style={styles.petSitterName}>{item.Name}</Text>
-        <Text style={styles.petSitterLocation}>{item.Location}</Text>
+        <View style={styles.locationContainer}>
+          <Icon name="map-marker" size={16} color={Colors.GRAY_600} style={styles.locationIcon} />
+          <Text style={styles.petSitterLocation}>{item.Location}</Text>
+        </View>
       </View>
       <MarkFavSitter
         petSitterId={item.id}
@@ -126,7 +130,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontFamily: Font_Family.BLACK,
-    color: Colors.TURQUOISE_GREEN,
+    color: Colors.BRIGHT_BLUE,
     textAlign: 'center',
     marginVertical: 20,
   },
@@ -149,26 +153,35 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   petSitterImage: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    marginRight: 15,
-    borderColor: Colors.GRAY_100,
-    borderWidth: 1,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    marginBottom: 5,
+    borderWidth: 2,
+    borderColor: Colors.PRIMARY,
   },
   petSitterDetails: {
     flex: 1,
   },
   petSitterName: {
-    fontSize: 18,
-    fontFamily: Font_Family.BLACK,
-    color: Colors.GRAY_800,
-    marginBottom: 2,
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: Colors.TURQUOISE_GREEN,
+    fontFamily: Font_Family.REGULAR,
+    marginLeft: 15,
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 15,
+  },
+  locationIcon: {
+    marginRight: 5,
   },
   petSitterLocation: {
     fontSize: 14,
     fontFamily: Font_Family.REGULAR,
-    color: Colors.GREY1,
+    color: "gray",
   },
   noFavoritesText: {
     fontSize: 18,

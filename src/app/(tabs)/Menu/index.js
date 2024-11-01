@@ -137,7 +137,7 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     marginTop: 50,
-    marginBottom: 40,
+    marginBottom: 20,
   },
   UserIcon: {
     width: 70,
