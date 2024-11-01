@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { doc, getDoc, setDoc, collection, addDoc, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, addDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../../../firebaseConfig';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
+import MarkFavSitter from '../../../components/MarkFavSitter/index';
 
 const PetSitterProfile = () => {
   const { id } = useLocalSearchParams(); // Pet Sitter profile ID
@@ -16,17 +17,11 @@ const PetSitterProfile = () => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchUserAndPetSitter = async () => {
       try {
         const currentUser = await GoogleSignin.getCurrentUser();
-        setUser(currentUser?.user || null);
-      } catch (error) {
-        console.error("Error fetching user:", error);
-      }
-    };
+        if (currentUser) setUser(currentUser.user);
 
-    const fetchPetSitter = async () => {
-      try {
         const docRef = doc(db, 'PetSitterProfile', id);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
@@ -35,15 +30,54 @@ const PetSitterProfile = () => {
           console.error('No such document found in the database!');
         }
       } catch (error) {
-        console.error('Error fetching pet sitter data:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUser();
-    fetchPetSitter();
+    fetchUserAndPetSitter();
   }, [id]);
+
+  const handleChatNavigation = async () => {
+    if (!user) {
+      Alert.alert("Error", "You need to be logged in to start a chat");
+      return;
+    }
+
+    try {
+      const chatQuery = query(
+        collection(db, 'Chat'),
+        where('userIds', 'array-contains', user.email)
+      );
+      const querySnapshot = await getDocs(chatQuery);
+      let chatDocId = null;
+
+      querySnapshot.forEach((doc) => {
+        const chatData = doc.data();
+        if (chatData.userIds.includes(petSitter.email)) {
+          chatDocId = doc.id;
+        }
+      });
+
+      if (!chatDocId) {
+        const chatRef = await addDoc(collection(db, 'Chat'), {
+          userIds: [user.email, petSitter.email],
+          users: [
+            { email: user.email, name: user.name, avatar: user.photo },
+            { email: petSitter.email, name: petSitter.Name, avatar: petSitter.Avatar },
+          ],
+          createdAt: new Date(),
+        });
+        chatDocId = chatRef.id;
+      }
+
+      router.push(`/Chat?id=${chatDocId}`);
+    } catch (error) {
+      console.error("Error initiating chat:", error);
+      Alert.alert("Error", "Failed to initiate chat. Please try again.");
+    }
+  };
 
   if (loading) {
     return <ActivityIndicator size="large" color={Colors.PRIMARY} />;
@@ -53,91 +87,18 @@ const PetSitterProfile = () => {
     return <Text>No pet sitter profile found</Text>;
   }
 
-  // Function to initiate or navigate to chat
-  const handleChatNavigation = async () => {
-    if (!user) {
-      Alert.alert("Error", "You need to be logged in to start a chat");
-      return;
-    }
-  
-    try {
-      // Check if a chat already exists between the current user and pet sitter
-      const chatQuery = query(
-        collection(db, 'Chat'),
-        where('userIds', 'array-contains', user.email)
-      );
-  
-      const querySnapshot = await getDocs(chatQuery);
-      let chatDocId = null;
-  
-      querySnapshot.forEach((doc) => {
-        const chatData = doc.data();
-        if (chatData.userIds.includes(petSitter.email)) {
-          chatDocId = doc.id; // Get the chat document ID if it exists
-        }
-      });
-  
-      // Log user and pet sitter values to debug
-      console.log("User Data:", {
-        email: user.email || 'unknown-email',
-        name: user.name || 'Unknown User',
-        avatar: user.photo || 'default-avatar-url',
-      });
-      console.log("Pet Sitter Data:", {
-        email: petSitter.email || 'unknown-email',
-        name: petSitter.Name || 'Unknown Pet Sitter',
-        avatar: petSitter.Avatar || 'default-avatar-url',
-      });
-  
-      // If no chat exists, create a new one
-      if (!chatDocId) {
-        const chatRef = await addDoc(collection(db, 'Chat'), {
-          userIds: [
-            user.email || 'unknown-email',
-            petSitter.email || 'unknown-email'
-          ],
-          users: [
-            {
-              email: user.email || 'unknown-email',
-              name: user.name || 'Unknown User',
-              avatar: user.photo || 'default-avatar-url',
-            },
-            {
-              email: petSitter.email || 'unknown-email',
-              name: petSitter.Name || 'Unknown Pet Sitter',
-              avatar: petSitter.Avatar || 'default-avatar-url',
-            },
-          ],
-          createdAt: new Date(),
-        });
-        chatDocId = chatRef.id;
-      }
-  
-      // Navigate to the chat screen with the chat document ID
-      router.push(`/Chat?id=${chatDocId}`);
-    } catch (error) {
-      console.error("Error initiating chat:", error);
-      Alert.alert("Error", "Failed to initiate chat. Please try again.");
-    }
-  };
-  
-
   return (
     <ScrollView style={styles.container}>
-      {/* Header Image */}
       <View style={styles.headerImageContainer}>
         <Image source={{ uri: petSitter.Avatar }} style={styles.headerImage} />
         <View style={styles.imageOverlay}>
-          <TouchableOpacity style={styles.imageButton}>
-            <Ionicons name="heart-outline" size={20} color={Colors.CORAL_PINK} />
-          </TouchableOpacity>
+          <MarkFavSitter petSitterId={id} color={Colors.CORAL_PINK} />
           <TouchableOpacity style={styles.imageButton}>
             <Ionicons name="share-outline" size={20} color={Colors.CORAL_PINK} />
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Profile Information */}
       <View style={styles.profileInfoContainer}>
         <Text style={styles.sitterName}>{petSitter.Name}</Text>
         <Text style={styles.location}>{petSitter.Location}</Text>
@@ -148,7 +109,6 @@ const PetSitterProfile = () => {
         </View>
       </View>
 
-      {/* Action Buttons */}
       <View style={styles.actionButtonsContainer}>
         <TouchableOpacity style={[styles.button, styles.meetButton]} onPress={handleChatNavigation}>
           <Text style={styles.buttonText}>MEETING PET SITTER</Text>
@@ -158,13 +118,11 @@ const PetSitterProfile = () => {
         </TouchableOpacity>
       </View>
 
-      {/* About Me Section */}
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>ABOUT ME</Text>
         <Text style={styles.aboutText}>{petSitter.About}</Text>
       </View>
 
-      {/* Services Section */}
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>SERVICES</Text>
         {petSitter.Services && petSitter.Services.map((service, index) => (
@@ -175,7 +133,6 @@ const PetSitterProfile = () => {
         ))}
       </View>
 
-      {/* Availability Section */}
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>AVAILABILITY</Text>
         <View style={styles.availabilityCalendar}>
@@ -185,7 +142,6 @@ const PetSitterProfile = () => {
         </View>
       </View>
 
-      {/* Skills Section */}
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>SKILLS</Text>
         {petSitter.Skills && petSitter.Skills.map((skill, index) => (
@@ -195,7 +151,6 @@ const PetSitterProfile = () => {
     </ScrollView>
   );
 };
-
 
 const styles = StyleSheet.create({
   container: {
@@ -222,7 +177,6 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     padding: 10,
     marginLeft: 10,
-    
   },
   profileInfoContainer: {
     padding: 20,
@@ -270,11 +224,9 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     alignItems: 'center',
     margin: 5,
-    
   },
   meetButton: {
     backgroundColor: Colors.TURQUOISE_GREEN,
-    
   },
   messageButton: {
     backgroundColor: Colors.BRIGHT_BLUE,
@@ -316,11 +268,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  enquiryText: {
-    color: Colors.TURQUOISE_GREEN,
-    fontFamily: Font_Family.BOLD,
-    marginVertical: 5,
-  },
   availabilityCalendar: {
     height: 200,
     backgroundColor: '#F0F0F0',
@@ -340,6 +287,7 @@ const styles = StyleSheet.create({
 });
 
 export default PetSitterProfile;
+
 
 
 

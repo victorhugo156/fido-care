@@ -160,6 +160,18 @@ export default function Rootlayout() {
                         }}
                     />
 
+                    <Stack.Screen
+                        name="screens/Favourites/index"
+                        options={{
+                            title: "My Favourites", 
+                            headerStyle: {
+                                backgroundColor: '#3772FF', 
+                            },
+                            headerTitleAlign: 'center', 
+                            headerTintColor: '#fff', 
+                        }}
+                    />
+
 
 
                     <Stack.Screen
