@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react'; 
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, where, addDoc } from 'firebase/firestore';
 import { db } from '../../../../firebaseConfig';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -10,14 +10,15 @@ import Font_Family from '../../../constants/Font_Family';
 import MarkFavSitter from '../../../components/MarkFavSitter/index';
 
 const PetSitterProfile = () => {
-  const { id } = useLocalSearchParams(); // Retrieve pet sitter ID from parameters
-  const petSitterId = id; // Alias for clarity
+  const { id } = useLocalSearchParams();
+  const petSitterId = id;
   const router = useRouter();
   const [petSitter, setPetSitter] = useState(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
-  const [averageRating, setAverageRating] = useState(null); // State for average rating
-  const [reviewCount, setReviewCount] = useState(0); // State for review count
+  const [averageRating, setAverageRating] = useState(null);
+  const [reviewCount, setReviewCount] = useState(0);
+  const [showFullText, setShowFullText] = useState(false);
 
   useEffect(() => {
     const fetchUserAndPetSitter = async () => {
@@ -26,12 +27,11 @@ const PetSitterProfile = () => {
         if (currentUser) setUser(currentUser.user);
 
         if (petSitterId) {
-          console.log("Fetching pet sitter data with ID:", petSitterId);
           const docRef = doc(db, 'PetSitterProfile', petSitterId);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
             setPetSitter(docSnap.data());
-            fetchAverageRating(); // Fetch the average rating and review count after setting the pet sitter data
+            fetchAverageRating();
           } else {
             console.error('No such document found in the database!');
           }
@@ -68,7 +68,7 @@ const PetSitterProfile = () => {
       } else {
         setAverageRating(null);
       }
-      setReviewCount(count); // Set the number of reviews
+      setReviewCount(count);
     } catch (error) {
       console.error("Error fetching average rating:", error);
     }
@@ -81,11 +81,11 @@ const PetSitterProfile = () => {
     }
 
     try {
+      // Check if an existing chat with the pet sitter exists
       const chatsQuery = query(
         collection(db, 'Chat'),
         where('userIds', 'array-contains', user.email)
       );
-
       const chatsSnapshot = await getDocs(chatsQuery);
       let existingChat = null;
 
@@ -97,8 +97,10 @@ const PetSitterProfile = () => {
       });
 
       if (existingChat) {
+        // Navigate to existing chat
         router.push(`/Chat?id=${existingChat.id}`);
       } else {
+        // Create a new chat if no existing chat is found
         const chatRef = await addDoc(collection(db, 'Chat'), {
           userIds: [user.email, petSitter.email],
           users: [
@@ -118,8 +120,6 @@ const PetSitterProfile = () => {
   const handleNavigateToReviews = () => {
     if (petSitterId) {
       router.push(`/screens/Reviews?id=${petSitterId}`);
-    } else {
-      console.error("Error: petSitterId is undefined when attempting to navigate to reviews.");
     }
   };
 
@@ -168,7 +168,12 @@ const PetSitterProfile = () => {
 
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>ABOUT ME</Text>
-        <Text style={styles.aboutText}>{petSitter.About}</Text>
+        <Text style={styles.aboutText} numberOfLines={showFullText ? undefined : 3}>
+          {petSitter.About}
+        </Text>
+        <TouchableOpacity onPress={() => setShowFullText(!showFullText)}>
+          <Text style={styles.readMoreText}>{showFullText ? 'Read Less' : 'Read More'}</Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.sectionContainer}>
@@ -296,9 +301,16 @@ const styles = StyleSheet.create({
   },
   aboutText: {
     fontSize: 16,
-    color: '#333',
+    color: Colors.GRAY_700,
     lineHeight: 24,
+    textAlign: 'justify',
     fontFamily: Font_Family.REGULAR,
+  },
+  readMoreText: {
+    fontSize: 16,
+    color: Colors.GRAY_700,
+    fontFamily: Font_Family.BOLD,
+    marginTop: 5,
   },
   serviceItem: {
     flexDirection: 'row',
@@ -309,6 +321,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: Font_Family.REGULAR,
     color: Colors.BOLD,
+    
   },
   servicePrice: {
     fontSize: 16,
@@ -333,6 +346,7 @@ const styles = StyleSheet.create({
 });
 
 export default PetSitterProfile;
+
 
 
 

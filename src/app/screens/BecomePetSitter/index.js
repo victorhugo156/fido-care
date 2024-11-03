@@ -12,9 +12,7 @@ import { db } from '../../../../firebaseConfig';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 import { Picker } from '@react-native-picker/picker';
-import { GetUserToken } from '../../../data/storage/getUserToken';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-
 
 const BecomePetSitter = () => {
   const router = useRouter();
@@ -36,11 +34,10 @@ const BecomePetSitter = () => {
 
   // Predefined services options
   const serviceOptions = [
-    'Dog boarding',
-    'Doggy day care',
-    'Dog walking',
-    '1x Home visit',
-    '2x Home visits',
+    'Pet Day Care',
+    'Pet Boarding',
+    'Pet Wash',
+    'Dog Walking',
     'House sitting',
   ];
 
@@ -58,7 +55,6 @@ const BecomePetSitter = () => {
     'Grooming',
   ];
 
-  // Request permission for location access and set initial location
   useEffect(() => {
     (async () => {
       let { status } = await Location.requestForegroundPermissionsAsync();
@@ -82,7 +78,6 @@ const BecomePetSitter = () => {
     })();
   }, []);
 
-  // Fetch authenticated user data
   async function getUserData() {
     try {
       const currentUser = await GoogleSignin.getCurrentUser();
@@ -125,8 +120,6 @@ const BecomePetSitter = () => {
     name: Yup.string().required('Name is required'),
     location: Yup.string().required('Location is required'),
     experience: Yup.string().required('Experience is required'),
-    rating: Yup.number().min(0).max(5, 'Rating must be between 0 and 5').required('Rating is required'),
-    reviews: Yup.number().min(0).required('Number of reviews is required'),
     about: Yup.string().required('About is required'),
     avatar: Yup.string().url('Must be a valid URL').required('Avatar URL is required'),
     services: Yup.array().of(
@@ -150,12 +143,10 @@ const BecomePetSitter = () => {
     }
   };
 
-  // Remove date from availability array
   const handleRemoveDate = (dateToRemove) => {
     setAvailability(availability.filter((date) => date !== dateToRemove));
   };
 
-  // Handle form submission
   const handleSubmit = async (values) => {
     if (!latitude || !longitude) {
       Alert.alert('Error', 'Please select a valid location.');
@@ -175,8 +166,6 @@ const BecomePetSitter = () => {
         Latitude: latitude,
         Longitude: longitude,
         Experience: values.experience,
-        Rating: parseFloat(values.rating) || 0,
-        Reviews: parseInt(values.reviews) || 0,
         About: values.about,
         Avatar: user.photo || values.avatar, // Use user’s photo URL if available
         Services: values.services,
@@ -210,8 +199,6 @@ const BecomePetSitter = () => {
             name: petSitterData.Name || '',
             location: petSitterData.Location || '',
             experience: petSitterData.Experience || '',
-            rating: petSitterData.Rating?.toString() || '',
-            reviews: petSitterData.Reviews?.toString() || '',
             about: petSitterData.About || '',
             avatar: petSitterData.Avatar || '',
             services: petSitterData.Services || [{ title: '', price: '' }],
@@ -252,7 +239,7 @@ const BecomePetSitter = () => {
                     setFieldValue('location', data.description);
                   }
                 }}
-                query={{ key: 'AIzaSyBQJUBHGQfNam1-_zUiAFVMYIg8jQ5Vvdo', language: 'en' }}
+                query={{ key: 'YOUR_GOOGLE_API_KEY', language: 'en' }}
                 fetchDetails={true}
                 enablePoweredByContainer={false}
                 minLength={3}
@@ -279,28 +266,6 @@ const BecomePetSitter = () => {
                 value={values.experience}
               />
               {touched.experience && errors.experience && <Text style={styles.errorText}>{errors.experience}</Text>}
-
-              {/* Rating Input */}
-              <TextInput
-                style={styles.input}
-                placeholder="Rating (0-5)"
-                keyboardType="numeric"
-                onChangeText={handleChange('rating')}
-                onBlur={handleBlur('rating')}
-                value={values.rating}
-              />
-              {touched.rating && errors.rating && <Text style={styles.errorText}>{errors.rating}</Text>}
-
-              {/* Reviews Input */}
-              <TextInput
-                style={styles.input}
-                placeholder="Number of Reviews"
-                keyboardType="numeric"
-                onChangeText={handleChange('reviews')}
-                onBlur={handleBlur('reviews')}
-                value={values.reviews}
-              />
-              {touched.reviews && errors.reviews && <Text style={styles.errorText}>{errors.reviews}</Text>}
 
               {/* About Input */}
               <TextInput
