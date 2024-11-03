@@ -115,7 +115,7 @@ export default function Favorites() {
           contentContainerStyle={styles.listContainer}
         />
       ) : (
-        <Text style={styles.noFavoritesText}>You don't have any favorite pet sitters yet.</Text>
+        <Text style={styles.noFavoritesText}>You don't have any favourite pet sitters yet.</Text>
       )}
     </View>
   );

@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react'; 
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { doc, getDoc, addDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../../../firebaseConfig';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -10,11 +10,14 @@ import Font_Family from '../../../constants/Font_Family';
 import MarkFavSitter from '../../../components/MarkFavSitter/index';
 
 const PetSitterProfile = () => {
-  const { id } = useLocalSearchParams(); // Pet Sitter profile ID
+  const { id } = useLocalSearchParams(); // Retrieve pet sitter ID from parameters
+  const petSitterId = id; // Alias for clarity
   const router = useRouter();
   const [petSitter, setPetSitter] = useState(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const [averageRating, setAverageRating] = useState(null); // State for average rating
+  const [reviewCount, setReviewCount] = useState(0); // State for review count
 
   useEffect(() => {
     const fetchUserAndPetSitter = async () => {
@@ -22,12 +25,18 @@ const PetSitterProfile = () => {
         const currentUser = await GoogleSignin.getCurrentUser();
         if (currentUser) setUser(currentUser.user);
 
-        const docRef = doc(db, 'PetSitterProfile', id);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setPetSitter(docSnap.data());
+        if (petSitterId) {
+          console.log("Fetching pet sitter data with ID:", petSitterId);
+          const docRef = doc(db, 'PetSitterProfile', petSitterId);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            setPetSitter(docSnap.data());
+            fetchAverageRating(); // Fetch the average rating and review count after setting the pet sitter data
+          } else {
+            console.error('No such document found in the database!');
+          }
         } else {
-          console.error('No such document found in the database!');
+          console.error('Pet Sitter ID is undefined');
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -37,7 +46,33 @@ const PetSitterProfile = () => {
     };
 
     fetchUserAndPetSitter();
-  }, [id]);
+  }, [petSitterId]);
+
+  const fetchAverageRating = async () => {
+    try {
+      const reviewsRef = collection(db, 'Feedback');
+      const q = query(reviewsRef, where('petSitterId', '==', petSitterId));
+      const querySnapshot = await getDocs(q);
+
+      let totalRating = 0;
+      let count = 0;
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        totalRating += data.rating;
+        count += 1;
+      });
+
+      if (count > 0) {
+        setAverageRating((totalRating / count).toFixed(1));
+      } else {
+        setAverageRating(null);
+      }
+      setReviewCount(count); // Set the number of reviews
+    } catch (error) {
+      console.error("Error fetching average rating:", error);
+    }
+  };
 
   const handleChatNavigation = async () => {
     if (!user) {
@@ -46,21 +81,24 @@ const PetSitterProfile = () => {
     }
 
     try {
-      const chatQuery = query(
+      const chatsQuery = query(
         collection(db, 'Chat'),
         where('userIds', 'array-contains', user.email)
       );
-      const querySnapshot = await getDocs(chatQuery);
-      let chatDocId = null;
 
-      querySnapshot.forEach((doc) => {
-        const chatData = doc.data();
+      const chatsSnapshot = await getDocs(chatsQuery);
+      let existingChat = null;
+
+      chatsSnapshot.forEach((chatDoc) => {
+        const chatData = chatDoc.data();
         if (chatData.userIds.includes(petSitter.email)) {
-          chatDocId = doc.id;
+          existingChat = { id: chatDoc.id, ...chatData };
         }
       });
 
-      if (!chatDocId) {
+      if (existingChat) {
+        router.push(`/Chat?id=${existingChat.id}`);
+      } else {
         const chatRef = await addDoc(collection(db, 'Chat'), {
           userIds: [user.email, petSitter.email],
           users: [
@@ -69,13 +107,19 @@ const PetSitterProfile = () => {
           ],
           createdAt: new Date(),
         });
-        chatDocId = chatRef.id;
+        router.push(`/Chat?id=${chatRef.id}`);
       }
-
-      router.push(`/Chat?id=${chatDocId}`);
     } catch (error) {
       console.error("Error initiating chat:", error);
       Alert.alert("Error", "Failed to initiate chat. Please try again.");
+    }
+  };
+
+  const handleNavigateToReviews = () => {
+    if (petSitterId) {
+      router.push(`/screens/Reviews?id=${petSitterId}`);
+    } else {
+      console.error("Error: petSitterId is undefined when attempting to navigate to reviews.");
     }
   };
 
@@ -92,7 +136,7 @@ const PetSitterProfile = () => {
       <View style={styles.headerImageContainer}>
         <Image source={{ uri: petSitter.Avatar }} style={styles.headerImage} />
         <View style={styles.imageOverlay}>
-          <MarkFavSitter petSitterId={id} color={Colors.CORAL_PINK} />
+          <MarkFavSitter petSitterId={petSitterId} color={Colors.CORAL_PINK} />
           <TouchableOpacity style={styles.imageButton}>
             <Ionicons name="share-outline" size={20} color={Colors.CORAL_PINK} />
           </TouchableOpacity>
@@ -102,11 +146,15 @@ const PetSitterProfile = () => {
       <View style={styles.profileInfoContainer}>
         <Text style={styles.sitterName}>{petSitter.Name}</Text>
         <Text style={styles.location}>{petSitter.Location}</Text>
-        <View style={styles.ratingContainer}>
+        <TouchableOpacity style={styles.ratingContainer} onPress={handleNavigateToReviews}>
           <Ionicons name="star" size={16} color={Colors.CORAL_PINK} />
-          <Text style={styles.ratingText}>{petSitter.Rating ? petSitter.Rating.toFixed(1) : 'N/A'}</Text>
-          <Text style={styles.reviewCount}>({petSitter.Reviews} Reviews)</Text>
-        </View>
+          <Text style={styles.ratingText}>
+            {averageRating ? `${averageRating} / 5` : 'N/A'}
+          </Text>
+          <Text style={styles.reviewCount}>
+            ({reviewCount} {reviewCount === 1 ? 'Review' : 'Reviews'})
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.actionButtonsContainer}>
@@ -209,7 +257,6 @@ const styles = StyleSheet.create({
   reviewCount: {
     fontSize: 14,
     marginLeft: 5,
-    color: Colors.GRAY,
     fontFamily: Font_Family.BOLD,
     color: Colors.CORAL_PINK,    
   },
@@ -257,7 +304,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginVertical: 10,
-    fontFamily: Font_Family.REGULAR,
   },
   serviceTitle: {
     fontSize: 16,
@@ -287,6 +333,8 @@ const styles = StyleSheet.create({
 });
 
 export default PetSitterProfile;
+
+
 
 
 

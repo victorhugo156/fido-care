@@ -1,85 +1,134 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, FlatList } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons'; // Import Ionicons for star icons
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../../../../firebaseConfig';
 import Colors from '../../../constants/Colors';
+import ReviewItem from '../../../components/Reviews/ReviewItem';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 import Font_Family from '../../../constants/Font_Family';
-import Font_Size from '../../../constants/Font_Size';
 
-// Example review data for the pet sitter
-const reviewsData = [
-  {
-    id: '1',
-    reviewerName: 'John Doe',
-    rating: 5,
-    comment: 'Stephen was fantastic! My dog Max enjoyed his walks, and Stephen was very professional.',
-    date: '07-09-2024',
-    avatar: 'https://online.wharton.upenn.edu/wp-content/uploads/professional-man-with-glasses-smiling-in-his-office-1.webp',
-  },
-  {
-    id: '2',
-    reviewerName: 'Jane Smith',
-    rating: 4,
-    comment: 'Great service. Stephen was punctual and very caring towards Bella. Will book again!',
-    date: '22-09-2024',
-    avatar: 'https://orlandosydney.com/wp-content/uploads/2023/04/Gradient-Background-Female-Headshots-Sydney.-Corporate-Photos-By-Orlandosydney.com-202300229.jpg',
-  },
-  {
-    id: '3',
-    reviewerName: 'Sam Wilson',
-    rating: 4,
-    comment: 'Stephen is amazing with pets! Rocky was comfortable with him, and I couldn’t ask for more!',
-    date: '05-10-2024',
-    avatar: 'https://images.squarespace-cdn.com/content/v1/5fa2f067e96c08501a0871b9/0f9b73c5-1ee0-453d-9d66-a798cc7fec4f/Neal-Richardson-Headshot-1.jpg',
-  },
-];
+const ReviewPage = () => {
+  const router = useRouter();
+  const { id: petSitterId } = useLocalSearchParams();
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [userReview, setUserReview] = useState(null);
+  const [averageRating, setAverageRating] = useState(null);
+  const [user, setUser] = useState(null);
 
-// Calculate the average rating
-const averageRating =
-  reviewsData.reduce((sum, review) => sum + review.rating, 0) / reviewsData.length;
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const currentUser = await GoogleSignin.getCurrentUser();
+        if (currentUser) {
+          setUser(currentUser.user);
+        }
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
 
-const Reviews = () => {
-  // Function to render each review item
-  const renderReviewItem = ({ item }) => (
-    <View style={styles.reviewItemContainer}>
-      <Image source={{ uri: item.avatar }} style={styles.avatar} />
-      <View style={styles.reviewContent}>
-        <Text style={styles.reviewerName}>{item.reviewerName}</Text>
-        <Text style={styles.reviewDate}>{item.date}</Text>
-        <View style={styles.ratingContainer}>
-          {/* Display star icons based on the rating value */}
-          {[...Array(5)].map((_, i) => (
-            <Ionicons
-              key={i}
-              name={i < item.rating ? 'star' : 'star-outline'}
-              size={16}
-              color={i < item.rating ? Colors.CORAL_PINK : Colors.GRAY_200}
-              style={styles.starIcon}
-            />
-          ))}
-        </View>
-        <Text style={styles.commentText}>{item.comment}</Text>
-      </View>
-    </View>
-  );
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    if (petSitterId) {
+      fetchReviews();
+    } else {
+      console.error("petSitterId is undefined");
+    }
+  }, [petSitterId, user]);
+
+  const fetchReviews = async () => {
+    setLoading(true);
+    try {
+      const reviewsRef = collection(db, 'Feedback');
+      const q = query(reviewsRef, where('petSitterId', '==', petSitterId));
+      const querySnapshot = await getDocs(q);
+
+      const fetchedReviews = [];
+      let totalRating = 0;
+      let userExistingReview = null;
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        fetchedReviews.push({ id: doc.id, ...data });
+        totalRating += data.rating;
+        
+        // Check if the current user has already reviewed
+        if (data.userId === user?.id) {
+          userExistingReview = { id: doc.id, ...data };
+        }
+      });
+
+      setReviews(fetchedReviews);
+      setUserReview(userExistingReview); // Set the user's existing review if found
+
+      if (fetchedReviews.length > 0) {
+        const avgRating = totalRating / fetchedReviews.length;
+        setAverageRating(avgRating.toFixed(1));
+      } else {
+        setAverageRating(null);
+      }
+    } catch (error) {
+      console.error("Error fetching reviews:", error);
+      Alert.alert("Error", "Failed to load reviews.");
+    }
+    setLoading(false);
+  };
+
+  const handleWriteOrEditReview = () => {
+    if (!user) {
+      Alert.alert("Sign In Required", "You must be signed in to write or edit a review.");
+      return;
+    }
+
+    if (petSitterId) {
+      // Navigate to RateService screen with review data if user already has a review
+      const route = userReview
+        ? `/screens/Rateservice?id=${petSitterId}&reviewId=${userReview.id}&existingRating=${userReview.rating}&existingComment=${userReview.comment}`
+        : `/screens/Rateservice?id=${petSitterId}`;
+      router.push(route);
+    } else {
+      console.error("Error: petSitterId is undefined when attempting to navigate to RateService.");
+    }
+  };
 
   return (
     <View style={styles.container}>
-      {/* Display average rating at the top of the screen */}
-      <View style={styles.averageRatingContainer}>
-        <Text style={styles.averageRatingText}>Average Rating</Text>
-        <View style={styles.averageRatingValue}>
-          <Text style={styles.averageRatingNumber}>{averageRating.toFixed(1)}</Text>
-          <Ionicons name="star" size={24} color={Colors.CORAL_PINK} style={styles.averageRatingStar} />
+      {averageRating !== null && (
+        <View style={styles.averageRatingContainer}>
+          <Text style={styles.averageRatingLabel}>Average Rating</Text>
+          <Text style={styles.averageRatingValue}>
+            {averageRating} <Ionicons name="star" size={20} color={Colors.CORAL_PINK} />
+          </Text>
         </View>
-      </View>
+      )}
 
       <Text style={styles.title}>Reviews</Text>
-      <FlatList
-        data={reviewsData}
-        keyExtractor={(item) => item.id}
-        renderItem={renderReviewItem}
-        contentContainerStyle={styles.reviewList}
-      />
+
+      {loading ? (
+        <ActivityIndicator size="large" color={Colors.PRIMARY} />
+      ) : reviews.length > 0 ? (
+        <FlatList
+          data={reviews}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => <ReviewItem review={item} />}
+          contentContainerStyle={styles.reviewList}
+        />
+      ) : (
+        <Text style={styles.noReviewsText}>No reviews available for this pet sitter.</Text>
+      )}
+      
+      {user && (
+        <TouchableOpacity style={styles.writeReviewButton} onPress={handleWriteOrEditReview}>
+          <Text style={styles.writeReviewButtonText}>
+            {userReview ? "Edit Your Review" : "Write a Review"}
+          </Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -90,95 +139,75 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.LIGHT_GRAY,
     padding: 20,
   },
-  title: {
-    fontSize: Font_Size.XL,
-    fontFamily: Font_Family.BOLD,
-    color: Colors.BRIGHT_BLUE,
-    textAlign: 'center',
-    marginBottom: 20,
-  },
   averageRatingContainer: {
-    backgroundColor: Colors.WHITE,
-    padding: 5,
-    borderRadius: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
     alignItems: 'center',
-    marginBottom: 20,
+    marginVertical: 10,
+    padding: 10,
+    backgroundColor: Colors.WHITE,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  averageRatingText: {
-    fontSize: Font_Size.LG,
+  averageRatingLabel: {
+    fontSize: 18,
     fontFamily: Font_Family.BOLD,
-    color: Colors.GRAY_800,
+    color: Colors.DARK_TEXT,
   },
   averageRatingValue: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  averageRatingNumber: {
-    fontSize: Font_Size.XXL,
-    fontFamily: Font_Family.BLACK,
+    fontSize: 32,
+    fontWeight: 'bold',
     color: Colors.CORAL_PINK,
-    marginRight: 5,
+    marginTop: 5,
   },
-  averageRatingStar: {
-    marginLeft: 5,
+  title: {
+    fontSize: 24,
+    fontFamily: Font_Family.BLACK,
+    color: Colors.BRIGHT_BLUE,
+    textAlign: 'center',
+    marginBottom: 15,
   },
   reviewList: {
     paddingBottom: 20,
   },
-  reviewItemContainer: {
-    flexDirection: 'row',
-    backgroundColor: Colors.WHITE,
-    borderRadius: 15,
-    padding: 15,
-    marginBottom: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 15,
-  },
-  reviewContent: {
-    flex: 1,
-  },
-  reviewerName: {
-    fontSize: Font_Size.MD,
-    fontFamily: Font_Family.BOLD,
-    color: Colors.DARK_TEXT,
-    marginBottom: 5,
-  },
-  reviewDate: {
-    fontSize: Font_Size.SM,
-    fontFamily: Font_Family.REGULAR,
+  noReviewsText: {
+    fontSize: 18,
     color: Colors.GRAY_600,
-    marginBottom: 5,
+    textAlign: 'center',
+    marginTop: 20,
   },
-  ratingContainer: {
-    flexDirection: 'row',
-    marginBottom: 10,
+  writeReviewButton: {
+    backgroundColor: Colors.TURQUOISE_GREEN,
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 20,
   },
-  starIcon: {
-    marginRight: 3,
-  },
-  commentText: {
-    fontSize: Font_Size.MD,
-    fontFamily: Font_Family.REGULAR,
-    color: Colors.GRAY_800,
+  writeReviewButtonText: {
+    color: Colors.WHITE,
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });
 
-export default Reviews;
+export default ReviewPage;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
