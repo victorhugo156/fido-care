@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { db } from '../../../../firebaseConfig';
 import Colors from '../../../constants/Colors';
 import ReviewItem from '../../../components/Reviews/ReviewItem';
@@ -29,55 +29,47 @@ const ReviewPage = () => {
         console.error("Error fetching user:", error);
       }
     };
-
     fetchUser();
   }, []);
 
   useEffect(() => {
     if (petSitterId) {
-      fetchReviews();
+      const reviewsRef = collection(db, 'Feedback');
+      const q = query(reviewsRef, where('petSitterId', '==', petSitterId));
+
+      const unsubscribe = onSnapshot(q, (querySnapshot) => {
+        const fetchedReviews = [];
+        let totalRating = 0;
+        let userExistingReview = null;
+
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          fetchedReviews.push({ id: doc.id, ...data });
+          totalRating += data.rating;
+
+          // Check if the current user has already reviewed
+          if (data.userId === user?.id) {
+            userExistingReview = { id: doc.id, ...data };
+          }
+        });
+
+        setReviews(fetchedReviews);
+        setUserReview(userExistingReview);
+
+        if (fetchedReviews.length > 0) {
+          const avgRating = totalRating / fetchedReviews.length;
+          setAverageRating(avgRating.toFixed(1));
+        } else {
+          setAverageRating(null);
+        }
+        setLoading(false);
+      });
+
+      return () => unsubscribe();
     } else {
       console.error("petSitterId is undefined");
     }
   }, [petSitterId, user]);
-
-  const fetchReviews = async () => {
-    setLoading(true);
-    try {
-      const reviewsRef = collection(db, 'Feedback');
-      const q = query(reviewsRef, where('petSitterId', '==', petSitterId));
-      const querySnapshot = await getDocs(q);
-
-      const fetchedReviews = [];
-      let totalRating = 0;
-      let userExistingReview = null;
-
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        fetchedReviews.push({ id: doc.id, ...data });
-        totalRating += data.rating;
-        
-        // Check if the current user has already reviewed
-        if (data.userId === user?.id) {
-          userExistingReview = { id: doc.id, ...data };
-        }
-      });
-
-      setReviews(fetchedReviews);
-      setUserReview(userExistingReview); // Set the user's existing review if found
-
-      if (fetchedReviews.length > 0) {
-        const avgRating = totalRating / fetchedReviews.length;
-        setAverageRating(avgRating.toFixed(1));
-      } else {
-        setAverageRating(null);
-      }
-    } catch (error) {
-      console.error("Error fetching reviews:", error);
-      Alert.alert("Error", "Failed to load reviews.");
-    }
-    setLoading(false);
-  };
 
   const handleWriteOrEditReview = () => {
     if (!user) {
@@ -86,7 +78,6 @@ const ReviewPage = () => {
     }
 
     if (petSitterId) {
-      // Navigate to RateService screen with review data if user already has a review
       const route = userReview
         ? `/screens/Rateservice?id=${petSitterId}&reviewId=${userReview.id}&existingRating=${userReview.rating}&existingComment=${userReview.comment}`
         : `/screens/Rateservice?id=${petSitterId}`;
@@ -121,7 +112,7 @@ const ReviewPage = () => {
       ) : (
         <Text style={styles.noReviewsText}>No reviews available for this pet sitter.</Text>
       )}
-      
+
       {user && (
         <TouchableOpacity style={styles.writeReviewButton} onPress={handleWriteOrEditReview}>
           <Text style={styles.writeReviewButtonText}>
@@ -163,7 +154,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontFamily: Font_Family.BLACK,
     color: Colors.BRIGHT_BLUE,
     textAlign: 'center',
@@ -174,7 +165,8 @@ const styles = StyleSheet.create({
   },
   noReviewsText: {
     fontSize: 18,
-    color: Colors.GRAY_600,
+    color: Colors.GRAY_700,
+    fontFamily: Font_Family.BOLD,
     textAlign: 'center',
     marginTop: 20,
   },
@@ -193,6 +185,7 @@ const styles = StyleSheet.create({
 });
 
 export default ReviewPage;
+
 
 
 

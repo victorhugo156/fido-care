@@ -1,13 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { collection, doc, getDoc, getDocs, query, where, addDoc } from 'firebase/firestore';
+import { collection, doc, getDocs, onSnapshot, query, where, addDoc } from 'firebase/firestore';
 import { db } from '../../../../firebaseConfig';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 import MarkFavSitter from '../../../components/MarkFavSitter/index';
+
+// Skeleton loading component for smoother transitions
+const SkeletonProfile = () => (
+  <View style={styles.skeletonContainer}>
+    <View style={styles.skeletonHeaderImage} />
+    <View style={styles.skeletonInfo}>
+      <View style={styles.skeletonText} />
+      <View style={styles.skeletonText} />
+      <View style={styles.skeletonButton} />
+    </View>
+  </View>
+);
 
 const PetSitterProfile = () => {
   const { id } = useLocalSearchParams();
@@ -28,13 +40,14 @@ const PetSitterProfile = () => {
 
         if (petSitterId) {
           const docRef = doc(db, 'PetSitterProfile', petSitterId);
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-            setPetSitter(docSnap.data());
-            fetchAverageRating();
-          } else {
-            console.error('No such document found in the database!');
-          }
+          const unsubscribeProfile = onSnapshot(docRef, (docSnap) => {
+            if (docSnap.exists()) {
+              setPetSitter(docSnap.data());
+            } else {
+              console.error('No such document found in the database!');
+            }
+          });
+          return unsubscribeProfile;
         } else {
           console.error('Pet Sitter ID is undefined');
         }
@@ -45,34 +58,45 @@ const PetSitterProfile = () => {
       }
     };
 
-    fetchUserAndPetSitter();
+    const unsubscribeProfile = fetchUserAndPetSitter();
+
+    return () => {
+      if (typeof unsubscribeProfile === 'function') {
+        unsubscribeProfile();
+      }
+    };
   }, [petSitterId]);
 
-  const fetchAverageRating = async () => {
-    try {
+  useEffect(() => {
+    if (petSitterId) {
       const reviewsRef = collection(db, 'Feedback');
       const q = query(reviewsRef, where('petSitterId', '==', petSitterId));
-      const querySnapshot = await getDocs(q);
 
-      let totalRating = 0;
-      let count = 0;
+      const unsubscribeReviews = onSnapshot(q, (querySnapshot) => {
+        let totalRating = 0;
+        let count = 0;
 
-      querySnapshot.forEach((doc) => {
-        const data = doc.data();
-        totalRating += data.rating;
-        count += 1;
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          totalRating += data.rating;
+          count += 1;
+        });
+
+        if (count > 0) {
+          setAverageRating((totalRating / count).toFixed(1));
+        } else {
+          setAverageRating(null);
+        }
+        setReviewCount(count);
       });
 
-      if (count > 0) {
-        setAverageRating((totalRating / count).toFixed(1));
-      } else {
-        setAverageRating(null);
-      }
-      setReviewCount(count);
-    } catch (error) {
-      console.error("Error fetching average rating:", error);
+      return () => {
+        if (typeof unsubscribeReviews === 'function') {
+          unsubscribeReviews();
+        }
+      };
     }
-  };
+  }, [petSitterId]);
 
   const handleChatNavigation = async () => {
     if (!user) {
@@ -81,11 +105,11 @@ const PetSitterProfile = () => {
     }
 
     try {
-      // Check if an existing chat with the pet sitter exists
       const chatsQuery = query(
         collection(db, 'Chat'),
         where('userIds', 'array-contains', user.email)
       );
+
       const chatsSnapshot = await getDocs(chatsQuery);
       let existingChat = null;
 
@@ -97,10 +121,8 @@ const PetSitterProfile = () => {
       });
 
       if (existingChat) {
-        // Navigate to existing chat
         router.push(`/Chat?id=${existingChat.id}`);
       } else {
-        // Create a new chat if no existing chat is found
         const chatRef = await addDoc(collection(db, 'Chat'), {
           userIds: [user.email, petSitter.email],
           users: [
@@ -128,7 +150,7 @@ const PetSitterProfile = () => {
   }
 
   if (!petSitter) {
-    return <Text>No pet sitter profile found</Text>;
+    return <SkeletonProfile />;
   }
 
   return (
@@ -257,13 +279,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginLeft: 5,
     fontFamily: Font_Family.BOLD,
-    color: Colors.CORAL_PINK,    
+    color: Colors.CORAL_PINK,
   },
   reviewCount: {
     fontSize: 14,
     marginLeft: 5,
     fontFamily: Font_Family.BOLD,
-    color: Colors.CORAL_PINK,    
+    color: Colors.CORAL_PINK,
   },
   actionButtonsContainer: {
     flexDirection: 'row',
@@ -321,7 +343,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: Font_Family.REGULAR,
     color: Colors.BOLD,
-    
   },
   servicePrice: {
     fontSize: 16,
@@ -343,9 +364,38 @@ const styles = StyleSheet.create({
     marginVertical: 5,
     fontFamily: Font_Family.REGULAR,
   },
+  skeletonContainer: {
+    padding: 20,
+  },
+  skeletonHeaderImage: {
+    width: '100%',
+    height: 200,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 10,
+  },
+  skeletonInfo: {
+    marginTop: 15,
+    alignItems: 'center',
+  },
+  skeletonText: {
+    width: '60%',
+    height: 20,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 5,
+    marginVertical: 5,
+  },
+  skeletonButton: {
+    width: '40%',
+    height: 30,
+    backgroundColor: '#e0e0e0',
+    borderRadius: 5,
+    marginTop: 10,
+  },
 });
 
 export default PetSitterProfile;
+
+
 
 
 
