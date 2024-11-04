@@ -172,6 +172,41 @@ export default function Rootlayout() {
                         }}
                     />
 
+                    <Stack.Screen
+                        name="screens/PetList/index"
+                        options={{
+                            title: "My Pet list", 
+                            headerStyle: {
+                                backgroundColor: '#3772FF', 
+                            },
+                            headerTitleAlign: 'center', 
+                            headerTintColor: '#fff', 
+                        }}
+                    />
+
+                    <Stack.Screen
+                        name="screens/PetDetails/index"
+                        options={{
+                            title: "My Pet Details", 
+                            headerStyle: {
+                                backgroundColor: '#3772FF', 
+                            },
+                            headerTitleAlign: 'center', 
+                            headerTintColor: '#fff', 
+                        }}
+                    />
+
+                    <Stack.Screen
+                        name="screens/PetForm/index"
+                        options={{
+                            title: "My Pet Form", 
+                            headerStyle: {
+                                backgroundColor: '#3772FF', 
+                            },
+                            headerTitleAlign: 'center', 
+                            headerTintColor: '#fff', 
+                        }}
+                    />                
 
 
                     <Stack.Screen

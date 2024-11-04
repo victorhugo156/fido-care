@@ -70,6 +70,9 @@ const Menu = () => {
       router.push('/screens/PersonalDetails');
     } else if (screenName === 'Favorites') {
       router.push('/screens/Favourites'); // Navigate to the Favorites screen
+    } else if (screenName === 'AddPet') {
+      router.push('/screens/PetList'); // Navigate to the Favorites screen
+
     } else {
       router.push(`/${screenName}`);
     }
