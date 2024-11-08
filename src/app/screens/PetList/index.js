@@ -69,12 +69,16 @@ const PetListScreen = () => {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>My Pet List</Text>
-      <FlatList 
-        data={pets} 
-        keyExtractor={(item) => item.id} 
-        renderItem={renderPetItem} 
-        contentContainerStyle={styles.listContainer} 
-      />
+      {pets.length === 0 ? (
+        <Text style={styles.noPetsText}>You have not added any pets yet.</Text>
+      ) : (
+        <FlatList 
+          data={pets} 
+          keyExtractor={(item) => item.id} 
+          renderItem={renderPetItem} 
+          contentContainerStyle={styles.listContainer} 
+        />
+      )}
       <TouchableOpacity style={styles.addButton} onPress={() => router.push('/screens/PetForm')}>
         <Text style={styles.addButtonText}>Add New Pet</Text>
       </TouchableOpacity>
@@ -136,12 +140,21 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderRadius: 8,
     alignItems: 'center',
-    marginBottom: 15,
+   marginTop: 20,
+
   },
   addButtonText: {
     color: '#fff',
     fontWeight: 'bold',
     fontSize: Font_Size.LG,
+  },
+  noPetsText: {
+    fontSize: Font_Size.XL,
+    fontFamily: Font_Family.BOLD,
+    color: Colors.GRAY_700,
+    textAlign: 'center',
+    marginTop: 20,
+    marginBottom: 20,
   },
   thumbnail: {
     width: 90,
@@ -156,6 +169,7 @@ const styles = StyleSheet.create({
 });
 
 export default PetListScreen;
+
 
 
 

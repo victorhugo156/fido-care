@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, FlatList } from 'react-native';
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, FlatList, Image, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import MapView, { Marker } from 'react-native-maps';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import { collection, doc, setDoc, getDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, getDoc,deleteDoc  } from 'firebase/firestore';
 import * as Location from 'expo-location';
 import { db } from '../../../../firebaseConfig';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 import { Picker } from '@react-native-picker/picker';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import * as ImagePicker from 'expo-image-picker';
+
 
 const BecomePetSitter = () => {
   const router = useRouter();
@@ -31,6 +33,8 @@ const BecomePetSitter = () => {
   const [loading, setLoading] = useState(true);
   const [petSitterData, setPetSitterData] = useState({});
   const [user, setUser] = useState(null);
+  const [avatar, setAvatar] = useState(''); 
+  const [profileDeleted, setProfileDeleted] = useState(false);
 
   // Predefined services options
   const serviceOptions = [
@@ -56,27 +60,54 @@ const BecomePetSitter = () => {
   ];
 
   useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      setLocationPermission(status);
-
-      if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Location permission is required to use this feature.');
-        setLoading(false);
-        return;
+    const fetchUserData = async () => {
+      // Exit early if profile has already been deleted to prevent unnecessary fetching
+      if (profileDeleted) return;
+  
+      try {
+        const currentUser = await GoogleSignin.getCurrentUser();
+        setUser(currentUser?.user || null);
+  
+        if (currentUser) {
+          const userId = currentUser.user.id;
+          const docRef = doc(db, 'PetSitterProfile', userId);
+          const docSnap = await getDoc(docRef);
+  
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            setPetSitterData({ id: userId, ...data });
+            setLatitude(data.Latitude);
+            setLongitude(data.Longitude);
+            setAvailability(data.Availability || []);
+            setRegion({
+              latitude: data.Latitude,
+              longitude: data.Longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            });
+            // Set initial avatar if available
+            if (data.Avatar) {
+              setAvatar(data.Avatar);
+            }
+          } else {
+            // Document does not exist, set profileDeleted to true
+            setProfileDeleted(true);
+          }
+        } else {
+          // Redirect to login if no user is authenticated
+          router.push('/screens/EntryPoint');
+        }
+      } catch (error) {
+        console.log(error);
       }
-
-      let userLocation = await Location.getCurrentPositionAsync({});
-      setLatitude(userLocation.coords.latitude);
-      setLongitude(userLocation.coords.longitude);
-      setRegion({
-        latitude: userLocation.coords.latitude,
-        longitude: userLocation.coords.longitude,
-        latitudeDelta: 0.01,
-        longitudeDelta: 0.01,
-      });
-    })();
-  }, []);
+      setLoading(false); // Ensure loading is set to false after fetching
+    };
+  
+    fetchUserData();
+  }, [profileDeleted]); // Depend on profileDeleted so it stops re-fetching after deletion
+  
+  
+  
 
   async function getUserData() {
     try {
@@ -115,21 +146,75 @@ const BecomePetSitter = () => {
     getUserData();
   }, []);
 
-  // Form validation schema
-  const validationSchema = Yup.object().shape({
-    name: Yup.string().required('Name is required'),
-    location: Yup.string().required('Location is required'),
-    experience: Yup.string().required('Experience is required'),
-    about: Yup.string().required('About is required'),
-    avatar: Yup.string().url('Must be a valid URL').required('Avatar URL is required'),
-    services: Yup.array().of(
-      Yup.object().shape({
-        title: Yup.string().required('Service title is required'),
-        price: Yup.number().required('Service price is required'),
-      })
-    ),
-    skills: Yup.array().of(Yup.string().required('Skill is required')),
-  });
+  // Avatar Picker Function
+  const pickImage = async (setFieldValue) => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Denied', 'We need access to your photos to set an avatar.');
+      return;
+    }
+
+    const pickerResult = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!pickerResult.canceled && pickerResult.assets && pickerResult.assets.length > 0) {
+      const selectedImageUri = pickerResult.assets[0].uri;
+      setAvatar(selectedImageUri);
+      setFieldValue('avatar', selectedImageUri); // Update Formik field
+    }
+  };  
+
+    // Delete Pet Sitter Profile
+    const handleDeleteProfile = async () => {
+      Alert.alert(
+        "Delete Profile",
+        "Are you sure you want to delete your pet sitter profile?",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Delete",
+            style: "destructive",
+            onPress: async () => {
+              try {
+                if (user) {
+                  const userId = user.id;
+                  await deleteDoc(doc(db, 'PetSitterProfile', userId));
+                  setProfileDeleted(true);
+                  Alert.alert("Profile Deleted", "Your pet sitter profile has been deleted.");
+                  router.push('/Home'); // Redirect after deletion
+                }
+              } catch (error) {
+                console.error("Error deleting profile: ", error);
+                Alert.alert("Error", "There was an error deleting your profile.");
+              }
+            },
+          },
+        ]
+      );
+    };    
+  
+
+// Form validation schema
+const validationSchema = Yup.object().shape({
+  name: Yup.string().required('Name is required'),
+  location: Yup.string().required('Location is required'),
+  experience: Yup.string().required('Experience is required'),
+  about: Yup.string().required('About is required'),
+  avatar: Yup.string()
+    .test('is-selected', 'Avatar is required', (value) => !!value) // Ensure avatar has a value
+    .required('Photo Profile is required'), // Required validation for avatar
+  services: Yup.array().of(
+    Yup.object().shape({
+      title: Yup.string().required('Service title is required'),
+      price: Yup.number().required('Service price is required'),
+    })
+  ),
+  skills: Yup.array().of(Yup.string().required('Skill is required')),
+});  
 
   // Handle Date Selection
   const onDateChange = (event, selectedDate) => {
@@ -158,7 +243,6 @@ const BecomePetSitter = () => {
         Alert.alert('Error', 'User not authenticated.');
         return;
       }
-
       const userId = user.id;
       await setDoc(doc(db, 'PetSitterProfile', userId), {
         Name: values.name,
@@ -167,11 +251,11 @@ const BecomePetSitter = () => {
         Longitude: longitude,
         Experience: values.experience,
         About: values.about,
-        Avatar: user.photo || values.avatar, // Use user’s photo URL if available
+        Avatar: avatar,
         Services: values.services,
         Skills: values.skills,
         Availability: availability,
-        email: user.email, // Add user's email to the profile
+        email: user.email,
       });
 
       Alert.alert('Success', 'Your pet sitter profile has been updated successfully.');
@@ -185,10 +269,14 @@ const BecomePetSitter = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text>Loading...</Text>
+        <View style={styles.loader}>
+          <ActivityIndicator size="large" color="#00aaff" />
+          <Text style={styles.loadingText}>Loading your profile...</Text>
+        </View>
       </View>
     );
   }
+  
 
   return (
     <FlatList
@@ -200,7 +288,7 @@ const BecomePetSitter = () => {
             location: petSitterData.Location || '',
             experience: petSitterData.Experience || '',
             about: petSitterData.About || '',
-            avatar: petSitterData.Avatar || '',
+            avatar: avatar || '',
             services: petSitterData.Services || [{ title: '', price: '' }],
             skills: petSitterData.Skills || [''],
           }}
@@ -211,7 +299,19 @@ const BecomePetSitter = () => {
             <View style={styles.contentContainer}>
               <Text style={styles.header}>Form to Become a Pet Sitter</Text>
 
+              {/* Avatar Picker */}
+              <TouchableOpacity style={styles.avatarContainer} onPress={() => pickImage(setFieldValue)}>
+                {avatar ? (
+                  <Image source={{ uri: avatar }} style={styles.avatar} />
+                ) : (
+                  <Text style={styles.avatarPlaceholder}>Tap here to select a photo</Text>
+                )}
+              </TouchableOpacity>
+              {errors.avatar && <Text style={styles.errorText}>{errors.avatar}</Text>}
+
+
               {/* Name Input */}
+              <Text style={styles.sectionTitle}>Name</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Name and Surname"
@@ -239,7 +339,7 @@ const BecomePetSitter = () => {
                     setFieldValue('location', data.description);
                   }
                 }}
-                query={{ key: 'YOUR_GOOGLE_API_KEY', language: 'en' }}
+                query={{ key: 'AIzaSyBQJUBHGQfNam1-_zUiAFVMYIg8jQ5Vvdo', language: 'en' }}
                 fetchDetails={true}
                 enablePoweredByContainer={false}
                 minLength={3}
@@ -258,6 +358,7 @@ const BecomePetSitter = () => {
               </MapView>
 
               {/* Experience Input */}
+              <Text style={styles.sectionTitle}>Years of Experience</Text>
               <TextInput
                 style={styles.input}
                 placeholder="Your Experience (in years)"
@@ -268,6 +369,7 @@ const BecomePetSitter = () => {
               {touched.experience && errors.experience && <Text style={styles.errorText}>{errors.experience}</Text>}
 
               {/* About Input */}
+              <Text style={styles.sectionTitle}>About me</Text>
               <TextInput
                 style={[styles.input, styles.aboutInput]}
                 placeholder="About Me"
@@ -277,16 +379,6 @@ const BecomePetSitter = () => {
                 multiline
               />
               {touched.about && errors.about && <Text style={styles.errorText}>{errors.about}</Text>}
-
-              {/* Avatar URL Input */}
-              <TextInput
-                style={styles.input}
-                placeholder="Avatar URL"
-                onChangeText={handleChange('avatar')}
-                onBlur={handleBlur('avatar')}
-                value={values.avatar}
-              />
-              {touched.avatar && errors.avatar && <Text style={styles.errorText}>{errors.avatar}</Text>}
 
               {/* Services Section */}
               <Text style={styles.sectionTitle}>Services</Text>
@@ -394,6 +486,14 @@ const BecomePetSitter = () => {
               <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
                 <Text style={styles.submitButtonText}>Submit</Text>
               </TouchableOpacity>
+
+              {/* Conditional Delete Button */}
+              {petSitterData.id && (
+                <TouchableOpacity style={styles.deleteButton} onPress={handleDeleteProfile}>
+                  <Text style={styles.deleteButtonText}>Delete Profile</Text>
+                </TouchableOpacity>
+              )}
+
             </View>
           )}
         </Formik>
@@ -433,6 +533,48 @@ const styles = StyleSheet.create({
     color: Colors.DARK_TEXT,
     fontFamily: Font_Family.BOLD,
   },
+  avatarContainer: {
+    alignItems: 'center',
+    marginBottom: 20,
+    //backgroundColor: Colors.BRIGHT_BLUE,
+    borderRadius: 50,
+    padding: 10,
+  },
+  avatar: {
+    width: 150,
+    height: 150,
+    borderRadius: 50,
+  },
+  avatarPlaceholder: {
+    color: Colors.BRIGHT_BLUE,
+    fontSize: 16,
+    fontFamily: Font_Family.BOLD, 
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  loader: {
+    backgroundColor: '#ffffff',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
+    textAlign: 'center',
+  },  
+  
   input: {
     borderColor: '#ddd',
     borderWidth: 1,
@@ -503,7 +645,7 @@ const styles = StyleSheet.create({
   },
   serviceRow: {
     marginBottom: 20,
-    backgroundColor: Colors.SOFT_CREAM,
+    backgroundColor: Colors.GRAY_200,
     padding: 10,
     borderRadius: 10,
     elevation: 2,
@@ -525,6 +667,18 @@ const styles = StyleSheet.create({
   removeButtonText: {
     color: '#FFF',
     fontSize: 14,
+    fontWeight: 'bold',
+  },
+  deleteButton: {
+    backgroundColor: Colors.CORAL_PINK,
+    paddingVertical: 5,
+    borderRadius: 5,
+    alignItems: 'center',
+    marginTop: 50,
+  },
+  deleteButtonText: {
+    color: '#FFF',
+    fontSize: 18,
     fontWeight: 'bold',
   },
 });
