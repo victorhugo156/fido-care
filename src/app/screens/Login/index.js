@@ -115,7 +115,7 @@ export default function LoginScreen() {
   }
 
   function handleRegister() {
-    router.push("screens/Register/setpOne");
+    router.push("screens/Register/formStepOne");
   }
 
  
@@ -139,6 +139,7 @@ export default function LoginScreen() {
             name='email'
             rules={{
               required: "Inform your email",
+              
     
             }}
             render={({ field: { onChange, value } }) => (
@@ -150,6 +151,7 @@ export default function LoginScreen() {
                 style={styles.input}
                 onChangeText={onChange}
                 value={value}
+                error={errors.email?.message}
 
               />
 
@@ -175,6 +177,7 @@ export default function LoginScreen() {
                 style={styles.input}
                 onChangeText={onChange}
                 value={value}
+                error= {errors.password?.message}
               />
             )}
           />

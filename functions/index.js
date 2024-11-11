@@ -11,7 +11,7 @@ const db = getFirestore();
  * as a new Bokkings document is created in Firebase FIrestore.
  */
 
-//DEfine CLoud Function -> This thunction triggers when a new document is created in the "Bookings"collection 
+//Define CLoud Function -> This thunction triggers when a new document is created in the "Bookings"collection 
 exports.sendBookingNotification = onDocumentCreated("/Bookings/{bookingId}", async (event) => {
   const booking = event.data.data(); //Extractiong data from Booking document
   const petSitterId = booking.PetSitterID;//Extracting PetSitter ID from Booking doc
