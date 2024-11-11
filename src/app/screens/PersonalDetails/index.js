@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Button, StyleSheet, Alert, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
 import { GetUserToken } from '../../../data/storage/getUserToken';
 import { db } from '../../../../firebaseConfig';
@@ -71,7 +71,10 @@ const PersonalDetails = () => {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <Text>Loading...</Text>
+        <View style={styles.loader}>
+          <ActivityIndicator size="large" color="#00aaff" />
+          <Text style={styles.loadingText}>Loading your Personal Details...</Text>
+        </View>
       </View>
     );
   }
@@ -150,6 +153,30 @@ const styles = StyleSheet.create({
   formContainer: {
     marginBottom: 20,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  loader: {
+    backgroundColor: '#ffffff',
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+    elevation: 5,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#333',
+    fontWeight: '500',
+    textAlign: 'center',
+  },  
   label: {
     fontSize: 16,
     fontFamily: Font_Family.BOLD,

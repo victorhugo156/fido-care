@@ -60,7 +60,7 @@ export default function TabLayout() {
                     path: 'Chat',
                     tabBarLabel: "Chat",
                     title: "Inbox",  // 
-                    //headerShown: false,
+                    headerShown: false,
                     headerStyle: {
                         backgroundColor: '#3772FF', // Set background color here
                     },

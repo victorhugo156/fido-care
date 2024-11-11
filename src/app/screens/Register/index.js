@@ -26,7 +26,7 @@ export default function Register() {
 
     const handleSignUp = async(data)=>{
         try{
-            await addDoc(collection(db, "User"),{
+            await addDoc(collection(db, "Users"),{
                 Address:data.address,
                 Email: data.email,
                 Password: data.password,

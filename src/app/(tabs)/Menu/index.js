@@ -15,19 +15,19 @@ const menuItems = [
   { name: 'Bookings', label: 'Bookings', icon: 'calendar', color: 'white' },
   { name: 'Blog', label: "Fido's Blog", icon: 'book', color: 'white' },
   { name: 'Payments', label: 'Payments', icon: 'credit-card', color: 'white' },
+  { name: 'Favorites', label: 'Favourite Sitters', icon: 'heart', color: 'white' }, // New Favorites menu item
   { name: 'About', label: 'About Fido', icon: 'info-circle', color: 'white' },
-  { name: 'BecomePetSitter', label: 'Become a Pet Sitter', icon: 'handshake-o', color: '#FC7071' }, // Link to Become a Pet Sitter screen
+  { name: 'BecomePetSitter', label: 'Become a Pet Sitter', icon: 'handshake-o', color: '#FC7071' },
   { name: 'HelpCenter', label: 'Help Center', icon: 'question-circle', color: 'white' },
   { name: 'Log Out', label: 'Log Out', icon: 'sign-out', color: 'white' },
 ];
 
 const Menu = () => {
   const router = useRouter();
-
   const [userAuthenticated, setUserAuthenticated] = useState(false);
   const [userData, setUserData] = useState({});
 
-  //Verify if user is Authenticated
+  // Verify if user is authenticated
   async function getUser() {
     try {
       const userToken = await GetUserToken("user_data");
@@ -35,15 +35,11 @@ const Menu = () => {
 
       if (user) {
         console.log("User is authenticated", user);
-        setUserAuthenticated(true)
-        setUserData(user)
-        console.log("User name is", userData.photo);
-
+        setUserAuthenticated(true);
+        setUserData(user);
       } else {
         console.log("User is not authenticated");
-        // Redirect to login or handle unauthenticated state
       }
-
     } catch (error) {
       console.log(error);
     }
@@ -57,9 +53,9 @@ const Menu = () => {
         {
           text: 'Yes', onPress: async () => {
             try {
-              await AsyncStorage.removeItem('userToken'); // Clear user session or token storage
+              await AsyncStorage.removeItem('userToken');
               await handleSignOut();
-              router.push('screens/EntryPoint'); // Use router.push to navigate to Login screen
+              router.push('screens/EntryPoint');
             } catch (error) {
               Alert.alert('Error', 'An error occurred while logging out.');
             }
@@ -67,15 +63,18 @@ const Menu = () => {
         },
       ]);
     } else if (screenName === 'BecomePetSitter') {
-      // Navigate to the BecomePetSitter screen using its exact path
-      router.push('/screens/BecomePetSitter'); // Correct path to the screen
+      router.push('/screens/BecomePetSitter');
     } else if (screenName === 'HelpCenter') {
-      router.push('/screens/UserPetsitterprofile'); // Correct path to the screen
+      router.push('/screens/UserPetsitterprofile');
     } else if (screenName === 'PersonalDetails') {
-      router.push('/screens/PersonalDetails'); // Correct path to the screen
+      router.push('/screens/PersonalDetails');
+    } else if (screenName === 'Favorites') {
+      router.push('/screens/Favourites'); // Navigate to the Favorites screen
+    } else if (screenName === 'AddPet') {
+      router.push('/screens/PetList'); // Navigate to the Favorites screen
 
     } else {
-      router.push(`/${screenName}`); // Navigate to the selected screen using router.push
+      router.push(`/${screenName}`);
     }
   };
 
@@ -83,7 +82,6 @@ const Menu = () => {
   async function handleSignOut() {
     try {
       await GoogleSignin.signOut();
-      // Clear user data from AsyncStorage
       await AsyncStorage.removeItem('user_data');
       console.log("User signed out successfully");
       router.push('screens/EntryPoint');
@@ -94,16 +92,14 @@ const Menu = () => {
 
   useEffect(() => {
     getUser();
-  }, [])
+  }, []);
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.ContainerUserIcon}>
         {userData?.photo ? (
-          // Display user photo if available
           <Image style={styles.UserIcon} source={{ uri: userData.photo }} />
         ) : (
-          // Display default icon if no user photo is found
           <Image style={styles.UserIcon} source={require('../../../assets/icons/user.png')} />
         )}
         <View>
@@ -116,7 +112,7 @@ const Menu = () => {
 
       {menuItems.map((item) => (
         <TouchableOpacity
-          key={item.name} // Ensure unique key for each item
+          key={item.name}
           style={styles.menuItem}
           onPress={() => handleNavigation(item.name)}
         >
@@ -137,7 +133,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     backgroundColor: Colors.TURQUOISE_GREEN,
   },
-
   ContainerUserIcon: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -145,9 +140,8 @@ const styles = StyleSheet.create({
     padding: 10,
     borderRadius: 10,
     marginTop: 50,
-    marginBottom: 40,
+    marginBottom: 20,
   },
-
   UserIcon: {
     width: 70,
     height: 70,
@@ -155,19 +149,16 @@ const styles = StyleSheet.create({
     resizeMode: "contain",
     marginRight: 15,
   },
-
   welcomeText: {
     fontSize: 18,
     color: Colors.BRIGHT_BLUE,
     fontFamily: Font_Family.BLACK,
   },
-
   userName: {
     fontSize: 20,
     color: Colors.DARK_TEXT,
     fontFamily: Font_Family.BOLD,
   },
-
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -176,20 +167,21 @@ const styles = StyleSheet.create({
     borderBottomColor: '#ddd',
   },
   iconContainer: {
-    width: 30, // Set a fixed width for the icon container
-    alignItems: 'center', // Center the icon within the container
+    width: 30,
+    alignItems: 'center',
   },
   menuText: {
     flex: 1,
     fontSize: 18,
     color: 'white',
     fontFamily: Font_Family.BOLD,
-    marginLeft: 10, // Adjust margin to ensure proper spacing
+    marginLeft: 10,
     textAlignVertical: 'center',
   },
 });
 
 export default Menu;
+
 
 
 
