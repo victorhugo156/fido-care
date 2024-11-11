@@ -16,10 +16,22 @@ export default function Home() {
 
 
   //This function will update the useContext
-  const handlePetSitterPress = () => {
-    setService("Pet Sitting"); 
-    setSourceScreen("Home")
-    router.push("Home/feed");
+  const handlePetSitterPress = (servicePicked) => {
+    if(servicePicked === "Pet Sitting"){
+      setService("Pet Sitting"); 
+      setSourceScreen("Home")
+      router.push("Home/feed");
+    }else if( servicePicked === "Dog Walking"){
+      setService("Dog Walking"); 
+      setSourceScreen("Home")
+      router.push("Home/feed");
+
+    }else if( servicePicked === "Dog Wash"){
+      setService("Dog Wash"); 
+      setSourceScreen("Home")
+      router.push("Home/feed");
+    }
+
   };
 
   const router = useRouter(); // Initialize router
@@ -47,7 +59,7 @@ export default function Home() {
         {/* Pet Sitter Button */}
         <TouchableOpacity
           style={styles.ContainerBtnPetSitter}
-          onPress={handlePetSitterPress}
+          onPress={()=>handlePetSitterPress("Pet Sitting")}
         >
           <View>
             <Image style={styles.Icon} source={require('../../../assets/icons/kitten_face.png')} />
@@ -60,6 +72,7 @@ export default function Home() {
         {/* Dog Walk Button */}
         <TouchableOpacity
           style={styles.ContainerBtnDogWalk}
+          onPress={()=>handlePetSitterPress("Dog Walking")}
         >
           <View>
             <Image style={styles.Icon} source={require('../../../assets/icons/paw.png')} />
@@ -72,7 +85,8 @@ export default function Home() {
         {/* Pet Wash Button */}
         <TouchableOpacity
           style={styles.ContainerBtnPetWash}
-          onPress={() => router.push('/screens/Petsitterlist')}
+          onPress={()=>handlePetSitterPress("Dog Wash")}
+          //onPress={() => router.push('/screens/Petsitterlist')}
         >
           <View>
             <Image style={styles.Icon} source={require('../../../assets/icons/shower.png')} />

@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { doc, getDoc, setDoc, collection, addDoc, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, addDoc, query, where, getDocs } from '@firebase/firestore';
 import { db } from '../../../../firebaseConfig';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
+
+import ButtonApply from '../../../components/ButtonApply/idex';
 
 const PetSitterProfile = () => {
   const { id } = useLocalSearchParams(); // Pet Sitter profile ID
@@ -120,6 +122,48 @@ const PetSitterProfile = () => {
       Alert.alert("Error", "Failed to initiate chat. Please try again.");
     }
   };
+
+
+
+
+   function handleApply(){
+    console.log("This is the pet sitter info: ", petSitter.id);
+    console.log("This is the user info: ", user.id);
+   }
+
+
+
+   const serviceDetails = {
+    title: "Pet Sitting",
+    date: "10-11-2024"
+};
+
+   const createBookingRequest = async ()=>{
+
+        // Debugging log to ensure variables are defined
+        console.log("currentUser.id:", user?.id);
+        console.log("petSitter.id:", petSitter?.id);
+    
+        if (!user?.id || !petSitter?.id) {
+            console.error("Error: petOwnerId or petSitterId is undefined.");
+            alert("Booking request cannot be created: Pet Owner or Pet Sitter ID is missing.");
+            return;
+        }
+    try{
+      await addDoc(collection(db, "Bookings"), {
+        PetOwnerID: user.id,
+        PetSitterID: petSitter.id,
+        BookingStatus: "waiting",
+        ServiceDetails: serviceDetails
+      });
+
+      alert("Booking request Sent");
+
+    }catch(error){
+      console.error("Error creating booking request:", error);
+    }
+   }
+
   
 
   return (
@@ -192,11 +236,13 @@ const PetSitterProfile = () => {
           <Text key={index} style={styles.skillText}>✔️ {skill}</Text>
         ))}
       </View>
+
+      <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Apply"} onPress={createBookingRequest}/>
     </ScrollView>
   );
 };
 
-
+3
 const styles = StyleSheet.create({
   container: {
     flex: 1,

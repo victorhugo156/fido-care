@@ -3,7 +3,7 @@ import { View, Text, TextInput, Button, StyleSheet, Alert, ScrollView, Touchable
 import { useRouter } from 'expo-router';
 import { GetUserToken } from '../../../data/storage/getUserToken';
 import { db } from '../../../../firebaseConfig';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from '@firebase/firestore';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 

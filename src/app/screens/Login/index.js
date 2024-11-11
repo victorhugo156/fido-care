@@ -1,7 +1,10 @@
 import { View, Text, StyleSheet, Image, TextInput, Alert } from 'react-native';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'expo-router';
 import { useForm, Controller } from "react-hook-form"
+import { db } from '../../../../firebaseConfig';
+import { OneSignal } from 'react-native-onesignal';
+import { doc, setDoc } from 'firebase/firestore';
 
 import { WEB_CLIENT_ID, IOS_CLIENT_ID } from '@env';
 
@@ -31,8 +34,48 @@ export default function LoginScreen() {
 
   const router = useRouter(); // Initialize router
   const { control, handleSubmit, formState: { errors } } = useForm();
-
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [oneSignalPlayerId, setOneSignalPlayerId] = useState(null);
+
+  useEffect(() => {
+    // Initialize OneSignal
+    OneSignal.initialize('56418014-2ca0-45b0-bd36-6ea04a3d655a');
+
+    // Request permission for notifications
+    OneSignal.Notifications.requestPermission(true);
+
+    // Use getIdAsync to retrieve the Player ID
+    const fetchPlayerId = async () => {
+      try {
+        const playerId = await OneSignal.User.pushSubscription.getIdAsync();
+        if (playerId) {
+          setOneSignalPlayerId(playerId);
+          console.log('OneSignal Player ID:', playerId);
+        } else {
+          console.warn('OneSignal Player ID is not available.');
+        }
+      } catch (error) {
+        console.error('Error fetching OneSignal Player ID:', error);
+      }
+    };
+
+    fetchPlayerId();
+  }, []);
+
+  // Save Player ID to Firestore
+  const savePlayerId = async (userId) => {
+    if (!oneSignalPlayerId) {
+      console.warn("OneSignal Player ID is not available.");
+      return;
+    }
+
+    try {
+      await setDoc(doc(db, "Users", userId), { oneSignalPlayerId }, { merge: true });
+      console.log("OneSignal Player ID saved to Firestore");
+    } catch (error) {
+      console.error("Error saving OneSignal Player ID:", error);
+    }
+  };
 
   async function handleGoogleSignIn() {
 
@@ -48,6 +91,7 @@ export default function LoginScreen() {
 
       if (userData) {
         await LoginStorage(userData);
+        await savePlayerId(userData.id);
         router.push("Home");
 
       }
@@ -71,8 +115,10 @@ export default function LoginScreen() {
   }
 
   function handleRegister() {
-    router.push("screens/Register");
+    router.push("screens/Register/setpOne");
   }
+
+ 
 
 
   return (
@@ -87,6 +133,7 @@ export default function LoginScreen() {
       <View style={styles.containerForm}>
         <View style={styles.containerInputs}>
 
+          {/**Using React Hoock Form to render and Control the Inputs*/}
           <Controller
             control={control}
             name='email'
@@ -96,6 +143,7 @@ export default function LoginScreen() {
             }}
             render={({ field: { onChange, value } }) => (
               <Input
+                iconName="envelope"
                 placeholder='Email address'
                 keyboardType = "email-address"
                 placeholderTextColor={Colors.GRAY_700}
@@ -121,6 +169,7 @@ export default function LoginScreen() {
             }}
             render={({ field: { onChange, value } }) => (
               <Input
+              iconName="lock"
                 placeholder='Password'
                 placeholderTextColor={Colors.GRAY_700}
                 style={styles.input}

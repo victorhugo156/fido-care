@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, TextInput, Dimensions, SafeAreaView } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useRouter } from 'expo-router';
-import { collection, Firestore, getDocs, query, where } from 'firebase/firestore';
+import { collection, Firestore, getDocs, query, where } from "@firebase/firestore";
 import { db } from '../../../../firebaseConfig';
 
 import { GetUserToken } from '../../../data/storage/getUserToken';
@@ -14,6 +14,8 @@ import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
 
 
 export default function FeedScreen() {
+
+    const router = useRouter(); // Initialize router
 
     //Use Context variable with data from Filter Service stored
     const { filter } = UseContextService();
@@ -33,10 +35,10 @@ export default function FeedScreen() {
 
         //This array will store the colection to be displayed after the filter criteria
         const sitters = [];
-        
+
         try {
             const querySnapshot = await getDocs(collection(db, "PetSitterProfile"));
-    
+
             querySnapshot.forEach((doc) => {
 
                 //This variable receives a Colection of Objects from the DB
@@ -46,7 +48,7 @@ export default function FeedScreen() {
 
                 let matchedLocation = false;
                 let matchedAvailability = false;
-    
+
                 if (sourceScreen == null) {
                     sitters.push({ id: doc.id, ...data });
                 } else if (sourceScreen === "Home") {
@@ -55,11 +57,11 @@ export default function FeedScreen() {
                             matchedServices.push(serviceItem);
                         }
                     }
-    
+
                     if (matchedServices.length > 0) {
                         sitters.push({ id: doc.id, ...data });
                     }
-    
+
                 } else if (sourceScreen === "Filter") {
                     // Check service match
                     for (const serviceItem of data.Services) {
@@ -67,17 +69,17 @@ export default function FeedScreen() {
                             matchedServices.push(serviceItem);
                         }
                     }
-    
+
                     // Check location match
                     if (data.Location === filter.locationPicked) {
                         matchedLocation = true;
                     }
-    
+
                     // Check availability match
                     matchedAvailability = filter.datePicked.some(datePicked =>
                         data.Availability.includes(datePicked)
                     );
-    
+
                     // Add sitter if all conditions are met
                     if (matchedServices.length > 0 && matchedLocation && matchedAvailability) {
                         sitters.push({ id: doc.id, ...data });
@@ -90,9 +92,9 @@ export default function FeedScreen() {
                     }
                 }
             });
-    
+
             setPetSitters(sitters);
-    
+
             if (sitters.length === 0) {
                 setNoResult(true);
                 setExceptionMsg("No results found for your filter");
@@ -100,15 +102,15 @@ export default function FeedScreen() {
             } else {
                 console.log("results found: ", sitters);
             }
-    
+
         } catch (error) {
             console.error("Error fetching data:", error);
         }
     };
-    
 
 
-    //AsybcStorage retrieving user authentication status
+
+    //AsynStorage retrieving user authentication status
     async function getUser() {
         try {
             const isAuthenticated = await GetUserToken();
@@ -153,15 +155,18 @@ export default function FeedScreen() {
                     data={petSitters}
                     KeyExtractor={item => item}
                     renderItem={({ item }) => (
-                        <CardFeed
-                            img={item.Avatar}
-                            name={item.Name}
-                            location={item.Location}
-                            description={item.Experience}
-                            services={item.Services[0].title}
-                            price={item.Services[0].price}
-                            rate={item.Rating}
-                        />
+                        <TouchableOpacity  onPress={() => router.push(`/screens/Petsitterprofile?id=${item.id}`)}>
+                            <CardFeed
+                                img={item.Avatar}
+                                name={item.Name}
+                                location={item.Location}
+                                description={item.Experience}
+                                services={item.Services[0].title}
+                                price={item.Services[0].price}
+                                rate={item.Rating}
+                            />
+                        </TouchableOpacity>
+
                     )}
 
                 />

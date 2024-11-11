@@ -6,7 +6,7 @@ import * as Yup from 'yup';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import MapView, { Marker } from 'react-native-maps';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import { collection, doc, setDoc, getDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, getDoc } from "@firebase/firestore";
 import * as Location from 'expo-location';
 import { db } from '../../../../firebaseConfig';
 import Colors from '../../../constants/Colors';
@@ -36,9 +36,9 @@ const BecomePetSitter = () => {
 
   // Predefined services options
   const serviceOptions = [
-    'Dog boarding',
-    'Doggy day care',
-    'Dog walking',
+    'Pet Boarding',
+    'Pet Wash',
+    'Dog Walking',
     '1x Home visit',
     '2x Home visits',
     'House sitting',
@@ -123,12 +123,12 @@ const BecomePetSitter = () => {
   // Form validation schema
   const validationSchema = Yup.object().shape({
     name: Yup.string().required('Name is required'),
-    location: Yup.string().required('Location is required'),
+    //location: Yup.string().required('Location is required'),
     experience: Yup.string().required('Experience is required'),
     rating: Yup.number().min(0).max(5, 'Rating must be between 0 and 5').required('Rating is required'),
     reviews: Yup.number().min(0).required('Number of reviews is required'),
     about: Yup.string().required('About is required'),
-    avatar: Yup.string().url('Must be a valid URL').required('Avatar URL is required'),
+    //avatar: Yup.string().url('Must be a valid URL').required('Avatar URL is required'),
     services: Yup.array().of(
       Yup.object().shape({
         title: Yup.string().required('Service title is required'),
@@ -183,6 +183,8 @@ const BecomePetSitter = () => {
         Skills: values.skills,
         Availability: availability,
         email: user.email, // Add user's email to the profile
+        id: userId
+        
       });
 
       Alert.alert('Success', 'Your pet sitter profile has been updated successfully.');

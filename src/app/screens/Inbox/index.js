@@ -2,7 +2,7 @@ import { View, StyleSheet, ActivityIndicator, Text } from 'react-native';
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { collection, doc, addDoc, onSnapshot, getDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, addDoc, onSnapshot, getDoc, serverTimestamp } from '@firebase/firestore';
 import { db } from '../../../../firebaseConfig';
 import Colors from '../../../constants/Colors';
 import { GiftedChat, Bubble, Avatar } from 'react-native-gifted-chat';

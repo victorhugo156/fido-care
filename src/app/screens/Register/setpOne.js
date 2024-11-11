@@ -67,7 +67,6 @@ export default function Register() {
                         )}
                     />
 
-
                     <Controller
                         control={control}
                         name='address'
@@ -80,69 +79,9 @@ export default function Register() {
                                 value={value}
                             />
                         )}
-                    />
-
-                    <Controller
-                        control={control}
-                        name='phone'
-                        render={({ field: { onChange, value } }) => (
-                            <TextInput
-                                placeholder='type your phone'
-                                placeholderTextColor={Colors.GRAY_700}
-                                keyboardType='numeric'
-                                style={styles.input}
-                                onChangeText={onChange}
-                                value={value}
-                            />
-                        )}
-                    />
-
-                    <Controller
-                        control={control}
-                        name='userName'
-                        render={({ field: { onChange, value } }) => (
-                            <TextInput
-                                placeholder='define your user name'
-                                placeholderTextColor={Colors.GRAY_700}
-                                style={styles.input}
-                                onChangeText={onChange}
-                                value={value}
-                            />
-                        )}
-                    />
-
-                    <Controller
-                        control={control}
-                        name='email'
-                        render={({ field: { onChange, value } }) => (
-                            <TextInput
-                                placeholder='type your e-mail'
-                                placeholderTextColor={Colors.GRAY_700}
-                                style={styles.input}
-                                onChangeText={onChange}
-                                value={value}
-                            />
-                        )}
-                    />
-
-                    <Controller
-                        control={control}
-                        name='password'
-                        render={({ field: { onChange, value } }) => (
-                            <TextInput
-                                placeholder='type your password'
-                                placeholderTextColor={Colors.GRAY_700}
-                                style={styles.input}
-                                onChangeText={onChange}
-                                value={value}
-                                onSubmitEditing={handleSubmit(handleSignUp)}
-                                returnKeyType='send'
-                            />
-                        )}
-                    />
-                
+                    />                
             </View>
-            <ButtonGreen btnName="SIGNUP" onPress={handleSubmit(handleSignUp)} /> 
+            <ButtonGreen btnName="NEXT" onPress={handleSubmit(handleSignUp)} /> 
         </View>
     );
 }

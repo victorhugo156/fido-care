@@ -1,12 +1,13 @@
 import { StyleSheet, Text, View, FlatList, ActivityIndicator, TouchableOpacity } from 'react-native';
 import React, { useEffect, useState } from 'react';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, where } from "@firebase/firestore"
 import { db } from './../../../../firebaseConfig';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { useRouter } from 'expo-router';
 import UserItem from '../../../components/Inbox/UserItem';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
+import { Form } from 'react-hook-form';
 
 
 export default function Chat() {

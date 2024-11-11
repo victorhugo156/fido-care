@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Button, StyleSheet, Alert } from 'react-native';
 import { useRouter, useNavigation } from 'expo-router';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc } from '@firebase/firestore';
 import { db } from '../../../../firebaseConfig';
 
 const SummaryScreen = ({ route }) => {
