@@ -30,7 +30,6 @@ export default function CardFeed({img, location, name, description, services, pr
                     <Text style={styles.TxtRate}>{rate}</Text>
                 </View>
             </View>
-
         </View>
     )
 }

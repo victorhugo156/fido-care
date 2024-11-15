@@ -1,5 +1,7 @@
-import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { initializeApp } from 'firebase/app';
+import { getFirestore } from "@firebase/firestore";
+// import firestore from "@react-native-firebase/firestore";
+// import messaging from "@react-native-firebase/messaging";
 
 
 // Your web app's Firebase configuration
@@ -14,7 +16,10 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-// Set Firestore log level to debug
 
 const db = getFirestore(app);
-export { db };
+
+// const db = firestore();
+//const firebaseMessaging  = messaging();
+
+export { db  };

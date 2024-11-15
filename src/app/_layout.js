@@ -16,7 +16,7 @@ export default function Rootlayout() {
     return (
         <ContextProvider>
             <SafeAreaView style={{ flex: 1 }}>
-            <StatusBar style="auto" /> 
+                <StatusBar style="auto" />
                 <Stack>
                     <Stack.Screen
                         name="screens/Login/index"
@@ -24,6 +24,7 @@ export default function Rootlayout() {
                             headerShown: false,  // No header for login
                         }}
                     />
+
 
                     <Stack.Screen
                         name="(tabs)"
@@ -139,24 +140,24 @@ export default function Rootlayout() {
                     <Stack.Screen
                         name="screens/PersonalDetails/index"
                         options={{
-                            title: "Personal Details", 
+                            title: "Personal Details",
                             headerStyle: {
-                                backgroundColor: '#3772FF', 
+                                backgroundColor: '#3772FF',
                             },
-                            headerTitleAlign: 'center', 
-                            headerTintColor: '#fff', 
+                            headerTitleAlign: 'center',
+                            headerTintColor: '#fff',
                         }}
                     />
 
                     <Stack.Screen
                         name="screens/UserPetsitterprofile/index"
                         options={{
-                            title: "My Pet Sitter Profile", 
+                            title: "My Pet Sitter Profile",
                             headerStyle: {
-                                backgroundColor: '#3772FF', 
+                                backgroundColor: '#3772FF',
                             },
-                            headerTitleAlign: 'center', 
-                            headerTintColor: '#fff', 
+                            headerTitleAlign: 'center',
+                            headerTintColor: '#fff',
                         }}
                     />
 

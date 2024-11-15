@@ -3,7 +3,11 @@ import { View, FlatList, Text, StyleSheet, ActivityIndicator, Alert } from 'reac
 import { useRouter } from 'expo-router';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import MapView, { Marker } from 'react-native-maps';
+import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import { collection, doc, setDoc, getDoc,deleteDoc  } from 'firebase/firestore';
+import * as Location from 'expo-location';
 import { db } from '../../../../firebaseConfig';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import Colors from '../../../constants/Colors';
@@ -37,10 +41,11 @@ const BecomePetSitter = () => {
   const [profileDeleted, setProfileDeleted] = useState(false);
 
   const serviceOptions = [
-    'Pet Day Care',
-    'Pet Boarding',
-    'Pet Wash',
-    'Dog Walking',
+    'Dog boarding',
+    'Doggy day care',
+    'Dog walking',
+    '1x Home visit',
+    '2x Home visits',
     'House sitting',
   ];
 
@@ -96,22 +101,133 @@ const BecomePetSitter = () => {
     };
 
     fetchUserData();
-  }, [profileDeleted]);
+  }, [profileDeleted]); // Depend on profileDeleted so it stops re-fetching after deletion
+  
+  
+  
 
-  const validationSchema = Yup.object().shape({
-    name: Yup.string().required('Name is required'),
-    location: Yup.string().required('Location is required'),
-    experience: Yup.string().required('Experience is required'),
-    about: Yup.string().required('About is required'),
-    avatar: Yup.string().required('Photo Profile is required'),
-    services: Yup.array().of(
-      Yup.object().shape({
-        title: Yup.string().required('Service title is required'),
-        price: Yup.number().required('Service price is required'),
-      })
-    ),
-    skills: Yup.array().of(Yup.string().required('Skill is required')),
-  });
+  async function getUserData() {
+    try {
+      const currentUser = await GoogleSignin.getCurrentUser();
+      setUser(currentUser?.user || null);
+
+      if (currentUser) {
+        const userId = currentUser.user.id;
+        const docRef = doc(db, 'PetSitterProfile', userId);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          setPetSitterData({ id: userId, ...docSnap.data() });
+          setLatitude(docSnap.data().Latitude);
+          setLongitude(docSnap.data().Longitude);
+          setAvailability(docSnap.data().Availability || []);
+          setRegion({
+            latitude: docSnap.data().Latitude,
+            longitude: docSnap.data().Longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          });
+        }
+      } else {
+        console.log('User is not authenticated');
+        router.push('/screens/EntryPoint');
+      }
+      setLoading(false);
+    } catch (error) {
+      console.log(error);
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    getUserData();
+  }, []);
+
+  // Avatar Picker Function
+  const pickImage = async (setFieldValue) => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission Denied', 'We need access to your photos to set an avatar.');
+      return;
+    }
+
+    const pickerResult = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 1,
+    });
+
+    if (!pickerResult.canceled && pickerResult.assets && pickerResult.assets.length > 0) {
+      const selectedImageUri = pickerResult.assets[0].uri;
+      setAvatar(selectedImageUri);
+      setFieldValue('avatar', selectedImageUri); // Update Formik field
+    }
+  };  
+
+    // Delete Pet Sitter Profile
+    const handleDeleteProfile = async () => {
+      Alert.alert(
+        "Delete Profile",
+        "Are you sure you want to delete your pet sitter profile?",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Delete",
+            style: "destructive",
+            onPress: async () => {
+              try {
+                if (user) {
+                  const userId = user.id;
+                  await deleteDoc(doc(db, 'PetSitterProfile', userId));
+                  setProfileDeleted(true);
+                  Alert.alert("Profile Deleted", "Your pet sitter profile has been deleted.");
+                  router.push('/Home'); // Redirect after deletion
+                }
+              } catch (error) {
+                console.error("Error deleting profile: ", error);
+                Alert.alert("Error", "There was an error deleting your profile.");
+              }
+            },
+          },
+        ]
+      );
+    };    
+  
+
+// Form validation schema
+const validationSchema = Yup.object().shape({
+  name: Yup.string().required('Name is required'),
+  location: Yup.string().required('Location is required'),
+  experience: Yup.string().required('Experience is required'),
+  about: Yup.string().required('About is required'),
+  avatar: Yup.string()
+    .test('is-selected', 'Avatar is required', (value) => !!value) // Ensure avatar has a value
+    .required('Photo Profile is required'), // Required validation for avatar
+  services: Yup.array().of(
+    Yup.object().shape({
+      title: Yup.string().required('Service title is required'),
+      price: Yup.number().required('Service price is required'),
+    })
+  ),
+  skills: Yup.array().of(Yup.string().required('Skill is required')),
+});  
+
+  // Handle Date Selection
+  const onDateChange = (event, selectedDate) => {
+    const date = selectedDate || currentDate;
+    setShowDatePicker(false);
+    setCurrentDate(date);
+    if (!availability.includes(date.toLocaleDateString())) {
+      setAvailability([...availability, date.toLocaleDateString()]);
+    } else {
+      Alert.alert('Duplicate', 'This date is already added.');
+    }
+  };
+
+  const handleRemoveDate = (dateToRemove) => {
+    setAvailability(availability.filter((date) => date !== dateToRemove));
+  };
 
   const handleSubmit = async (values) => {
     if (!latitude || !longitude) {
@@ -136,7 +252,7 @@ const BecomePetSitter = () => {
         Services: values.services,
         Skills: values.skills,
         Availability: availability,
-        email: user.email,
+        email: user.email, // Add user's email to the profile
       });
 
       Alert.alert('Success', 'Your pet sitter profile has been updated successfully.');

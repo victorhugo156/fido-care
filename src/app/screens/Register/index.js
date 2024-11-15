@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { LoginStorage } from '../../../data/storage/loginStorage';
 import { useForm, Controller } from "react-hook-form"
 import { db } from '../../../../firebaseConfig';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc } from '@firebase/firestore';
 
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
