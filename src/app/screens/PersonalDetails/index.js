@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Alert, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { GetUserToken } from '../../../data/storage/getUserToken';
 import { db } from '../../../../firebaseConfig';
@@ -7,11 +7,22 @@ import { doc, setDoc, getDoc } from 'firebase/firestore';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 
+// Import LocationPicker component
+import LocationPicker from '../../../components/BecomePetSitter/LocationPicker';
+
 const PersonalDetails = () => {
   const router = useRouter();
   const [userData, setUserData] = useState({});
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [latitude, setLatitude] = useState(null);
+  const [longitude, setLongitude] = useState(null);
+  const [region, setRegion] = useState({
+    latitude: -33.8688,
+    longitude: 151.2093,
+    latitudeDelta: 0.01,
+    longitudeDelta: 0.01,
+  });
 
   // Fetch authenticated user data
   async function getUser() {
@@ -24,10 +35,20 @@ const PersonalDetails = () => {
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-          setUserData({ id: user.id, ...docSnap.data() });
+          const data = docSnap.data();
+          setUserData({ id: user.id, ...data });
+          if (data.latitude && data.longitude) {
+            setLatitude(data.latitude);
+            setLongitude(data.longitude);
+            setRegion({
+              latitude: data.latitude,
+              longitude: data.longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            });
+          }
         } else {
           console.log("No such document!");
-          // Create a new document with basic user data if it doesn't exist
           const newUserData = {
             name: user.name || "",
             email: user.email || "",
@@ -55,7 +76,7 @@ const PersonalDetails = () => {
   const handleSave = async () => {
     try {
       const userRef = doc(db, "Users", userData.id);
-      await setDoc(userRef, userData);
+      await setDoc(userRef, { ...userData, latitude, longitude });
       Alert.alert('Success', 'Your details have been updated successfully.');
       setEditMode(false);
     } catch (error) {
@@ -80,7 +101,7 @@ const PersonalDetails = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <Text style={styles.headerText}>My Personal Details</Text>
 
       <View style={styles.formContainer}>
@@ -100,12 +121,24 @@ const PersonalDetails = () => {
         />
 
         <Text style={styles.label}>Address</Text>
-        <TextInput
-          style={styles.input}
-          value={userData.address}
-          editable={editMode}
-          onChangeText={(text) => handleChange('address', text)}
-        />
+        {editMode ? (
+          <LocationPicker
+            latitude={latitude}
+            longitude={longitude}
+            setLatitude={setLatitude}
+            setLongitude={setLongitude}
+            region={region}
+            setRegion={setRegion}
+            setFieldValue={(field, value) => handleChange('address', value)}
+            initialLocation={userData.address} // Pass initial address
+          />
+        ) : (
+          <TextInput
+            style={styles.input}
+            value={userData.address}
+            editable={false}
+          />
+        )}
 
         <Text style={styles.label}>Phone Number</Text>
         <TextInput
@@ -125,7 +158,7 @@ const PersonalDetails = () => {
           <Text style={styles.editButtonText}>Edit</Text>
         </TouchableOpacity>
       )}
-    </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -141,7 +174,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     fontFamily: Font_Family.BOLD,
     color: Colors.BRIGHT_BLUE,
-
   },
   headerText: {
     fontSize: 28,
@@ -152,12 +184,6 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     marginBottom: 20,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
   },
   loader: {
     backgroundColor: '#ffffff',
@@ -176,7 +202,7 @@ const styles = StyleSheet.create({
     color: '#333',
     fontWeight: '500',
     textAlign: 'center',
-  },  
+  },
   label: {
     fontSize: 16,
     fontFamily: Font_Family.BOLD,
@@ -186,6 +212,8 @@ const styles = StyleSheet.create({
   input: {
     backgroundColor: '#FFF',
     borderRadius: 10,
+    color: Colors.GRAY_600,
+    fontFamily: Font_Family.REGULAR,
     padding: 10,
     marginBottom: 15,
     borderWidth: 1,
@@ -216,5 +244,7 @@ const styles = StyleSheet.create({
 });
 
 export default PersonalDetails;
+
+
 
 

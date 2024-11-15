@@ -127,7 +127,7 @@ const PetSitterProfile = () => {
           userIds: [user.email, petSitter.email],
           users: [
             { email: user.email, name: user.name, avatar: user.photo },
-            { email: petSitter.email, name: petSitter.Name, avatar: petSitter.Avatar },
+            { email: petSitter.email, name: petSitter.Name, avatar: petSitter.Avatar || 'default_avatar_url' },
           ],
           createdAt: new Date(),
         });
@@ -156,7 +156,10 @@ const PetSitterProfile = () => {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.headerImageContainer}>
-        <Image source={{ uri: petSitter.Avatar }} style={styles.headerImage} />
+        <Image
+          source={{ uri: petSitter.Avatar || 'https://your_default_image_url.com/default-avatar.png' }} // Fallback to default if no Avatar
+          style={styles.headerImage}
+        />
         <View style={styles.imageOverlay}>
           <MarkFavSitter petSitterId={petSitterId} color={Colors.CORAL_PINK} />
           <TouchableOpacity style={styles.imageButton}>
