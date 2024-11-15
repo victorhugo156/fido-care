@@ -1,14 +1,26 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { collection, doc, getDocs, onSnapshot, query, where, addDoc } from '@firebase/firestore';
+import { collection, doc, getDocs, onSnapshot, query, where, addDoc } from 'firebase/firestore';
 import { db } from '../../../../firebaseConfig';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
-
+import MarkFavSitter from '../../../components/MarkFavSitter/index';
 import ButtonApply from '../../../components/ButtonApply/idex';
+
+// Skeleton loading component for smoother transitions
+const SkeletonProfile = () => (
+  <View style={styles.skeletonContainer}>
+    <View style={styles.skeletonHeaderImage} />
+    <View style={styles.skeletonInfo}>
+      <View style={styles.skeletonText} />
+      <View style={styles.skeletonText} />
+      <View style={styles.skeletonButton} />
+    </View>
+  </View>
+);
 
 const PetSitterProfile = () => {
   const { id } = useLocalSearchParams();
@@ -20,6 +32,12 @@ const PetSitterProfile = () => {
   const [averageRating, setAverageRating] = useState(null);
   const [reviewCount, setReviewCount] = useState(0);
   const [showFullText, setShowFullText] = useState(false);
+
+  // Service details for booking
+  const serviceDetails = {
+    title: "Pet Sitting",
+    date: "10-11-2024"
+  };
 
   useEffect(() => {
     const fetchUserAndPetSitter = async () => {
@@ -87,6 +105,30 @@ const PetSitterProfile = () => {
     }
   }, [petSitterId]);
 
+  /** ---------- BOOKING FUNCTIONS ---------------- */
+  const createBookingRequest = async () => {
+    console.log("currentUser.id:", user?.id);
+    console.log("petSitter.id:", petSitter?.id);
+
+    if (!user?.id || !petSitter?.id) {
+      console.error("Error: petOwnerId or petSitterId is undefined.");
+      alert("Booking request cannot be created: Pet Owner or Pet Sitter ID is missing.");
+      return;
+    }
+    try {
+      await addDoc(collection(db, "Booking"), {
+        PetOwnerID: user.id,
+        PetSitterID: petSitter.id,
+        BookingStatus: "waiting",
+        ServiceDetails: serviceDetails
+      });
+
+      alert("Booking request Sent");
+    } catch (error) {
+      console.error("Error creating booking request:", error);
+    }
+  };
+
   const handleChatNavigation = async () => {
     if (!user) {
       Alert.alert("Error", "You need to be logged in to start a chat");
@@ -116,7 +158,7 @@ const PetSitterProfile = () => {
           userIds: [user.email, petSitter.email],
           users: [
             { email: user.email, name: user.name, avatar: user.photo },
-            { email: petSitter.email, name: petSitter.Name, avatar: petSitter.Avatar || 'default_avatar_url' },
+            { email: petSitter.email, name: petSitter.Name, avatar: petSitter.Avatar },
           ],
           createdAt: new Date(),
         });
@@ -138,51 +180,8 @@ const PetSitterProfile = () => {
     return <ActivityIndicator size="large" color={Colors.PRIMARY} />;
   }
 
-  // if (!petSitter) {
-  //   return <SkeletonProfile />;
-  // }
-
-
-  function handlePetSitterInfo(){
-    console.log("This is the petSitter ID: ", petSitter.Services);
-  }
-
-
-
-
-
-  /** ---------- BOOKING FUNCTIONS ---------------- */
-
-  
-  const serviceDetails = {
-    title: "Pet Sitting",
-    date: "10-11-2024"
-  };
-
-  const createBookingRequest = async () => {
-
-    // Debugging log to ensure variables are defined
-    console.log("currentUser.id:", user?.id);
-    console.log("petSitter.id:", petSitter?.id);
-
-    if (!user?.id || !petSitter?.id) {
-      console.error("Error: petOwnerId or petSitterId is undefined.");
-      alert("Booking request cannot be created: Pet Owner or Pet Sitter ID is missing.");
-      return;
-    }
-    try {
-      await addDoc(collection(db, "Booking"), {
-        PetOwnerID: user.id,
-        PetSitterID: petSitter.id,
-        BookingStatus: "waiting",
-        ServiceDetails: serviceDetails
-      });
-
-      alert("Booking request Sent");
-
-    } catch (error) {
-      console.error("Error creating booking request:", error);
-    }
+  if (!petSitter) {
+    return <SkeletonProfile />;
   }
 
   return (
@@ -190,26 +189,16 @@ const PetSitterProfile = () => {
       <View style={styles.headerImageContainer}>
         <Image source={{ uri: petSitter.Avatar }} style={styles.headerImage} />
         <View style={styles.imageOverlay}>
-          {
-            petSitter && (
-              <MarkFavSitter petSitterId={petSitterId} color={Colors.CORAL_PINK} />
-            )
-          }
-          
+          <MarkFavSitter petSitterId={petSitterId} color={Colors.CORAL_PINK} />
           <TouchableOpacity style={styles.imageButton}>
             <Ionicons name="share-outline" size={20} color={Colors.CORAL_PINK} />
           </TouchableOpacity>
         </View>
-      </View> */}
+      </View>
 
       <View style={styles.profileInfoContainer}>
-        {
-          petSitter &&(
-            <Text style={styles.sitterName}>{petSitter.Name}</Text>,         
-            <Text style={styles.location}>{petSitter.Location}</Text>
-          )
-        }
-        
+        <Text style={styles.sitterName}>{petSitter.Name}</Text>
+        <Text style={styles.location}>{petSitter.Location}</Text>
         <TouchableOpacity style={styles.ratingContainer} onPress={handleNavigateToReviews}>
           <Ionicons name="star" size={16} color={Colors.CORAL_PINK} />
           <Text style={styles.ratingText}>
@@ -232,14 +221,9 @@ const PetSitterProfile = () => {
 
       <View style={styles.sectionContainer}>
         <Text style={styles.sectionTitle}>ABOUT ME</Text>
-        {
-          petSitter &&(
-            <Text style={styles.aboutText} numberOfLines={showFullText ? undefined : 3}>
-            {petSitter.About}
-          </Text>
-          )
-        }
-
+        <Text style={styles.aboutText} numberOfLines={showFullText ? undefined : 3}>
+          {petSitter.About}
+        </Text>
         <TouchableOpacity onPress={() => setShowFullText(!showFullText)}>
           <Text style={styles.readMoreText}>{showFullText ? 'Read Less' : 'Read More'}</Text>
         </TouchableOpacity>
@@ -271,7 +255,7 @@ const PetSitterProfile = () => {
         ))}
       </View>
 
-      <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Apply"} onPress={handlePetSitterInfo} />
+      <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Apply"} onPress={createBookingRequest} />
     </ScrollView>
   );
 };

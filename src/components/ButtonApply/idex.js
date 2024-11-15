@@ -18,18 +18,13 @@ export default function ButtonApply({bgColor, btnTitle, onPress}){
 const styles = StyleSheet.create({
 
     ContainerBtn:{
-
-        alignItems:"center",
-        justifyContent: "center",
-
-        width: 105,
-        height: 35,
-
-        justifyContent: "center",
         alignItems: "center",
-
-        
-        borderRadius: 6
+        justifyContent: "center",
+        width: '90%', 
+        height: 50, 
+        borderRadius: 10,
+        alignSelf: "center", 
+        marginVertical: 20, 
     },
 
     BtnTitle:{

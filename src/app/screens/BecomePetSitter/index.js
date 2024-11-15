@@ -6,10 +6,10 @@ import * as Yup from 'yup';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import MapView, { Marker } from 'react-native-maps';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import { collection, doc, setDoc, getDoc,deleteDoc  } from 'firebase/firestore';
+//import { collection, doc, setDoc, getDoc,deleteDoc  } from 'firebase/firestore';
 import * as Location from 'expo-location';
 import { db } from '../../../../firebaseConfig';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc,deleteDoc } from 'firebase/firestore';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 
