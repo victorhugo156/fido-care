@@ -6,7 +6,6 @@ import Font_Family from "../../constants/Font_Family"
 import Font_Size from "../../constants/Font_Size"
 
 
-
 export default function Input({ placeholder, iconName, error = "", onChangeText, value}) {
     return (
         <View style={styles.Container}>
@@ -16,11 +15,12 @@ export default function Input({ placeholder, iconName, error = "", onChangeText,
                 </View>
 
                 <TextInput
+                    style={styles.input}
                     placeholder={placeholder}
                     placeholderTextColor={Colors.GRAY_700}
                     onChangeText={onChangeText}
                     value={value}
-                    style={styles.input}
+                    
                 />
             </View>
             {
@@ -35,31 +35,30 @@ export default function Input({ placeholder, iconName, error = "", onChangeText,
 const styles = StyleSheet.create({
 
     Container:{
-        backgroundColor: Colors.GRAY_100,
-
+        
         width: "100%",
         height: 70,
 
-        marginBottom: 30
-
+        marginBottom: 30,
     },
 
     ContainerInput:{
+        backgroundColor: Colors.GRAY_100,
         width: "100%",
-        height: 58,
-
+   
         flexDirection: "row",
+        alignItems: "center",
         
         padding: 10,
 
-        borderRadius: 10,
+        marginBottom: 15,
 
-        marginBottom: 15
+        borderRadius: 5
+        
     },
 
     ErrorMessage:{
         color: Colors.CORAL_PINK
-
     },
 
     Icon:{
@@ -74,8 +73,7 @@ const styles = StyleSheet.create({
     },
 
     input:{
-
-        padding: 10
+        paddingLeft: 20,
         
     }
 

@@ -1,8 +1,12 @@
 import { View, Text, StyleSheet, Image, TextInput, Alert } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { Link } from 'expo-router';
-import { useForm, Controller } from "react-hook-form"
+import { useForm, Controller } from "react-hook-form";
+import { UseRegisterService } from "../../hook/useRegisterService";
 import { db } from '../../../../firebaseConfig';
+import { auth } from '../../../../firebaseConfig';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+
 import { OneSignal } from 'react-native-onesignal';
 import { doc, setDoc } from 'firebase/firestore';
 
@@ -36,10 +40,13 @@ export default function LoginScreen() {
   const { control, handleSubmit, formState: { errors } } = useForm();
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [oneSignalPlayerId, setOneSignalPlayerId] = useState(null);
+  const { newUser, setNewUser } = UseRegisterService();
 
   useEffect(() => {
     // Initialize OneSignal
     OneSignal.initialize('56418014-2ca0-45b0-bd36-6ea04a3d655a');
+
+    // console.log('Firebase Auth initialized:', auth().app.name);
 
     // Request permission for notifications
     OneSignal.Notifications.requestPermission(true);
@@ -51,6 +58,10 @@ export default function LoginScreen() {
         if (playerId) {
           setOneSignalPlayerId(playerId);
           console.log('OneSignal Player ID:', playerId);
+          setNewUser((prev) => ({
+            ...prev, oneSignalId: playerId,
+          }));
+          
         } else {
           console.warn('OneSignal Player ID is not available.');
         }
@@ -61,6 +72,8 @@ export default function LoginScreen() {
 
     fetchPlayerId();
   }, []);
+
+  console.log("this is the new user OneSIgnalPlayer", newUser)
 
   // Save Player ID to Firestore
   const savePlayerId = async (userId) => {
@@ -110,8 +123,37 @@ export default function LoginScreen() {
 
   }
 
-  function handleLogin() {
-    console.log("I am here in Login")
+  const onSubmit = (data) => {
+    const { email, password } = data;
+    handleLogin(email, password); // Call the login function
+  };
+
+  const handleLogin= async (email, password) => {
+    try {
+      // Authenticate the user using Firebase Auth
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  
+      // Retrieve authenticated user's information
+      const user = userCredential.user;
+  
+      console.log("User signed in successfully:", user);
+  
+      // Additional actions after successful login
+      // For example: Navigate to the home screen or store user data in context
+      router.push("Home");
+    } catch (error) {
+      // Handle authentication errors
+      console.error("Error signing in:", error);
+  
+      // User-friendly error handling
+      if (error.code === "auth/user-not-found") {
+        alert("No user found with this email.");
+      } else if (error.code === "auth/wrong-password") {
+        alert("Incorrect password.");
+      } else {
+        alert("Error signing in: " + error.message);
+      }
+    }
   }
 
   function handleRegister() {
@@ -119,7 +161,6 @@ export default function LoginScreen() {
   }
 
  
-
 
   return (
     <View style={styles.container}>
@@ -140,7 +181,6 @@ export default function LoginScreen() {
             rules={{
               required: "Inform your email",
               
-    
             }}
             render={({ field: { onChange, value } }) => (
               <Input
@@ -192,7 +232,7 @@ export default function LoginScreen() {
             <Text style={styles.recoverPasswordLink}>Forgot your password?</Text>
           </Link>
 
-          <ButtonGreen btnName="LOGIN" onPress={handleSubmit(handleLogin)} />
+          <ButtonGreen btnName="LOGIN" onPress={handleSubmit(onSubmit)} />
         </View>
       </View>
 

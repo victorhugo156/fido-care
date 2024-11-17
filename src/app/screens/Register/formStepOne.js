@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { Link } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { LoginStorage } from '../../../data/storage/loginStorage';
-import { useForm, Controller } from "react-hook-form"
+import { useForm, Controller } from "react-hook-form";
+import { UseRegisterService } from '../../hook/useRegisterService';
 
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
@@ -12,16 +13,28 @@ import Input from '../../../components/Input';
 import ButtonGreen from '../../../components/ButtonGreen';
 
 
+
 export default function formStepOne() {
 
     const router = useRouter(); // Initialize router
+    const { newUser, setNewUser } = UseRegisterService(); // Access context
 
-    const { control, handleSubmit, formState: { errors } } = useForm();
+    const { control, handleSubmit, formState: { errors } } = useForm({
+        defaultValues:{
+            name: newUser.name || "",
+            address: newUser.address || "",
+        }
+    });
 
-    console.log(errors)
+    console.log(errors);
 
 
     function handleNextStep(data) {
+        setNewUser((prev)=>({
+            ...prev,
+            name: data.name,
+            address: data.address,
+        }));
         router.push("screens/Register/formStepTwo");
     }
 
