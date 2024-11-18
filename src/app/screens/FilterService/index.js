@@ -155,6 +155,8 @@ export default function FilterService() {
                     </View>
                 </View>
 
+                {/*-------------- Modal ------------------- */}
+                
                 <CustomBottomSheet ref={bottomSheetRef}>
                     <View style={styles.ContainerModal}>
                         <Text style={styles.ModalTitle}>Pet Size</Text>

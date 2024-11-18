@@ -7,6 +7,8 @@ import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 import { GetUserToken } from '../../../data/storage/getUserToken';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '../../../../firebaseConfig';
 
 // Define menu items with screen names and icons
 const menuItems = [
@@ -32,6 +34,25 @@ const Menu = () => {
     try {
       const userToken = await GetUserToken("user_data");
       const user = userToken ? JSON.parse(userToken) : null;
+
+       // Check Firebase Authentication
+       onAuthStateChanged(auth, (firebaseUser) => {
+        if (firebaseUser) {
+            console.log("Firebase user authenticated:", firebaseUser);
+
+            // Combine Firebase and Google Sign-In data
+            setUserAuthenticated(true);
+            setUserData({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              name: firebaseUser.displayName || "Anonymous User", // Default to anonymous if no name
+            });
+        } else {
+            console.log("Firebase user is not authenticated");
+            setUserAuthenticated(false);
+            setUserData(null);
+        }
+    });
 
       if (user) {
         console.log("User is authenticated", user);

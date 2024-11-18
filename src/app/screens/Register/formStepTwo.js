@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Link } from 'expo-router';
 
 import { auth, db  } from "../../../../firebaseConfig";
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 
 import { useRouter } from 'expo-router';
 import { useForm, Controller } from "react-hook-form";
@@ -21,35 +21,35 @@ import { addDoc, collection } from '@firebase/firestore';
 export default function formStepTwo() {
 
     const router = useRouter(); // Initialize router
-    const { newUser, setNewUser } = UseRegisterService(); // Access context
+    const { currentUser, setCurrentUser } = UseRegisterService(); // Access context
 
     const { control, handleSubmit, formState: { errors } } = useForm({
         defaultValues:{
-            email: newUser.email || "",
-            password: newUser.password || "",
+            email: currentUser.email || "",
+            password: currentUser.password || "",
         }
     });
 
     console.log(errors);
-    console.log("This is the new user on Screen 2 info ->", newUser);
+    console.log("This is the new user on Screen 2 info ->", currentUser);
 
 
     const handleNextStep = async (data) => {
         try{
-            setNewUser((prev)=>({
+            setCurrentUser((prev)=>({
                 ...prev,
                 email: data.email,
                 password: data.password,
             }));
 
-            console.log("Updated Context Data: ", data);
-
-            await registerUser(data.email, data.password,{
-                address: newUser.address,
+            console.log("Updated Context Data: ", { ...currentUser, email: data.email, password: data.password });
+            // Register the user
+            await registerUser(data.email, data.password, currentUser.name, {
+                address: currentUser.address,
                 email: data.email,
                 password: data.password,
-                name: newUser.name,
-                oneSignalId: newUser.oneSignalId,
+                name: currentUser.name,
+                oneSignalId: currentUser.oneSignalId,
             });
 
             router.push("Home");
@@ -59,24 +59,30 @@ export default function formStepTwo() {
         }
     }
 
-    const registerUser = async (email, password, newUser) => {
+    const registerUser = async (email, password, displayName, currentUser) => {
         try {
             // Create the user in Firebase Authentication
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-
             const userId = userCredential.user.uid;
 
+            
+            // Update the displayName
+            await updateProfile(userCredential.user, {
+                displayName: displayName,
+            });
+
             // Ensure all required fields are defined
-            if (!newUser.address || !newUser.email || !newUser.name || !newUser.oneSignalId) {
+            if (!currentUser.address || !currentUser.email || !currentUser.name || !currentUser.oneSignalId) {
                 throw new Error("Missing required fields for Firestore document.");
             }
 
+
             // Save user data to Firestore
             await addDoc(collection(db, "Users"), {
-                address: newUser.address,
+                address: currentUser.address,
                 id: userId,
-                name: newUser.name,
-                oneSignalPlayerId: newUser.oneSignalId
+                name: currentUser.name,
+                oneSignalPlayerId: currentUser.oneSignalId
             });
             console.log('User registered and saved to Firestore:', userId);
         } catch (error) {
@@ -103,9 +109,11 @@ export default function formStepTwo() {
                     render={({ field: { onChange, value } }) => (
 
                         <Input
+                            style={styles.input}
+                            iconName="envelope"
+                            iconSize={20}
                             placeholder='type your email'
                             placeholderTextColor={Colors.GRAY_700}
-                            style={styles.input}
                             error={errors.email?.message}
                             onChangeText={onChange}
                             value={value}
@@ -122,9 +130,12 @@ export default function formStepTwo() {
                     }}
                     render={({ field: { onChange, value } }) => (
                         <Input
+                        style={styles.input}
+                            iconName="lock"
+                            iconSize={25}
                             placeholder='type your password'
+                            secureTextEntry={true}
                             placeholderTextColor={Colors.GRAY_700}
-                            style={styles.input}
                             error = {errors.address?.message}
                             onChangeText={onChange}
                             value={value}
@@ -132,7 +143,7 @@ export default function formStepTwo() {
                     )}
                 />
             </View>
-            <ButtonGreen btnName="NEXT" onPress={handleSubmit(handleNextStep)} />
+            <ButtonGreen btnName="REGISTER" onPress={handleSubmit(handleNextStep)} />
         </View>
     );
 }

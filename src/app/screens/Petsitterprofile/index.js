@@ -1,14 +1,20 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 import { collection, doc, getDocs, onSnapshot, query, where, addDoc } from 'firebase/firestore';
 import { db } from '../../../../firebaseConfig';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { UseRegisterService } from '../../hook/useRegisterService'; 
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+
+
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 import MarkFavSitter from '../../../components/MarkFavSitter/index';
 import ButtonApply from '../../../components/ButtonApply/idex';
+import CustomBottomSheet from '../../../components/CustomBottomSheet';
 
 // Skeleton loading component for smoother transitions
 const SkeletonProfile = () => (
@@ -24,11 +30,15 @@ const SkeletonProfile = () => (
 
 const PetSitterProfile = () => {
   const { id } = useLocalSearchParams();
+  const { currentUser } = UseRegisterService();
   const petSitterId = id;
+  //This will get the reference of the bottom sheet
+  const bottomSheetRef = useRef(null);
+
   const router = useRouter();
   const [petSitter, setPetSitter] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
+  //const [user, setUser] = useState(null);
   const [averageRating, setAverageRating] = useState(null);
   const [reviewCount, setReviewCount] = useState(0);
   const [showFullText, setShowFullText] = useState(false);
@@ -38,12 +48,16 @@ const PetSitterProfile = () => {
     title: "Pet Sitting",
     date: "10-11-2024"
   };
+  //Modal Controls
+  const handleClosePress = () => bottomSheetRef.current?.close();
+  const handleOpenPress = () => bottomSheetRef.current?.present();
 
   useEffect(() => {
+    console.log('This is the currentUser in PetSitterProFile ->>>>', currentUser)
     const fetchUserAndPetSitter = async () => {
       try {
-        const currentUser = await GoogleSignin.getCurrentUser();
-        if (currentUser) setUser(currentUser.user);
+        // const currentUser = await GoogleSignin.getCurrentUser();
+        // if (currentUser) setUser(currentUser.user);
 
         if (petSitterId) {
           const docRef = doc(db, 'PetSitterProfile', petSitterId);
@@ -107,23 +121,24 @@ const PetSitterProfile = () => {
 
   /** ---------- BOOKING FUNCTIONS ---------------- */
   const createBookingRequest = async () => {
-    console.log("currentUser.id:", user?.id);
+    console.log("currentUser.id:",currentUser?.userId);
     console.log("petSitter.id:", petSitter?.id);
 
-    if (!user?.id || !petSitter?.id) {
+    if (!currentUser?.userId || !petSitter?.id) {
       console.error("Error: petOwnerId or petSitterId is undefined.");
       alert("Booking request cannot be created: Pet Owner or Pet Sitter ID is missing.");
       return;
     }
     try {
       await addDoc(collection(db, "Booking"), {
-        PetOwnerID: user.id,
+        PetOwnerID: currentUser.userId,
         PetSitterID: petSitter.id,
         BookingStatus: "waiting",
         ServiceDetails: serviceDetails
       });
 
       alert("Booking request Sent");
+      router.push("Bookings");
     } catch (error) {
       console.error("Error creating booking request:", error);
     }
@@ -185,78 +200,88 @@ const PetSitterProfile = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.headerImageContainer}>
-        <Image source={{ uri: petSitter.Avatar }} style={styles.headerImage} />
-        <View style={styles.imageOverlay}>
-          <MarkFavSitter petSitterId={petSitterId} color={Colors.CORAL_PINK} />
-          <TouchableOpacity style={styles.imageButton}>
-            <Ionicons name="share-outline" size={20} color={Colors.CORAL_PINK} />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ScrollView style={styles.container}>
+        <View style={styles.headerImageContainer}>
+          <Image source={{ uri: petSitter.Avatar }} style={styles.headerImage} />
+          <View style={styles.imageOverlay}>
+            <MarkFavSitter petSitterId={petSitterId} color={Colors.CORAL_PINK} />
+            <TouchableOpacity style={styles.imageButton}>
+              <Ionicons name="share-outline" size={20} color={Colors.CORAL_PINK} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.profileInfoContainer}>
+          <Text style={styles.sitterName}>{petSitter.Name}</Text>
+          <Text style={styles.location}>{petSitter.Location}</Text>
+          <TouchableOpacity style={styles.ratingContainer} onPress={handleNavigateToReviews}>
+            <Ionicons name="star" size={16} color={Colors.CORAL_PINK} />
+            <Text style={styles.ratingText}>
+              {averageRating ? `${averageRating} / 5` : 'N/A'}
+            </Text>
+            <Text style={styles.reviewCount}>
+              ({reviewCount} {reviewCount === 1 ? 'Review' : 'Reviews'})
+            </Text>
           </TouchableOpacity>
         </View>
-      </View>
 
-      <View style={styles.profileInfoContainer}>
-        <Text style={styles.sitterName}>{petSitter.Name}</Text>
-        <Text style={styles.location}>{petSitter.Location}</Text>
-        <TouchableOpacity style={styles.ratingContainer} onPress={handleNavigateToReviews}>
-          <Ionicons name="star" size={16} color={Colors.CORAL_PINK} />
-          <Text style={styles.ratingText}>
-            {averageRating ? `${averageRating} / 5` : 'N/A'}
+        <View style={styles.actionButtonsContainer}>
+          <TouchableOpacity style={[styles.button, styles.meetButton]} onPress={handleChatNavigation}>
+            <Text style={styles.buttonText}>MEETING PET SITTER</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.button, styles.messageButton]} onPress={handleChatNavigation}>
+            <Text style={styles.buttonText}>MESSAGE PET SITTER</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>ABOUT ME</Text>
+          <Text style={styles.aboutText} numberOfLines={showFullText ? undefined : 3}>
+            {petSitter.About}
           </Text>
-          <Text style={styles.reviewCount}>
-            ({reviewCount} {reviewCount === 1 ? 'Review' : 'Reviews'})
-          </Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity onPress={() => setShowFullText(!showFullText)}>
+            <Text style={styles.readMoreText}>{showFullText ? 'Read Less' : 'Read More'}</Text>
+          </TouchableOpacity>
+        </View>
 
-      <View style={styles.actionButtonsContainer}>
-        <TouchableOpacity style={[styles.button, styles.meetButton]} onPress={handleChatNavigation}>
-          <Text style={styles.buttonText}>MEETING PET SITTER</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, styles.messageButton]} onPress={handleChatNavigation}>
-          <Text style={styles.buttonText}>MESSAGE PET SITTER</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>ABOUT ME</Text>
-        <Text style={styles.aboutText} numberOfLines={showFullText ? undefined : 3}>
-          {petSitter.About}
-        </Text>
-        <TouchableOpacity onPress={() => setShowFullText(!showFullText)}>
-          <Text style={styles.readMoreText}>{showFullText ? 'Read Less' : 'Read More'}</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>SERVICES</Text>
-        {petSitter.Services && petSitter.Services.map((service, index) => (
-          <View key={index} style={styles.serviceItem}>
-            <Text style={styles.serviceTitle}>{service.title}</Text>
-            <Text style={styles.servicePrice}>AU${service.price} / hour</Text>
-          </View>
-        ))}
-      </View>
-
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>AVAILABILITY</Text>
-        <View style={styles.availabilityCalendar}>
-          {petSitter.Availability && petSitter.Availability.map((date, index) => (
-            <Text key={index} style={styles.calendarText}>{date}</Text>
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>SERVICES</Text>
+          {petSitter.Services && petSitter.Services.map((service, index) => (
+            <View key={index} style={styles.serviceItem}>
+              <Text style={styles.serviceTitle}>{service.title}</Text>
+              <Text style={styles.servicePrice}>AU${service.price} / hour</Text>
+            </View>
           ))}
         </View>
-      </View>
 
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>SKILLS</Text>
-        {petSitter.Skills && petSitter.Skills.map((skill, index) => (
-          <Text key={index} style={styles.skillText}>✔️ {skill}</Text>
-        ))}
-      </View>
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>AVAILABILITY</Text>
+          <View style={styles.availabilityCalendar}>
+            {petSitter.Availability && petSitter.Availability.map((date, index) => (
+              <Text key={index} style={styles.calendarText}>{date}</Text>
+            ))}
+          </View>
+        </View>
 
-      <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Apply"} onPress={createBookingRequest} />
-    </ScrollView>
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>SKILLS</Text>
+          {petSitter.Skills && petSitter.Skills.map((skill, index) => (
+            <Text key={index} style={styles.skillText}>✔️ {skill}</Text>
+          ))}
+        </View>
+
+        <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Apply"} onPress={handleOpenPress} />
+      </ScrollView>
+
+      {/*-------------- Modal ------------------- */}
+
+      <CustomBottomSheet ref={bottomSheetRef}>
+
+      </CustomBottomSheet>
+
+    </GestureHandlerRootView>
+
   );
 };
 

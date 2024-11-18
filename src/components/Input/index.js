@@ -6,17 +6,18 @@ import Font_Family from "../../constants/Font_Family"
 import Font_Size from "../../constants/Font_Size"
 
 
-export default function Input({ placeholder, iconName, error = "", onChangeText, value}) {
+export default function Input({ placeholder, iconName, iconSize, secureTextEntry = false, error = "", onChangeText, value}) {
     return (
         <View style={styles.Container}>
             <View style={styles.ContainerInput}>
                 <View style={styles.Icon}>
-                    <Icon name={iconName} size={20} color={Colors.CORAL_PINK} />
+                    <Icon name={iconName} size={iconSize} color={Colors.CORAL_PINK} />
                 </View>
 
                 <TextInput
                     style={styles.input}
                     placeholder={placeholder}
+                    secureTextEntry={secureTextEntry}
                     placeholderTextColor={Colors.GRAY_700}
                     onChangeText={onChangeText}
                     value={value}
@@ -35,7 +36,6 @@ export default function Input({ placeholder, iconName, error = "", onChangeText,
 const styles = StyleSheet.create({
 
     Container:{
-        
         width: "100%",
         height: 70,
 

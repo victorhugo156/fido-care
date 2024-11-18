@@ -3,7 +3,7 @@ import { createContext, useState } from 'react';
 export const AuthContext = createContext();
 
 export function RegisterContextProvider({children}){
-    const [newUser, setNewUser] = useState({
+    const [currentUser, setCurrentUser] = useState({
         name: null,
         address: null,
         userId: null,
@@ -11,7 +11,7 @@ export function RegisterContextProvider({children}){
       });
 
     return(
-        <AuthContext.Provider value={{ newUser, setNewUser }}>
+        <AuthContext.Provider value={{ currentUser, setCurrentUser }}>
             {children}
         </AuthContext.Provider>
 

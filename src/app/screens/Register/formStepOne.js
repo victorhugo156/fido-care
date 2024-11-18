@@ -17,12 +17,12 @@ import ButtonGreen from '../../../components/ButtonGreen';
 export default function formStepOne() {
 
     const router = useRouter(); // Initialize router
-    const { newUser, setNewUser } = UseRegisterService(); // Access context
+    const { currentUser, setCurrentUser } = UseRegisterService(); // Access context
 
     const { control, handleSubmit, formState: { errors } } = useForm({
         defaultValues:{
-            name: newUser.name || "",
-            address: newUser.address || "",
+            name: currentUser.name || "",
+            address: currentUser.address || "",
         }
     });
 
@@ -30,7 +30,7 @@ export default function formStepOne() {
 
 
     function handleNextStep(data) {
-        setNewUser((prev)=>({
+        setCurrentUser((prev)=>({
             ...prev,
             name: data.name,
             address: data.address,
@@ -57,6 +57,8 @@ export default function formStepOne() {
                     render={({ field: { onChange, value } }) => (
 
                         <Input
+                            iconName="user"
+                            iconSize={25}
                             placeholder='type your name'
                             placeholderTextColor={Colors.GRAY_700}
                             style={styles.input}
@@ -77,7 +79,9 @@ export default function formStepOne() {
                     }}
                     render={({ field: { onChange, value } }) => (
                         <Input
-                            placeholder='type your address'
+                            iconName="map"
+                            iconSize={20}
+                            placeholder='type your suburb'
                             placeholderTextColor={Colors.GRAY_700}
                             style={styles.input}
                             error = {errors.address?.message}

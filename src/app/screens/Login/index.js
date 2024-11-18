@@ -1,14 +1,17 @@
 import { View, Text, StyleSheet, Image, TextInput, Alert } from 'react-native';
 import React, { useState, useEffect } from 'react';
-import { Link } from 'expo-router';
+import { Link, useRouter } from 'expo-router';
+//import { useRouter } from 'expo-router';
 import { useForm, Controller } from "react-hook-form";
 import { UseRegisterService } from "../../hook/useRegisterService";
+
 import { db } from '../../../../firebaseConfig';
 import { auth } from '../../../../firebaseConfig';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-
 import { OneSignal } from 'react-native-onesignal';
 import { doc, setDoc } from 'firebase/firestore';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { LoginStorage } from '../../../data/storage/loginStorage';
 
 import { WEB_CLIENT_ID, IOS_CLIENT_ID } from '@env';
 
@@ -16,15 +19,10 @@ import { WEB_CLIENT_ID, IOS_CLIENT_ID } from '@env';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 import Font_Size from '../../../constants/Font_Size';
-
 import Input from '../../../components/Input';
 import ButtonGreen from '../../../components/ButtonGreen';
 import ButtonGoogle from '../../../components/ButtonGoogle';
 import ButtonTransparent from '../../../components/ButtonTransparent';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { LoginStorage } from '../../../data/storage/loginStorage';
-
-import { useRouter } from 'expo-router';
 
 
 GoogleSignin.configure({
@@ -40,7 +38,8 @@ export default function LoginScreen() {
   const { control, handleSubmit, formState: { errors } } = useForm();
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [oneSignalPlayerId, setOneSignalPlayerId] = useState(null);
-  const { newUser, setNewUser } = UseRegisterService();
+  //const { newUser, setNewUser } = UseRegisterService();
+  const { currentUser, setCurrentUser } = UseRegisterService();
 
   useEffect(() => {
     // Initialize OneSignal
@@ -58,7 +57,7 @@ export default function LoginScreen() {
         if (playerId) {
           setOneSignalPlayerId(playerId);
           console.log('OneSignal Player ID:', playerId);
-          setNewUser((prev) => ({
+          setCurrentUser((prev) => ({
             ...prev, oneSignalId: playerId,
           }));
           
@@ -73,7 +72,7 @@ export default function LoginScreen() {
     fetchPlayerId();
   }, []);
 
-  console.log("this is the new user OneSIgnalPlayer", newUser)
+  console.log("this is the new user OneSIgnalPlayer", currentUser)
 
   // Save Player ID to Firestore
   const savePlayerId = async (userId) => {
@@ -90,6 +89,7 @@ export default function LoginScreen() {
     }
   };
 
+  //Google Authentication Function
   async function handleGoogleSignIn() {
 
     try {
@@ -105,6 +105,9 @@ export default function LoginScreen() {
       if (userData) {
         await LoginStorage(userData);
         await savePlayerId(userData.id);
+        await setCurrentUser((prev) => ({
+          ...prev, userId: userData.id,
+        }));
         router.push("Home");
 
       }
@@ -128,15 +131,19 @@ export default function LoginScreen() {
     handleLogin(email, password); // Call the login function
   };
 
+  // Authenticate the user using Firebase Auth
   const handleLogin= async (email, password) => {
     try {
-      // Authenticate the user using Firebase Auth
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
   
       // Retrieve authenticated user's information
       const user = userCredential.user;
   
-      console.log("User signed in successfully:", user);
+      console.log("User signed in successfully:", user.uid);
+
+      setCurrentUser((prev) => ({
+        ...prev, userId: user.uid,
+      }));
   
       // Additional actions after successful login
       // For example: Navigate to the home screen or store user data in context
@@ -156,12 +163,12 @@ export default function LoginScreen() {
     }
   }
 
+
   function handleRegister() {
     router.push("screens/Register/formStepOne");
   }
 
  
-
   return (
     <View style={styles.container}>
       <View style={styles.containerHeader}>
@@ -185,6 +192,7 @@ export default function LoginScreen() {
             render={({ field: { onChange, value } }) => (
               <Input
                 iconName="envelope"
+                iconSize= {20}
                 placeholder='Email address'
                 keyboardType = "email-address"
                 placeholderTextColor={Colors.GRAY_700}
@@ -211,8 +219,11 @@ export default function LoginScreen() {
             }}
             render={({ field: { onChange, value } }) => (
               <Input
-              iconName="lock"
+                iconName="lock"
+                iconSize={25}
                 placeholder='Password'
+                secureTextEntry={true}
+
                 placeholderTextColor={Colors.GRAY_700}
                 style={styles.input}
                 onChangeText={onChange}
