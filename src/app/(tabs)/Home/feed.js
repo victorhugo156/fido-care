@@ -165,9 +165,7 @@ export default function FeedScreen() {
                                 rate={item.Rating}
                             />
                         </TouchableOpacity>
-
                     )}
-
                 />
             </View>
         </SafeAreaView>

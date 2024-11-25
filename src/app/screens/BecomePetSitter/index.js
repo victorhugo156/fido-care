@@ -6,10 +6,11 @@ import * as Yup from 'yup';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import MapView, { Marker } from 'react-native-maps';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
+import { UseRegisterService } from '../../hook/useRegisterService';
 //import { collection, doc, setDoc, getDoc,deleteDoc  } from 'firebase/firestore';
 import * as Location from 'expo-location';
 import { db } from '../../../../firebaseConfig';
-import { doc, setDoc, getDoc,deleteDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc,deleteDoc, updateDoc, arrayUnion, collection, query, where, getDocs} from 'firebase/firestore';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 
@@ -25,6 +26,7 @@ import SubmitButton from './../../../components/BecomePetSitter/SubmitButton';
 
 const BecomePetSitter = () => {
   const router = useRouter();
+  const { currentUser } = UseRegisterService();
   const [latitude, setLatitude] = useState(-33.8688);
   const [longitude, setLongitude] = useState(151.2093);
   const [region, setRegion] = useState({
@@ -63,42 +65,80 @@ const BecomePetSitter = () => {
   ];
 
   useEffect(() => {
+
     const fetchUserData = async () => {
-      if (profileDeleted) return;
-
+      if (profileDeleted) return; // Stop fetching if the profile is deleted
+    
       try {
-        const currentUser = await GoogleSignin.getCurrentUser();
-        setUser(currentUser?.user || null);
-
-        if (currentUser) {
-          const userId = currentUser.user.id;
-          const docRef = doc(db, 'PetSitterProfile', userId);
-          const docSnap = await getDoc(docRef);
-
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            setPetSitterData({ id: userId, ...data });
-            setLatitude(data.Latitude);
-            setLongitude(data.Longitude);
-            setAvailability(data.Availability || []);
-            setAvatar(data.Avatar || ''); // Retrieve avatar from data
-            setRegion({
-              latitude: data.Latitude,
-              longitude: data.Longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            });
-          } else {
-            setProfileDeleted(true);
-          }
+        if (!currentUser || !currentUser.userId) {
+          console.error("No current user found in context.");
+          router.push('/screens/EntryPoint'); // Redirect to the login/entry screen
+          return;
+        }
+    
+        const userId = currentUser.userId; // Fetch user ID from context
+        const docRef = doc(db, 'PetSitterProfile', userId);
+        const docSnap = await getDoc(docRef);
+    
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setPetSitterData({ id: userId, ...data });
+          setLatitude(data.Latitude || -33.8688); // Default latitude
+          setLongitude(data.Longitude || 151.2093); // Default longitude
+          setAvailability(Array.isArray(data.Availability) ? data.Availability : []);
+          setAvatar(data.Avatar || '');
+          setRegion({
+            latitude: data.Latitude || -33.8688,
+            longitude: data.Longitude || 151.2093,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          });
         } else {
-          router.push('/screens/EntryPoint');
+          console.warn("Pet sitter profile does not exist.");
+          setProfileDeleted(true);
         }
       } catch (error) {
-        console.log(error);
+        console.error("Error fetching pet sitter data:", error);
+      } finally {
+        setLoading(false); // Ensure loading is false even if an error occurs
       }
-      setLoading(false);
     };
+    // const fetchUserData = async () => {
+    //   if (profileDeleted) return;
+
+    //   try {
+    //     //const currentUser = await GoogleSignin.getCurrentUser();
+    //     setUser(currentUser.id);
+
+    //     if (currentUser) {
+    //       const userId = currentUser;
+    //       const docRef = doc(db, 'PetSitterProfile', userId);
+    //       const docSnap = await getDoc(docRef);
+
+    //       if (docSnap.exists()) {
+    //         const data = docSnap.data();
+    //         setPetSitterData({ id: userId, ...data });
+    //         setLatitude(data.Latitude);
+    //         setLongitude(data.Longitude);
+    //         setAvailability(data.Availability || []);
+    //         setAvatar(data.Avatar || ''); // Retrieve avatar from data
+    //         setRegion({
+    //           latitude: data.Latitude,
+    //           longitude: data.Longitude,
+    //           latitudeDelta: 0.01,
+    //           longitudeDelta: 0.01,
+    //         });
+    //       } else {
+    //         setProfileDeleted(true);
+    //       }
+    //     } else {
+    //       router.push('/screens/EntryPoint');
+    //     }
+    //   } catch (error) {
+    //     console.log(error);
+    //   }
+    //   setLoading(false);
+    // };
 
     fetchUserData();
   }, [profileDeleted]); // Depend on profileDeleted so it stops re-fetching after deletion
@@ -107,36 +147,69 @@ const BecomePetSitter = () => {
   
 
   async function getUserData() {
+
     try {
-      const currentUser = await GoogleSignin.getCurrentUser();
-      setUser(currentUser?.user || null);
-
-      if (currentUser) {
-        const userId = currentUser.user.id;
-        const docRef = doc(db, 'PetSitterProfile', userId);
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-          setPetSitterData({ id: userId, ...docSnap.data() });
-          setLatitude(docSnap.data().Latitude);
-          setLongitude(docSnap.data().Longitude);
-          setAvailability(docSnap.data().Availability || []);
-          setRegion({
-            latitude: docSnap.data().Latitude,
-            longitude: docSnap.data().Longitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          });
-        }
-      } else {
-        console.log('User is not authenticated');
+      if (!currentUser || !currentUser.userId) {
+        console.error("No current user found in context.");
         router.push('/screens/EntryPoint');
+        return;
       }
-      setLoading(false);
+  
+      const userId = currentUser.userId;
+      const docRef = doc(db, 'PetSitterProfile', userId);
+      const docSnap = await getDoc(docRef);
+  
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setPetSitterData({ id: userId, ...data });
+        setLatitude(data.Latitude || -33.8688);
+        setLongitude(data.Longitude || 151.2093);
+        setAvailability(Array.isArray(data.Availability) ? data.Availability : []);
+        setAvatar(data.Avatar || '');
+        setRegion({
+          latitude: data.Latitude || -33.8688,
+          longitude: data.Longitude || 151.2093,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        });
+      }
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching user data:", error);
+    } finally {
       setLoading(false);
     }
+
+
+    // try {
+    //   //const currentUser = await GoogleSignin.getCurrentUser();
+    //   setUser(currentUser.id);
+
+    //   if (currentUser) {
+    //     const userId = currentUser;
+    //     const docRef = doc(db, 'PetSitterProfile', userId);
+    //     const docSnap = await getDoc(docRef);
+
+    //     if (docSnap.exists()) {
+    //       setPetSitterData({ id: userId, ...docSnap.data() });
+    //       setLatitude(docSnap.data().Latitude);
+    //       setLongitude(docSnap.data().Longitude);
+    //       setAvailability(docSnap.data().Availability || []);
+    //       setRegion({
+    //         latitude: docSnap.data().Latitude,
+    //         longitude: docSnap.data().Longitude,
+    //         latitudeDelta: 0.01,
+    //         longitudeDelta: 0.01,
+    //       });
+    //     }
+    //   } else {
+    //     console.log('User is not authenticated');
+    //     router.push('/screens/EntryPoint');
+    //   }
+    //   setLoading(false);
+    // } catch (error) {
+    //   console.log(error);
+    //   setLoading(false);
+    // }
   }
 
   useEffect(() => {
@@ -201,9 +274,6 @@ const validationSchema = Yup.object().shape({
   location: Yup.string().required('Location is required'),
   experience: Yup.string().required('Experience is required'),
   about: Yup.string().required('About is required'),
-  avatar: Yup.string()
-    .test('is-selected', 'Avatar is required', (value) => !!value) // Ensure avatar has a value
-    .required('Photo Profile is required'), // Required validation for avatar
   services: Yup.array().of(
     Yup.object().shape({
       title: Yup.string().required('Service title is required'),
@@ -211,7 +281,7 @@ const validationSchema = Yup.object().shape({
     })
   ),
   skills: Yup.array().of(Yup.string().required('Skill is required')),
-});  
+});
 
   // Handle Date Selection
   const onDateChange = (event, selectedDate) => {
@@ -229,37 +299,93 @@ const validationSchema = Yup.object().shape({
     setAvailability(availability.filter((date) => date !== dateToRemove));
   };
 
+
+
+
   const handleSubmit = async (values) => {
+    console.log("Submitting form...");
+
     if (!latitude || !longitude) {
-      Alert.alert('Error', 'Please select a valid location.');
+      Alert.alert("Error", "Please select a valid location.");
       return;
     }
-
+  
     try {
-      if (!user) {
-        Alert.alert('Error', 'User not authenticated.');
+      if (!currentUser || !currentUser.userId) {
+        console.error("No current user found:", currentUser);
+        Alert.alert("Error", "User not authenticated.");
         return;
       }
-      const userId = user.id;
-      await setDoc(doc(db, 'PetSitterProfile', userId), {
-        Name: values.name,
-        Location: values.location,
+  
+      const authId = currentUser.userId; // This is the authentication ID
+      console.log("Auth ID:", authId);
+  
+      // Query Firestore to find the document with matching `authId`
+      const usersRef = collection(db, "Users");
+      const q = query(usersRef, where("id", "==", authId));
+      const querySnapshot = await getDocs(q);
+  
+      if (querySnapshot.empty) {
+        console.error("No document found with the provided authId.");
+        Alert.alert("Error", "No user document found.");
+        return;
+      }
+  
+      const userDoc = querySnapshot.docs[0]; // Get the first matching document
+      const userId = userDoc.id; // Firestore document ID
+      console.log("Firestore document ID:", userId);
+  
+      // Update the user's role in Firestore
+      const userDocRef = doc(db, "Users", userId);
+      await updateDoc(userDocRef, {
+        roles: arrayUnion("petSitter"),
+      });
+  
+      // Create or update the Pet Sitter profile
+      const petSitterProfile = {
+        Name: values.name || currentUser.name || "N/A",
+        Location: values.location || "Not specified",
         Latitude: latitude,
         Longitude: longitude,
-        Experience: values.experience,
-        About: values.about,
-        Avatar: avatar, // Save single avatar
-        Services: values.services,
-        Skills: values.skills,
-        Availability: availability,
-        email: user.email, // Add user's email to the profile
-      });
+        Experience: values.experience || "No experience provided",
+        About: values.about || "No description provided",
+        Avatar: avatar || "",
+        Services: values.services || [],
+        Skills: values.skills || [],
+        Availability: availability || [],
+        email: currentUser.email || "N/A",
+      };
+  
+      await setDoc(doc(db, "PetSitterProfile", userId), petSitterProfile);
+  
+      Alert.alert("Success", "Your pet sitter profile has been updated successfully.");
+      router.push("/Home");
 
-      Alert.alert('Success', 'Your pet sitter profile has been updated successfully.');
-      router.push('/Home');
+
+      // await setDoc(doc(db, 'PetSitterProfile', userId), {
+      //   Name: values.name,
+      //   Location: values.location,
+      //   Latitude: latitude,
+      //   Longitude: longitude,
+      //   Experience: values.experience,
+      //   About: values.about,
+      //   Avatar: avatar, // Save single avatar
+      //   Services: values.services,
+      //   Skills: values.skills,
+      //   Availability: availability,
+      //   email: user.email, // Add user's email to the profile
+      // });
+
     } catch (error) {
       console.error('Error updating document: ', error);
       Alert.alert('Error', 'An error occurred while submitting the form.');
+
+      // Friendly error messages for the user
+      const errorMessage =
+        error.code === 'permission-denied'
+          ? 'You do not have permission to update this profile.'
+          : 'An error occurred while creating your pet sitter profile.';
+      Alert.alert('Error', errorMessage);
     }
   };
 
@@ -278,16 +404,26 @@ const validationSchema = Yup.object().shape({
       ListHeaderComponent={
         <Formik
           initialValues={{
-            name: petSitterData.Name || '',
-            location: petSitterData.Location || '',
-            experience: petSitterData.Experience || '',
-            about: petSitterData.About || '',
-            avatar: avatar || '',
-            services: petSitterData.Services || [{ title: '', price: '' }],
-            skills: petSitterData.Skills || [''],
+            name: '',
+            location: '',
+            experience: '',
+            about: '',
+            services: [{ title: '', price: '' }],
+            skills: [''],
+            // name: petSitterData.Name || '',
+            // location: petSitterData.Location || '',
+            // experience: petSitterData.Experience || '',
+            // about: petSitterData.About || '',
+            // avatar: avatar || '',
+            // services: petSitterData.Services || [{ title: '', price: '' }],
+            // skills: petSitterData.Skills || [''],
           }}
-          validationSchema={validationSchema}
-          onSubmit={handleSubmit}
+         //validationSchema={validationSchema}
+          onSubmit={(values) => {
+            console.log('Form submitted:', values); // Check if this triggers
+            handleSubmit(values);
+          }}
+          //onSubmit={handleSubmit}
         >
           {({ handleChange, handleBlur, handleSubmit, values, errors, touched, setFieldValue }) => (
             <View style={styles.contentContainer}>
@@ -306,6 +442,7 @@ const validationSchema = Yup.object().shape({
                 onBlur={handleBlur('name')}
                 error={touched.name && errors.name}
               />
+              {errors.name && touched.name && <Text>{errors.name}</Text>}
 
               {/* Location Picker */}
               <LocationPicker
@@ -318,6 +455,7 @@ const validationSchema = Yup.object().shape({
               setFieldValue={setFieldValue}
               initialLocation={petSitterData.Location} // Pass current location
             />
+              {errors.location && touched.location && <Text>{errors.location}</Text>}
 
               {touched.location && errors.location && <Text style={styles.errorText}>{errors.location}</Text>}
 
@@ -359,8 +497,10 @@ const validationSchema = Yup.object().shape({
               {/* Availability Section */}
               <AvailabilityList availability={availability} setAvailability={setAvailability} />
 
+              <Text>{JSON.stringify(errors, null, 2)}</Text>
+
               {/* Submit Button */}
-              <SubmitButton onPress={handleSubmit} />
+              <SubmitButton  onPress={handleSubmit} />
 
               {/* Delete Button */}
               {petSitterData.id && (

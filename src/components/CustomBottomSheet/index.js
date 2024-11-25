@@ -2,17 +2,17 @@ import React, { forwardRef, useMemo } from 'react';
 import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import Colors from '../../constants/Colors';
 
-const CustomBottomSheet = forwardRef(({ children }, ref) => {
+const CustomBottomSheet = forwardRef(({ children, snapPointsStart = 2 }, ref) => {
 
 /*"useMemo" will avoid the app render every time that 
 the user change the size of the modal*/
-    const snapPoints = useMemo(() => ['25%', '60%', '70%'], []);
+    const snapPoints = useMemo(() => ['25%', '60%', '70%', '100%'], []);
 
     return (
         <BottomSheetModalProvider>
             <BottomSheetModal
                 ref={ref}
-                index={1}
+                index={snapPointsStart}
                 snapPoints={snapPoints}
                 enablePanDownToClose={true}
                 backgroundStyle={{ backgroundColor: Colors.WHITE }}

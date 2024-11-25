@@ -1,13 +1,13 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import React, { useEffect, useState, useRef, useContext } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Alert, TextInput } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { collection, doc, getDocs, onSnapshot, query, where, addDoc } from 'firebase/firestore';
+import { collection, doc, getDocs, onSnapshot, query, where, addDoc, getDoc } from 'firebase/firestore';
 import { db } from '../../../../firebaseConfig';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { UseRegisterService } from '../../hook/useRegisterService'; 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-
-
+import CalendarPicker from '../../../components/Calendar';
+import { MultipleSelectList } from 'react-native-dropdown-select-list'
 
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Colors from '../../../constants/Colors';
@@ -15,6 +15,7 @@ import Font_Family from '../../../constants/Font_Family';
 import MarkFavSitter from '../../../components/MarkFavSitter/index';
 import ButtonApply from '../../../components/ButtonApply/idex';
 import CustomBottomSheet from '../../../components/CustomBottomSheet';
+import { UseContextService } from '../../hook/useContextService';
 
 // Skeleton loading component for smoother transitions
 const SkeletonProfile = () => (
@@ -31,11 +32,25 @@ const SkeletonProfile = () => (
 const PetSitterProfile = () => {
   const { id } = useLocalSearchParams();
   const { currentUser } = UseRegisterService();
+  const { bookingDetails, setBookingDetails } = UseContextService({
+    PetOwnerId: null,
+    PetSitterId: null,
+    status: null,
+    title: null,
+    date: null,
+    petName: null,
+    time: null
+  })
   const petSitterId = id;
   //This will get the reference of the bottom sheet
   const bottomSheetRef = useRef(null);
 
   const router = useRouter();
+  const [dropDownMenuselected, setDropDownMenuSelected] = useState([]);
+  const [timeText, setTimeText] = useState('Select Your Time');
+  const [petName, setPetName] = useState('Add Your Pet Name');
+  const [dates, setDates] = useState(null);
+  const [days, setDays] = useState([]);
   const [petSitter, setPetSitter] = useState(null);
   const [loading, setLoading] = useState(true);
   //const [user, setUser] = useState(null);
@@ -43,34 +58,45 @@ const PetSitterProfile = () => {
   const [reviewCount, setReviewCount] = useState(0);
   const [showFullText, setShowFullText] = useState(false);
 
-  // Service details for booking
-  const serviceDetails = {
-    title: "Pet Sitting",
-    date: "10-11-2024"
-  };
+
+
   //Modal Controls
   const handleClosePress = () => bottomSheetRef.current?.close();
   const handleOpenPress = () => bottomSheetRef.current?.present();
 
   useEffect(() => {
-    console.log('This is the currentUser in PetSitterProFile ->>>>', currentUser)
-    const fetchUserAndPetSitter = async () => {
+    /*------ Formating Calendar Date ------ */
+    const date = new Date();
+    const day = String(date.getDate()).padStart(2, "0") // Get day and add add zero if needed
+    const month = String(date.getMonth() + 1).padStart(2, "0")
+    const year = date.getFullYear();
+    const formattedDefaultDate = `${day}/${month}/${year}`;
+    setDays([formattedDefaultDate]);
+
+    /*------ END Formating Calendar Date ------ */
+
+    console.log('This is the currentUser in PetSitterProFile ->>>>', currentUser);
+
+    // Function to fetch the pet sitter's profile
+    const fetchPetSitter = async () => {
+      if (!petSitterId) {
+        console.error("Invalid petSitterId:", petSitterId);
+        Alert.alert("Error", "Pet sitter ID is not provided.");
+        setLoading(false);
+        return;
+    }
       try {
         // const currentUser = await GoogleSignin.getCurrentUser();
         // if (currentUser) setUser(currentUser.user);
 
-        if (petSitterId) {
-          const docRef = doc(db, 'PetSitterProfile', petSitterId);
-          const unsubscribeProfile = onSnapshot(docRef, (docSnap) => {
-            if (docSnap.exists()) {
-              setPetSitter(docSnap.data());
-            } else {
-              console.error('No such document found in the database!');
-            }
-          });
-          return unsubscribeProfile;
+        const docRef = doc(db, "PetSitterProfile", petSitterId);
+        const petSitterDoc = await getDoc(docRef);
+    
+        if (petSitterDoc.exists()) {
+          const petSitterData = petSitterDoc.data();
+          setPetSitter({ id: petSitterId, ...petSitterData }); // Include the document ID
         } else {
-          console.error('Pet Sitter ID is undefined');
+            Alert.alert("Error", "Pet sitter not found.");
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -79,13 +105,17 @@ const PetSitterProfile = () => {
       }
     };
 
-    const unsubscribeProfile = fetchUserAndPetSitter();
+    // const unsubscribeProfile = fetchPetSitter();
 
-    return () => {
-      if (typeof unsubscribeProfile === 'function') {
-        unsubscribeProfile();
-      }
-    };
+    // return () => {
+    //   if (typeof unsubscribeProfile === 'function') {
+    //     unsubscribeProfile();
+    //   }
+    // };
+
+
+    // Calling the function to fetch the data
+  fetchPetSitter();
   }, [petSitterId]);
 
   useEffect(() => {
@@ -120,29 +150,92 @@ const PetSitterProfile = () => {
   }, [petSitterId]);
 
   /** ---------- BOOKING FUNCTIONS ---------------- */
+    // Service details for booking
+    const serviceDetails = {
+      title: dropDownMenuselected,
+      date: days,
+      petName: petName,
+      time: timeText
+    };
+
+    const data = [
+      {key:'1', value:'Mobiles', disabled:true},
+      {key:'2', value:'Appliances'},
+      {key:'3', value:'Cameras'},
+      {key:'4', value:'Computers', disabled:true},
+      {key:'5', value:'Vegetables'},
+      {key:'6', value:'Diary Products'},
+      {key:'7', value:'Drinks'},
+  ]
+
   const createBookingRequest = async () => {
+    setBookingDetails({
+      petOwnerID: currentUser.userId,
+      petSitterID: petSitter.id,
+      status: "waiting",
+      title: dropDownMenuselected,
+      petName: petName,
+      time: timeText,
+      date: days
+    });
     console.log("currentUser.id:",currentUser?.userId);
     console.log("petSitter.id:", petSitter?.id);
 
-    if (!currentUser?.userId || !petSitter?.id) {
-      console.error("Error: petOwnerId or petSitterId is undefined.");
-      alert("Booking request cannot be created: Pet Owner or Pet Sitter ID is missing.");
+    if (!currentUser || !currentUser.roles || !currentUser.roles.includes("petOwner")) {
+      Alert.alert("Error", "You must be a Pet Owner to create a booking.");
       return;
     }
+
+    console.log("Pet Sitter Data:", petSitter); // Debugging
+    if (!petSitter || !petSitter.id) {
+      Alert.alert("Error", "Pet sitter information is missing.");
+      return;
+    }
+    console.log("Booking data being sent:", bookingDetails);
     try {
       await addDoc(collection(db, "Booking"), {
-        PetOwnerID: currentUser.userId,
-        PetSitterID: petSitter.id,
+        // PetOwnerID: currentUser.userId,
+        // PetSitterID: petSitter.id,
+        // BookingStatus: "waiting",
+        // ServiceDetails: serviceDetails
+        PetOwnerID: bookingDetails.petOwnerID,
+        PetSitterID: bookingDetails.petSitterID,
         BookingStatus: "waiting",
-        ServiceDetails: serviceDetails
+        ServiceDetails: {
+          title: bookingDetails.title,
+          date: bookingDetails.date,
+          time: bookingDetails.time,
+          petName: bookingDetails.petName
+        }
       });
 
-      alert("Booking request Sent");
+      Alert.alert("Success", "Booking request sent.");
       router.push("Bookings");
     } catch (error) {
       console.error("Error creating booking request:", error);
+      Alert.alert("Error", "Failed to create booking.");
+      console.log(bookingDetails.petOwnerID);
     }
   };
+
+  const handleDateValue = (dates) => {
+    setBookingDetails({date:setDates(dates)});
+    console.log("Thhis is the Pet Sitter Info From DB --->> ", petSitter)
+
+}
+
+const handleTestFunction = () => {
+
+  //console.log("The dates Selectes are: ", dates)
+
+  console.log("The dates Selectes are: ", days);
+  console.log("The Time Selectes are: ", timeText);
+  console.log("The Service Selectes are: ", dropDownMenuselected);
+  console.log("The Pet Name Selectes are: ", petName);
+
+}
+
+  /** ---------- END BOOKING FUNCTIONS ---------------- */
 
   const handleChatNavigation = async () => {
     if (!user) {
@@ -276,7 +369,37 @@ const PetSitterProfile = () => {
 
       {/*-------------- Modal ------------------- */}
 
-      <CustomBottomSheet ref={bottomSheetRef}>
+      <CustomBottomSheet ref={bottomSheetRef} snapPointsStart={3}>
+        <View>
+          <Text>Select the Date</Text>
+          <CalendarPicker handleDate={handleDateValue} />
+          <Text>Select the TIME</Text>
+          <TextInput
+          onChangeText={(text) => setTimeText(text)}
+          value={timeText}
+          />
+
+          <Text>Select the Service your are After</Text>
+          <MultipleSelectList
+            setSelected={(val) => setDropDownMenuSelected(val)}
+          
+            data={data}
+            save="value"
+            onSelect={() => alert(dropDownMenuselected)}
+            label="Categories"
+          />
+
+          <Text>What is your Pet name?</Text>
+          <TextInput
+            onChangeText={(text) => {
+              setPetName(text); // Update local state
+      
+            }}
+            value={petName}
+          />
+        </View>
+
+        <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Apply"} onPress={createBookingRequest} />
 
       </CustomBottomSheet>
 

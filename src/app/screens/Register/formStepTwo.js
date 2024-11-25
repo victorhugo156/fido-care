@@ -15,7 +15,7 @@ import Font_Size from '../../../constants/Font_Size';
 import Input from '../../../components/Input';
 import ButtonGreen from '../../../components/ButtonGreen';
 
-import { addDoc, collection } from '@firebase/firestore';
+import { addDoc, collection, doc, setDoc } from '@firebase/firestore';
 
 
 export default function formStepTwo() {
@@ -67,26 +67,43 @@ export default function formStepTwo() {
 
             
             // Update the displayName
+            
             await updateProfile(userCredential.user, {
                 displayName: displayName,
             });
 
-            // Ensure all required fields are defined
-            if (!currentUser.address || !currentUser.email || !currentUser.name || !currentUser.oneSignalId) {
-                throw new Error("Missing required fields for Firestore document.");
+            // Validate required fields
+            const requiredFields = ['address', 'email', 'name', 'oneSignalId'];
+            for (const field of requiredFields) {
+                if (!currentUser[field]) {
+                    throw new Error(`Missing required field: ${field}`);
+                }
             }
 
 
             // Save user data to Firestore
-            await addDoc(collection(db, "Users"), {
+            const userDocRef = doc(db, "Users", userId); // Use userId as the document ID
+            await setDoc(userDocRef, {
                 address: currentUser.address,
-                id: userId,
+                id: userId, // This is the same as the document ID
                 name: currentUser.name,
-                oneSignalPlayerId: currentUser.oneSignalId
+                oneSignalPlayerId: currentUser.oneSignalId,
+                roles: ["petOwner"], // Store roles as an array
             });
             console.log('User registered and saved to Firestore:', userId);
         } catch (error) {
+            // Step 5: Handle errors
             console.error('Error registering user:', error);
+
+            if (error.code === 'auth/email-already-in-use') {
+                alert('The email address is already in use by another account.');
+            } else if (error.code === 'auth/invalid-email') {
+                alert('The email address is not valid.');
+            } else if (error.code === 'auth/weak-password') {
+                alert('The password is too weak.');
+            } else {
+                alert('Error registering user: ' + error.message);
+            }
         }
     }
 

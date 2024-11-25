@@ -1,10 +1,16 @@
-import React, { useState } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { collection, doc, getDocs, onSnapshot, query, where, addDoc, updateDoc } from 'firebase/firestore';
+import { db } from '../../../../firebaseConfig';
+import { useRouter } from 'expo-router';
+import { UseRegisterService } from '../../hook/useRegisterService';
+
+import CardBooking from '../../../components/CardBooking';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 import Font_Size from '../../../constants/Font_Size';
-import { useRouter } from 'expo-router';
+
 
 // Example booking data
 const bookingData = [
@@ -38,7 +44,13 @@ const bookingData = [
 ];
 
 export default function BookingList() {
-  const [searchQuery, setSearchQuery] = useState(''); // State for search input
+  const { currentUser } = UseRegisterService();
+
+  const [bookingDetails, setBookingDetails] = useState([]);
+  
+  const [searchQuery, setSearchQuery] = useState(""); 
+  
+
   const router = useRouter();
 
   // Function to filter bookings based on search query
@@ -48,6 +60,136 @@ export default function BookingList() {
       item.sitterName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.service.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const sentBookings = bookingDetails.filter((item) => item.role === "petOwner");
+  const receivedBookings = bookingDetails.filter((item) => item.role === "petSitter");
+
+      //Fetching data from the DB
+
+      const fetchData = async (userId, roles) => {
+        try {
+          const queries = [];
+      
+          console.log("Fetching bookings for user:", userId, "with roles:", roles);
+      
+          // Check if user is a PetOwner
+          if (roles.includes("petOwner")) {
+            const petOwnerQuery = query(
+              collection(db, "Booking"),
+              where("PetOwnerID", "==", userId)
+            );
+            queries.push(getDocs(petOwnerQuery));
+          }
+      
+          // Check if user is a PetSitter
+          if (roles.includes("petSitter")) {
+            const petSitterQuery = query(
+              collection(db, "Booking"),
+              where("PetSitterID", "==", userId)
+            );
+            queries.push(getDocs(petSitterQuery));
+          }
+      
+          // Execute all queries in parallel
+          const querySnapshots = await Promise.all(queries);
+      
+          const bookings = [];
+      
+          querySnapshots.forEach((snapshot, index) => {
+            snapshot.forEach((doc) => {
+              const data = doc.data();
+              bookings.push({
+                id: doc.id, // Firestore document ID
+                status: data.BookingStatus,
+                service: data.ServiceDetails?.title || "N/A",
+                petName: data.ServiceDetails?.petName || "Unknown",
+                date: data.ServiceDetails?.date || "N/A",
+                time: data.ServiceDetails?.time || "N/A",
+                sitterName: data.sitterName || "Unknown",
+                price: data.price || "N/A",
+                role: index === 0 && roles.includes("petOwner") ? "petOwner" : "petSitter", // Mark the role
+              });
+            });
+          });
+      
+          console.log("Fetched bookings:", bookings);
+      
+          setBookingDetails(bookings); // Update state with all bookings
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
+      };
+
+
+      // const fetchData = async (userId, isPetOwner = true) => {
+      //   try {
+      //     const fieldToQuery = isPetOwner ? "PetOwnerID" : "PetSitterID";
+      
+      //     console.log("Fetching bookings for:", userId, "as", isPetOwner ? "PetOwner" : "PetSitter");
+      
+      //     const bookingsQuery = query(
+      //       collection(db, "Booking"),
+      //       where(fieldToQuery, "==", userId)
+      //     );
+      
+      //     const querySnapshot = await getDocs(bookingsQuery);
+      
+      //     console.log("Query snapshot size:", querySnapshot.size);
+      
+      //     const bookings = querySnapshot.docs.map((doc) => ({
+      //       id: doc.id, // Firestore document ID
+      //       status: doc.data().BookingStatus,
+      //       service: doc.data().ServiceDetails?.title || "N/A",
+      //       petName: doc.data().ServiceDetails?.petName || "Unknown",
+      //       date: doc.data().ServiceDetails?.date || "N/A",
+      //       time: doc.data().ServiceDetails?.time || "N/A",
+      //       sitterName: doc.data().sitterName || "Unknown",
+      //       price: doc.data().price || "N/A",
+      //     }));
+      
+      //     console.log("Fetched bookings:", bookings);
+      
+      //     setBookingDetails(bookings); // Update state with accumulated bookings
+      //   } catch (error) {
+      //     console.error("Error fetching data:", error);
+      //   }
+      // };
+
+      const handleConfirmBooking = async (bookingId) => {
+        try {
+          // Update the status in the local state
+          setBookingDetails((prevBookings) =>
+            prevBookings.map((booking) =>
+              booking.id === bookingId ? { ...booking, status: "Confirmed" } : booking
+            )
+          );
+      
+          // Update the status in Firestore
+          const bookingRef = doc(db, "Booking", bookingId);
+          await updateDoc(bookingRef, {
+            BookingStatus: "Confirmed",
+          });
+      
+          Alert.alert("Success", "Booking has been confirmed!");
+        } catch (error) {
+          console.error("Error confirming booking:", error);
+          Alert.alert("Error", "Failed to confirm the booking.");
+        }
+      };
+
+
+      useEffect(() => {
+        console.log("Updated bookingDetails:", bookingDetails);
+      }, [bookingDetails]);
+
+      useEffect(() => {
+        if (currentUser && currentUser.userId && currentUser.roles) {
+          console.log("Fetching bookings for user:", currentUser);
+          fetchData(currentUser.userId, currentUser.roles);
+        } else {
+          console.log("Current user is not set or missing roles.");
+        }
+      }, [currentUser]);
 
   // Function to render each booking item
   const renderItem = ({ item }) => (
@@ -108,13 +250,79 @@ export default function BookingList() {
       </View>
 
       {/* Booking List */}
-      <FlatList
+      <View style={styles.BookingsList}>
+        <View style={styles.ContainerTitleBookingsCards}>
+          <Text>Sent Bookings</Text>
+        </View>
+
+        <FlatList
+          data={sentBookings}
+          keyExtractor={(item, index) => item.id || index.toString()}
+          renderItem={({ item }) => (
+            <TouchableOpacity>
+              <CardBooking
+                petName={item.petName}
+                status={item.status}
+                sitterName={item.sitterName}
+                date={item.date}
+                price={item.price}
+                service={item.service}
+                currentUserId={currentUser.userId} // Pass current user's ID
+                petSitterId={item.PetSitterID}    // Pass Pet Sitter's ID from booking
+              />
+            </TouchableOpacity>
+          )}
+        />
+
+        <View style={styles.ContainerTitleBookingsCards}>
+          <Text>Received Bookings</Text>
+        </View>
+
+        <FlatList
+          data={receivedBookings}
+          keyExtractor={(item, index) => item.id || index.toString()}
+          renderItem={({ item }) => (
+            <TouchableOpacity>
+              <CardBooking
+                petName={item.petName}
+                status={item.status}
+                sitterName={item.sitterName}
+                date={item.date}
+                price={item.price}
+                service={item.service}
+                onViewDetailsPress={() => router.push(`/screens/Petsitterprofile?id=${item.id}`)}
+                onConfirmPress={() => handleConfirmBooking(item.id)}
+              />
+            </TouchableOpacity>
+          )}
+        />
+      </View>
+
+      {/* <FlatList
+        data={bookingDetails}
+        renderItem={({ item }) => (
+          <View style={styles.itemContainer}>
+            <Text style={styles.roleTag}>{item.role === "petOwner" ? "Sent" : "Received"}</Text>
+            <Text>{item.petName}</Text>
+            <Text>{item.status}</Text>
+            <Text>{item.service}</Text>
+          </View>
+        )}
+        keyExtractor={(item) => item.id}
+      /> */}
+      {/* <FlatList
+            data={bookingDetails}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+            ListEmptyComponent={<Text>No bookings available.</Text>}
+        /> */}
+      {/* <FlatList
         data={filteredBookings}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContainer}
         ListEmptyComponent={<Text style={styles.noResultsText}>No bookings found</Text>}
-      />
+      /> */}
     </View>
   );
 }
@@ -155,6 +363,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
+
+    marginBottom: 12,
   },
   searchIcon: {
     marginRight: 8,
@@ -169,100 +379,19 @@ const styles = StyleSheet.create({
   listContainer: {
     padding: 16,
   },
-  itemContainer: {
-    backgroundColor: '#FFFFFF',
-    padding: 20,
-    marginBottom: 16,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 5 },
-    elevation: 5,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
+
+  BookingsList:{
+    alignItems: "center",
   },
-  itemContent: {
-    marginBottom: 12,
+
+
+
+  ContainerTitleBookingsCards:{
+    paddingLeft: 12,
+
+    marginBottom: 15,
   },
-  itemHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  petNameContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  petIcon: {
-    marginRight: 8,
-  },
-  petName: {
-    fontSize: Font_Size.XL,
-    fontFamily: Font_Family.BOLD,
-    color: Colors.GRAY_600,
-  },
-  statusContainer: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  status: {
-    fontSize: Font_Size.SM,
-    fontFamily: Font_Family.BOLD,
-    color: '#FFFFFF',
-  },
-  sitterName: {
-    fontSize: Font_Size.MD,
-    fontFamily: Font_Family.BOLD,
-    marginBottom: 8,
-    color: Colors.BRIGHT_BLUE,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  detailItem: {
-    flexDirection: 'row',
-  },
-  detailLabel: {
-    fontSize: Font_Size.MD,
-    fontFamily: Font_Family.BLACK,
-    color: Colors.GRAY_600,
-    marginRight: 6,
-  },
-  date: {
-    fontSize: Font_Size.MD,
-    fontFamily: Font_Family.REGULAR,
-    color: Colors.GRAY_600,
-    
-  },
-  price: {
-    fontSize: Font_Size.MD,
-    fontFamily: Font_Family.BOLD,
-    color: Colors.GRAY_600,
-  },
-  service: {
-    fontSize: Font_Size.MD,
-    fontFamily: Font_Family.REGULAR,
-    color: Colors.GRAY_600,
-  },
-  detailsButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: Colors.GRAY_200,
-    paddingTop: 16,
-  },
-  detailsButtonText: {
-    fontSize: Font_Size.MD,
-    fontFamily: Font_Family.BOLD,
-    color: Colors.BRIGHT_BLUE,
-    marginRight: 8,
-  },
+
   noResultsText: {
     textAlign: 'center',
     fontSize: Font_Size.MD,

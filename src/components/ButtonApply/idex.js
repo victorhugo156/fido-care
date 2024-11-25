@@ -20,7 +20,7 @@ const styles = StyleSheet.create({
     ContainerBtn:{
         alignItems: "center",
         justifyContent: "center",
-        width: '90%', 
+        width: '40%', 
         height: 50, 
         borderRadius: 10,
         alignSelf: "center", 

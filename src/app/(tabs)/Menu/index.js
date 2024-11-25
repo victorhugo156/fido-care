@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { UseRegisterService } from '../../hook/useRegisterService';
 import { useRouter } from 'expo-router';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
@@ -25,42 +26,56 @@ const menuItems = [
 ];
 
 const Menu = () => {
+  const { currentUser, setCurrentUser } = UseRegisterService();
   const router = useRouter();
   const [userAuthenticated, setUserAuthenticated] = useState(false);
   const [userData, setUserData] = useState({});
 
   // Verify if user is authenticated
   async function getUser() {
+
     try {
-      const userToken = await GetUserToken("user_data");
-      const user = userToken ? JSON.parse(userToken) : null;
+      
+      // const userToken = await GetUserToken("user_data");
+      // const user = userToken ? JSON.parse(userToken) : null;
 
        // Check Firebase Authentication
-       onAuthStateChanged(auth, (firebaseUser) => {
+       const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
         if (firebaseUser) {
             console.log("Firebase user authenticated:", firebaseUser);
+
+            // Check Google Sign-In
+            const googleUser = await GoogleSignin.getCurrentUser();
+            const name = googleUser?.user?.name || firebaseUser.displayName || "Anonymous User";
 
             // Combine Firebase and Google Sign-In data
             setUserAuthenticated(true);
             setUserData({
               uid: firebaseUser.uid,
               email: firebaseUser.email,
-              name: firebaseUser.displayName || "Anonymous User", // Default to anonymous if no name
+              name: name,
+              photo: googleUser?.user?.photo || firebaseUser.photoURL || null, // Handle photo from Google or Firebase
             });
         } else {
             console.log("Firebase user is not authenticated");
             setUserAuthenticated(false);
             setUserData(null);
         }
+        
     });
-
-      if (user) {
-        console.log("User is authenticated", user);
-        setUserAuthenticated(true);
-        setUserData(user);
-      } else {
-        console.log("User is not authenticated");
-      }
+    return unsubscribe; // Allow cleanup
+      // if (currentUser) {
+      //   console.log("User is authenticated", user);
+      //   setUserAuthenticated(true);
+      //   setUserData({
+      //     uid: currentUser.userId,
+      //     email: currentUser.email,
+      //     name: currentUser.name,
+      //     photo: currentUser.photo || null,
+      // });
+      // } else {
+      //   console.log("User is not authenticated");
+      // }
     } catch (error) {
       console.log(error);
     }
@@ -102,8 +117,18 @@ const Menu = () => {
   // Sign out Function from Google
   async function handleSignOut() {
     try {
+      // Clear Google Sign-In session
       await GoogleSignin.signOut();
-      await AsyncStorage.removeItem('user_data');
+
+      // Sign out from Google
+      await auth.signOut();
+
+
+      //await AsyncStorage.removeItem('user_data');
+      setUserAuthenticated(false); // Reset authentication state
+      setUserData(null); 
+      setUserData(null);
+      setCurrentUser(null); // Clear context 
       console.log("User signed out successfully");
       router.push('screens/EntryPoint');
     } catch (error) {
@@ -112,8 +137,21 @@ const Menu = () => {
   }
 
   useEffect(() => {
-    getUser();
-  }, []);
+    const unsubscribe = getUser(); // Call the getUser function, which returns the unsubscribe function for onAuthStateChanged
+  
+    console.log("The current User --->>", currentUser);
+  
+    if (!userAuthenticated) {
+      setUserData(null); // Clear user data when not authenticated
+    }
+  
+    // Cleanup function to unsubscribe from onAuthStateChanged
+    return () => {
+      if (typeof unsubscribe === "function") {
+        unsubscribe();
+      }
+    };
+  }, [userAuthenticated]);
 
   return (
     <ScrollView style={styles.container}>

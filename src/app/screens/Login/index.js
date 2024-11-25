@@ -9,7 +9,7 @@ import { db } from '../../../../firebaseConfig';
 import { auth } from '../../../../firebaseConfig';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { OneSignal } from 'react-native-onesignal';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import { LoginStorage } from '../../../data/storage/loginStorage';
 
@@ -44,8 +44,6 @@ export default function LoginScreen() {
   useEffect(() => {
     // Initialize OneSignal
     OneSignal.initialize('56418014-2ca0-45b0-bd36-6ea04a3d655a');
-
-    // console.log('Firebase Auth initialized:', auth().app.name);
 
     // Request permission for notifications
     OneSignal.Notifications.requestPermission(true);
@@ -105,9 +103,10 @@ export default function LoginScreen() {
       if (userData) {
         await LoginStorage(userData);
         await savePlayerId(userData.id);
-        await setCurrentUser((prev) => ({
-          ...prev, userId: userData.id,
-        }));
+        await fetchCurrentUser(userData.id);
+        // await setCurrentUser((prev) => ({
+        //   ...prev, userId: userData.id,
+        // }));
         router.push("Home");
 
       }
@@ -141,12 +140,9 @@ export default function LoginScreen() {
   
       console.log("User signed in successfully:", user.uid);
 
-      setCurrentUser((prev) => ({
-        ...prev, userId: user.uid,
-      }));
-  
-      // Additional actions after successful login
-      // For example: Navigate to the home screen or store user data in context
+      // Fetch user data from Firestore
+      await fetchCurrentUser(user.uid);
+
       router.push("Home");
     } catch (error) {
       // Handle authentication errors
@@ -162,6 +158,20 @@ export default function LoginScreen() {
       }
     }
   }
+
+  const fetchCurrentUser = async (userId) => {
+    try {
+        const userDoc = await getDoc(doc(db, "Users", userId));
+        if (userDoc.exists()) {
+            setCurrentUser({ ...userDoc.data(), userId });
+            console.log("User data fetched and stored in context:", userDoc.data());
+        } else {
+            console.error("User document not found in Firestore.");
+        }
+    } catch (error) {
+        console.error("Error fetching user data from Firestore:", error);
+    }
+};
 
 
   function handleRegister() {

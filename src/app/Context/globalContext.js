@@ -11,14 +11,23 @@ export function ContextProvider({children}){
         servicePicked: null, 
         pricePicked:  null,
         datePicked: null, 
-        locationPicked: null})
+        locationPicked: null});
+    const [bookingDetails, setBookingDetails] = useState({
+        petOwnerId: null,
+        petSitterId: null,
+        status: null,
+        title: null,
+        date: null,
+        petName: null,
+        time: null});
 
     return(
         <Context.Provider value={{ 
             service, setService, 
             petInfo, setPetInfo, 
             filter, setFilter,
-            sourceScreen, setSourceScreen }}>
+            sourceScreen, setSourceScreen,
+            bookingDetails, setBookingDetails}}>
             {children}
       </Context.Provider>
 
