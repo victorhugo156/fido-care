@@ -7,7 +7,7 @@ import { UseRegisterService } from "../../hook/useRegisterService";
 
 import { db } from '../../../../firebaseConfig';
 import { auth } from '../../../../firebaseConfig';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 import { OneSignal } from 'react-native-onesignal';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
@@ -58,7 +58,7 @@ export default function LoginScreen() {
           setCurrentUser((prev) => ({
             ...prev, oneSignalId: playerId,
           }));
-          
+
         } else {
           console.warn('OneSignal Player ID is not available.');
         }
@@ -91,16 +91,29 @@ export default function LoginScreen() {
   async function handleGoogleSignIn() {
 
     try {
-      setIsAuthenticating(true)
+      setIsAuthenticating(true);
 
+      // Perform Google Sign-In
       const response = await GoogleSignin.signIn();
 
+        // Extract user data from Google Sign-In
       const userData = response.data.user;
-
-      // Log user data to verify
       console.log("This is the user data:", userData);
 
       if (userData) {
+      // Retrieve the ID Token for Firebase Authentication
+      const idToken = await GoogleSignin.getTokens().then(tokens => tokens.idToken);
+
+      // Sign in to Firebase using the Google ID Token
+      const credential = GoogleAuthProvider.credential(idToken);
+      const firebaseUser = await signInWithCredential(auth, credential);
+
+      console.log("User signed in to Firebase:", firebaseUser);
+
+      // Save user in Firestore if not already saved
+      await savePlayerId(firebaseUser.user.uid); // Save the OneSignal Player ID
+      await fetchCurrentUser(firebaseUser.user.uid); // Fetch and update the user in the currentUser context
+
         await LoginStorage(userData);
         await savePlayerId(userData.id);
         await fetchCurrentUser(userData.id);
@@ -125,19 +138,20 @@ export default function LoginScreen() {
 
   }
 
+
   const onSubmit = (data) => {
     const { email, password } = data;
     handleLogin(email, password); // Call the login function
   };
 
   // Authenticate the user using Firebase Auth
-  const handleLogin= async (email, password) => {
+  const handleLogin = async (email, password) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-  
+
       // Retrieve authenticated user's information
       const user = userCredential.user;
-  
+
       console.log("User signed in successfully:", user.uid);
 
       // Fetch user data from Firestore
@@ -147,7 +161,7 @@ export default function LoginScreen() {
     } catch (error) {
       // Handle authentication errors
       console.error("Error signing in:", error);
-  
+
       // User-friendly error handling
       if (error.code === "auth/user-not-found") {
         alert("No user found with this email.");
@@ -159,6 +173,7 @@ export default function LoginScreen() {
     }
   }
 
+  //Function That will save User into DB
   const fetchCurrentUser = async (userId) => {
     try {
         const userDoc = await getDoc(doc(db, "Users", userId));
@@ -178,7 +193,7 @@ export default function LoginScreen() {
     router.push("screens/Register/formStepOne");
   }
 
- 
+
   return (
     <View style={styles.container}>
       <View style={styles.containerHeader}>
@@ -197,14 +212,14 @@ export default function LoginScreen() {
             name='email'
             rules={{
               required: "Inform your email",
-              
+
             }}
             render={({ field: { onChange, value } }) => (
               <Input
                 iconName="envelope"
-                iconSize= {20}
+                iconSize={20}
                 placeholder='Email address'
-                keyboardType = "email-address"
+                keyboardType="email-address"
                 placeholderTextColor={Colors.GRAY_700}
                 style={styles.input}
                 onChangeText={onChange}
@@ -238,7 +253,7 @@ export default function LoginScreen() {
                 style={styles.input}
                 onChangeText={onChange}
                 value={value}
-                error= {errors.password?.message}
+                error={errors.password?.message}
               />
             )}
           />
@@ -314,15 +329,15 @@ const styles = StyleSheet.create({
     marginBottom: 20
   },
 
-  ErrorMsg:{
+  ErrorMsg: {
     fontFamily: Font_Family.BOLD,
     fontSize: Font_Size.SM,
     color: Colors.CORAL_PINK,
 
     padding: 0,
-    margin:0
+    margin: 0
 
-},
+  },
 
   containerBtnLogin: {
     alignItems: "center",

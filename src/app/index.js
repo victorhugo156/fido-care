@@ -14,6 +14,7 @@ import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import { RegisterContextProvider } from "./Context/registerContext";
+import useAuthListener from "./hook/useAuthListener";
 
 
 import EntryPoint from "./screens/EntryPoint";
@@ -26,7 +27,7 @@ import { OneSignal } from "react-native-onesignal";
 export default function index() {
 
   const [fontsLoaded] = useFonts({ Nunito_300Light, Nunito_400Regular, Nunito_700Bold, Nunito_900Black });
-
+  
 
   useEffect(() => {
     // Initialize OneSignal with your App ID
@@ -46,6 +47,8 @@ export default function index() {
     console.log("User consent given for notifications");
   };
 
+
+  // useAuthListener();
 
   //Condition to check if the font was loaded
   if (!fontsLoaded) {

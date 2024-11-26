@@ -31,39 +31,46 @@ const Menu = () => {
   const [userAuthenticated, setUserAuthenticated] = useState(false);
   const [userData, setUserData] = useState({});
 
-  // Verify if user is authenticated
+
   async function getUser() {
 
     try {
-      
-      // const userToken = await GetUserToken("user_data");
-      // const user = userToken ? JSON.parse(userToken) : null;
-
-       // Check Firebase Authentication
-       const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      // Check Firebase Authentication
+      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
         if (firebaseUser) {
-            console.log("Firebase user authenticated:", firebaseUser);
+          console.log("Firebase user authenticated:", firebaseUser);
 
-            // Check Google Sign-In
+          // Use currentUser context as the primary source of truth
+          if (currentUser) {
+            console.log("Using currentUser context:", currentUser);
+            setUserAuthenticated(true);
+            setUserData({
+              uid: currentUser.userId,
+              email: currentUser.email,
+              name: currentUser.name,
+              photo: currentUser.photo || null,
+            });
+          } else {
+            console.log("Fetching Google Sign-In data...");
             const googleUser = await GoogleSignin.getCurrentUser();
             const name = googleUser?.user?.name || firebaseUser.displayName || "Anonymous User";
 
-            // Combine Firebase and Google Sign-In data
+            // Update state if Google Sign-In data is available
             setUserAuthenticated(true);
             setUserData({
               uid: firebaseUser.uid,
               email: firebaseUser.email,
               name: name,
-              photo: googleUser?.user?.photo || firebaseUser.photoURL || null, // Handle photo from Google or Firebase
+              photo: googleUser?.user?.photo || firebaseUser.photoURL || null,
             });
+          }
         } else {
-            console.log("Firebase user is not authenticated");
-            setUserAuthenticated(false);
-            setUserData(null);
+          console.log("Firebase user is not authenticated");
+          setUserAuthenticated(false);
+          setUserData(null);
         }
-        
-    });
-    return unsubscribe; // Allow cleanup
+      });
+      return unsubscribe; // Allow cleanup
       // if (currentUser) {
       //   console.log("User is authenticated", user);
       //   setUserAuthenticated(true);
@@ -126,7 +133,7 @@ const Menu = () => {
 
       //await AsyncStorage.removeItem('user_data');
       setUserAuthenticated(false); // Reset authentication state
-      setUserData(null); 
+      setUserData(null);
       setUserData(null);
       setCurrentUser(null); // Clear context 
       console.log("User signed out successfully");
@@ -138,20 +145,25 @@ const Menu = () => {
 
   useEffect(() => {
     const unsubscribe = getUser(); // Call the getUser function, which returns the unsubscribe function for onAuthStateChanged
-  
+
     console.log("The current User --->>", currentUser);
-  
-    if (!userAuthenticated) {
-      setUserData(null); // Clear user data when not authenticated
+
+    // Synchronize userData with currentUser
+    if (currentUser) {
+      setUserData({
+        uid: currentUser.userId,
+        email: currentUser.email,
+        name: currentUser.name,
+        photo: currentUser.photo || null,
+      });
     }
-  
-    // Cleanup function to unsubscribe from onAuthStateChanged
+
     return () => {
       if (typeof unsubscribe === "function") {
         unsubscribe();
       }
     };
-  }, [userAuthenticated]);
+  }, [currentUser, userAuthenticated]);
 
   return (
     <ScrollView style={styles.container}>

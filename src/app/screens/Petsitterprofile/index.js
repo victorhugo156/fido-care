@@ -16,6 +16,7 @@ import MarkFavSitter from '../../../components/MarkFavSitter/index';
 import ButtonApply from '../../../components/ButtonApply/idex';
 import CustomBottomSheet from '../../../components/CustomBottomSheet';
 import { UseContextService } from '../../hook/useContextService';
+import Font_Size from '../../../constants/Font_Size';
 
 // Skeleton loading component for smoother transitions
 const SkeletonProfile = () => (
@@ -364,42 +365,52 @@ const handleTestFunction = () => {
           ))}
         </View>
 
-        <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Apply"} onPress={handleOpenPress} />
+        <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Book"} onPress={handleOpenPress} />
       </ScrollView>
 
       {/*-------------- Modal ------------------- */}
 
       <CustomBottomSheet ref={bottomSheetRef} snapPointsStart={3}>
-        <View>
-          <Text>Select the Date</Text>
-          <CalendarPicker handleDate={handleDateValue} />
-          <Text>Select the TIME</Text>
-          <TextInput
-          onChangeText={(text) => setTimeText(text)}
-          value={timeText}
-          />
+        <View style={styles.containerModal}>
 
-          <Text>Select the Service your are After</Text>
-          <MultipleSelectList
-            setSelected={(val) => setDropDownMenuSelected(val)}
+          <View style={styles.containerModalCalendar}>
+            <Text style={styles.modalTitles}>Select the Date</Text>
+            <CalendarPicker handleDate={handleDateValue} />
+          </View>
+
+          <View style={styles.containerModalTime}>
+            <Text style={styles.modalTitles}>Select the TIME</Text>
+            <TextInput
+              placeholder="Time"
+              onChangeText={(text) => setTimeText(text)}
+              // value={timeText}
+            />
+          </View>
+
+          <View style={styles.containerModalService}>
+            <Text style={styles.modalTitles}>Select the Service your are After</Text>
+            <MultipleSelectList
+              setSelected={(val) => setDropDownMenuSelected(val)}
+
+              data={data}
+              save="value"
+              onSelect={() => alert(dropDownMenuselected)}
+              label="Categories"
+            />
+          </View>
           
-            data={data}
-            save="value"
-            onSelect={() => alert(dropDownMenuselected)}
-            label="Categories"
-          />
-
-          <Text>What is your Pet name?</Text>
-          <TextInput
-            onChangeText={(text) => {
-              setPetName(text); // Update local state
-      
-            }}
-            value={petName}
-          />
+          <View style={styles.containerModalPetName}>
+            <Text style={styles.modalTitles}>What is your Pet name?</Text>
+            <TextInput
+            placeholder="Pet Name"
+              onChangeText={(text) => {
+                setPetName(text); // Update local state
+              }}
+              // value={petName}
+            />
+          </View>
         </View>
-
-        <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Apply"} onPress={createBookingRequest} />
+        <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Send Booking"} onPress={createBookingRequest} />
 
       </CustomBottomSheet>
 
@@ -409,6 +420,26 @@ const handleTestFunction = () => {
 };
 
 const styles = StyleSheet.create({
+
+  /*-------------- Modal Style ------------------- */
+
+  containerModal:{
+    height: 670,
+
+    padding: 20,
+
+    justifyContent: "space-between"
+
+  },
+
+  modalTitles:{
+    fontFamily: Font_Family.BOLD,
+    color: Colors.GRAY_700,
+    fontSize: Font_Size.LG
+
+  },
+
+  /*-------------- End Modal Style ------------------- */
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',
