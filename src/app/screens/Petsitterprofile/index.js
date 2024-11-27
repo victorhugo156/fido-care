@@ -9,6 +9,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import CalendarPicker from '../../../components/Calendar';
 import { MultipleSelectList } from 'react-native-dropdown-select-list'
 
+import ServicePicker from '../../../components/SegmentControlMenu';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
@@ -49,9 +50,11 @@ const PetSitterProfile = () => {
   const router = useRouter();
   const [dropDownMenuselected, setDropDownMenuSelected] = useState([]);
   const [timeText, setTimeText] = useState('Select Your Time');
-  const [petName, setPetName] = useState('Add Your Pet Name');
+  const [petName, setPetName] = useState(''); //Modal Options - > For pet's name
   const [dates, setDates] = useState(null);
-  const [days, setDays] = useState([]);
+  const [selectedTime, setSelectedTime] = useState(null); // Modal Options - > For time (morning/afternoon/night)
+  const [selectedService, setSelectedService] = useState(null); // Modal Options - > For service
+  const [days, setDays] = useState([]); // Modal Options - > For calendar date
   const [petSitter, setPetSitter] = useState(null);
   const [loading, setLoading] = useState(true);
   //const [user, setUser] = useState(null);
@@ -151,71 +154,48 @@ const PetSitterProfile = () => {
   }, [petSitterId]);
 
   /** ---------- BOOKING FUNCTIONS ---------------- */
-    // Service details for booking
-    const serviceDetails = {
-      title: dropDownMenuselected,
-      date: days,
-      petName: petName,
-      time: timeText
-    };
-
-    const data = [
-      {key:'1', value:'Mobiles', disabled:true},
-      {key:'2', value:'Appliances'},
-      {key:'3', value:'Cameras'},
-      {key:'4', value:'Computers', disabled:true},
-      {key:'5', value:'Vegetables'},
-      {key:'6', value:'Diary Products'},
-      {key:'7', value:'Drinks'},
-  ]
 
   const createBookingRequest = async () => {
-    setBookingDetails({
-      petOwnerID: currentUser.userId,
-      petSitterID: petSitter.id,
-      status: "waiting",
-      title: dropDownMenuselected,
-      petName: petName,
-      time: timeText,
-      date: days
-    });
-    console.log("currentUser.id:",currentUser?.userId);
-    console.log("petSitter.id:", petSitter?.id);
-
     if (!currentUser || !currentUser.roles || !currentUser.roles.includes("petOwner")) {
       Alert.alert("Error", "You must be a Pet Owner to create a booking.");
       return;
     }
 
-    console.log("Pet Sitter Data:", petSitter); // Debugging
     if (!petSitter || !petSitter.id) {
       Alert.alert("Error", "Pet sitter information is missing.");
       return;
     }
+
+    // setBookingDetails({
+    //   petOwnerID: currentUser.userId,
+    //   petSitterID: petSitter.id,
+    //   status: "waiting",
+    //   title: selectedService,
+    //   petName: petName,
+    //   time: selectedTime,
+    //   date: days,
+    // });
+
+    const bookingData = {
+      PetOwnerID: currentUser.userId,
+      PetSitterID: petSitter.id,
+      BookingStatus: "waiting",
+      ServiceDetails: {
+        title: selectedService,
+        date: days,
+        time: selectedTime,
+        petName: petName,
+      },
+    };
+ 
     console.log("Booking data being sent:", bookingDetails);
     try {
-      await addDoc(collection(db, "Booking"), {
-        // PetOwnerID: currentUser.userId,
-        // PetSitterID: petSitter.id,
-        // BookingStatus: "waiting",
-        // ServiceDetails: serviceDetails
-        PetOwnerID: bookingDetails.petOwnerID,
-        PetSitterID: bookingDetails.petSitterID,
-        BookingStatus: "waiting",
-        ServiceDetails: {
-          title: bookingDetails.title,
-          date: bookingDetails.date,
-          time: bookingDetails.time,
-          petName: bookingDetails.petName
-        }
-      });
-
+      await addDoc(collection(db, "Booking"), bookingData);
       Alert.alert("Success", "Booking request sent.");
       router.push("Bookings");
     } catch (error) {
       console.error("Error creating booking request:", error);
       Alert.alert("Error", "Failed to create booking.");
-      console.log(bookingDetails.petOwnerID);
     }
   };
 
@@ -229,10 +209,12 @@ const handleTestFunction = () => {
 
   //console.log("The dates Selectes are: ", dates)
 
-  console.log("The dates Selectes are: ", days);
-  console.log("The Time Selectes are: ", timeText);
-  console.log("The Service Selectes are: ", dropDownMenuselected);
-  console.log("The Pet Name Selectes are: ", petName);
+  // console.log("The dates Selectes are: ", days);
+  // console.log("The Time Selectes are: ", timeText);
+  // console.log("The Service Selectes are: ", dropDownMenuselected);
+  // console.log("The Pet Name Selectes are: ", petName);
+
+  console.log("These are the pet sitter information --->>", petSitter?.Services);
 
 }
 
@@ -380,22 +362,19 @@ const handleTestFunction = () => {
 
           <View style={styles.containerModalTime}>
             <Text style={styles.modalTitles}>Select the TIME</Text>
-            <TextInput
-              placeholder="Time"
-              onChangeText={(text) => setTimeText(text)}
-              // value={timeText}
+            <ServicePicker
+            values={["Morning", "Afternoon", "Night"]}
+            onValueChange={(time) => setSelectedTime(time)}
             />
           </View>
 
+
+
           <View style={styles.containerModalService}>
             <Text style={styles.modalTitles}>Select the Service your are After</Text>
-            <MultipleSelectList
-              setSelected={(val) => setDropDownMenuSelected(val)}
-
-              data={data}
-              save="value"
-              onSelect={() => alert(dropDownMenuselected)}
-              label="Categories"
+            <ServicePicker
+            values={petSitter?.Services?.map((service) => service.title) || []} // Extracting titles from Services
+            onValueChange={(service) => setSelectedService(service)}
             />
           </View>
           
@@ -403,9 +382,8 @@ const handleTestFunction = () => {
             <Text style={styles.modalTitles}>What is your Pet name?</Text>
             <TextInput
             placeholder="Pet Name"
-              onChangeText={(text) => {
-                setPetName(text); // Update local state
-              }}
+            value={petName}
+            onChangeText={setPetName}
               // value={petName}
             />
           </View>
@@ -437,6 +415,23 @@ const styles = StyleSheet.create({
     color: Colors.GRAY_700,
     fontSize: Font_Size.LG
 
+  },
+
+  containerModalPetName:{
+    height: 50,
+
+    justifyContent: "space-between",
+
+  },
+  containerModalService:{
+    height: 70,
+
+    justifyContent: "space-between",
+  },
+  containerModalTime:{
+    height: 50,
+
+    justifyContent: "space-between",
   },
 
   /*-------------- End Modal Style ------------------- */
