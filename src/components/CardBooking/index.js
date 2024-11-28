@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Image } from 'react-native';
 
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Colors from '../../constants/Colors';
@@ -44,7 +44,10 @@ export default function CardBooking({
                     <Text style={styles.status}>{status}</Text>
                 </View>
             </View>
-            <Text style={styles.sitterName}>Sitter: {sitterName}</Text>
+            {isPetSitter && (
+                <Text style={styles.sitterName}>Pet Owner: {sitterName}</Text>
+            )}
+            
             <View style={styles.detailRow}>
                 <View style={styles.detailItem}>
                     <Text style={styles.detailLabel}>Date:</Text>
@@ -61,22 +64,34 @@ export default function CardBooking({
             </View>
 
             <View style={styles.callToActions}>
-                <TouchableOpacity
-                    style={styles.detailsButton}
-                    onPress={onViewDetailsPress}
-                >
-                    <Text style={styles.detailsButtonText}>View Details</Text>
-                    <Icon name="chevron-right" size={16} color={Colors.BRIGHT_BLUE} />
-                </TouchableOpacity>
-                
+                <View style={styles.containerViewDetails}>
+                    <TouchableOpacity
+                        style={styles.detailsButton}
+                        onPress={onViewDetailsPress}
+                    >
+                        <Text style={styles.viewDetailsBtnText}>View Details</Text>
+                        <Icon name="chevron-right" size={16} color={Colors.BRIGHT_BLUE} />
+                    </TouchableOpacity>
+                </View>
+
                 {/* Show Confirm button only if the current user is the Pet Sitter */}
                 {isPetSitter && (
-                    <TouchableOpacity
-                        style={styles.detailsButtonConfirm}
-                        onPress={onConfirmPress}
-                    >
-                        <Text style={styles.detailsButtonTextConfirm}>Confirm Request</Text>
-                    </TouchableOpacity>
+                    <View style={styles.containerBtnActions}>
+                        <TouchableOpacity
+                            style={styles.btnActionsConfirm}
+                            onPress={onConfirmPress}
+                        >
+                            <Image style={styles.Logo} source={require('../../assets/images/status_green.png')} />
+                            <Text style={styles.detailsBtnActionsText}>Confirm</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.btnActionsCancel}
+                            onPress={onConfirmPress}
+                        >
+                            <Image style={styles.Logo} source={require('../../assets/images/status_red.png')} />
+                            <Text style={styles.detailsBtnActionsText}>Cancel</Text>
+                        </TouchableOpacity>
+                    </View>
                 )}
             </View>
 
@@ -169,43 +184,75 @@ const styles = StyleSheet.create({
 
     callToActions: {
         width: "100%",
-        height: 60,
+        height: 100,
 
         marginTop: 25,
 
-        flexDirection: "row",
+        flexDirection:"column-reverse",
         justifyContent: "space-between",
         alignItems: "center",
 
     },
+
+    containerViewDetails:{
+        width: "100%",
+        alignItems: "flex-end",
+    },
+
     detailsButton: {
         flexDirection: 'row',
         alignItems: 'center',
-
     },
 
-    detailsButtonConfirm: {
-        backgroundColor: Colors.CORAL_PINK,
+    containerBtnActions:{
+        width: "100%",
+        flexDirection: "row",
+        justifyContent: "space-between"
+    },
+
+    btnActionsConfirm: {
+        backgroundColor: Colors.GREEN_VARIAENT,
         height: 40,
-        width: 130,
+        width: 120,
 
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: "center",
 
+        gap: 10,
+
         borderRadius: 10,
+        borderWidth: 1,
+        borderColor: Colors.TURQUOISE_GREEN,
+    },
+    btnActionsCancel:{
+        backgroundColor: Colors.PINK_VARIENT,
+        height: 40,
+        width: 120,
+
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: "center",
+
+        gap: 10,
+
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: Colors.CORAL_PINK,
 
     },
-    detailsButtonText: {
+
+
+    viewDetailsBtnText: {
         fontSize: Font_Size.MD,
         fontFamily: Font_Family.BOLD,
         color: Colors.BRIGHT_BLUE,
     },
 
-    detailsButtonTextConfirm: {
+    detailsBtnActionsText: {
         fontSize: Font_Size.SM,
         fontFamily: Font_Family.BOLD,
-        color: Colors.WHITE,
+        color: Colors.GRAY_700,
     },
     noResultsText: {
         textAlign: 'center',

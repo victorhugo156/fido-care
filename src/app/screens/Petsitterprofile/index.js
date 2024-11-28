@@ -179,7 +179,7 @@ const PetSitterProfile = () => {
     const bookingData = {
       PetOwnerID: currentUser.userId,
       PetSitterID: petSitter.id,
-      BookingStatus: "waiting",
+      BookingStatus: "Pending",
       ServiceDetails: {
         title: selectedService,
         date: days,
