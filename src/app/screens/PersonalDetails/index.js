@@ -36,7 +36,7 @@ const PersonalDetails = () => {
 
         if (docSnap.exists()) {
           const data = docSnap.data();
-          setUserData({ id: user.id, ...data });
+          setUserData({ id: user.id, name: user.name, email: user.email, ...data });
           if (data.latitude && data.longitude) {
             setLatitude(data.latitude);
             setLongitude(data.longitude);
@@ -56,7 +56,7 @@ const PersonalDetails = () => {
             phoneNumber: "",
           };
           await setDoc(docRef, newUserData);
-          setUserData({ id: user.id, ...newUserData });
+          setUserData({ id: user.id, name: user.name, email: user.email, ...newUserData });
         }
       } else {
         console.log("User is not authenticated");

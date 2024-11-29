@@ -13,17 +13,24 @@ const SubmitButton = ({ onPress }) => {
 
 const styles = StyleSheet.create({
   button: { 
-    backgroundColor: Colors.TURQUOISE_GREEN,
-    padding: 15, 
-    borderRadius: 5, 
-    marginTop: 20 
+    backgroundColor: Colors.TURQUOISE_GREEN, // Matches the Submit button's consistent color
+    paddingVertical: 12, 
+    paddingHorizontal: 20, 
+    borderRadius: 10, 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    flex: 1, // Ensure consistency with Back and Next buttons
+    marginHorizontal: 10, // Matches spacing in the button container
   },
   buttonText: { 
     color: Colors.WHITE,
+    fontFamily: Font_Family.BLACK, // Ensures font consistency
     fontWeight: 'bold', 
+    fontSize: 16, 
     textAlign: 'center', 
-    fontSize: 18 },
+  },
 });
 
 export default SubmitButton;
+
 

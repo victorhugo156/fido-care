@@ -63,7 +63,7 @@ const Menu = () => {
         },
       ]);
     } else if (screenName === 'BecomePetSitter') {
-      router.push('/screens/BecomePetSitter');
+      router.push('/screens/BecomePetSitterMenu');
     } else if (screenName === 'HelpCenter') {
       router.push('/screens/UserPetsitterprofile');
     } else if (screenName === 'PersonalDetails') {

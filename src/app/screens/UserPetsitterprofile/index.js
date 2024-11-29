@@ -25,7 +25,7 @@ const ViewPetSitterProfile = () => {
           if (docSnap.exists()) {
             setPetSitter(docSnap.data());
           } else {
-            console.error('No such document found in the database!');
+            console.log('No such document found in the database!');
           }
         } else {
           console.log('User is not authenticated');
@@ -40,12 +40,24 @@ const ViewPetSitterProfile = () => {
     fetchPetSitter();
   }, []);
 
+  // Navigate to BecomePetSitter form to create profile
+  const handleCreateProfile = () => {
+    router.push('/screens/BecomePetSitter');
+  };
+
   if (loading) {
     return <ActivityIndicator size="large" color={Colors.PRIMARY} />;
   }
 
   if (!petSitter) {
-    return <Text>No pet sitter profile found</Text>;
+    return (
+      <View style={styles.noProfileContainer}>
+        <Text style={styles.noProfileText}>No pet sitter profile found</Text>
+        <TouchableOpacity style={styles.createProfileButton} onPress={handleCreateProfile}>
+          <Text style={styles.createProfileButtonText}>Create Profile</Text>
+        </TouchableOpacity>
+      </View>
+    );
   }
 
   // Navigate to BecomePetSitter form to edit profile
@@ -245,6 +257,29 @@ const styles = StyleSheet.create({
     color: '#333',
     marginVertical: 5,
     fontFamily: Font_Family.REGULAR,
+  },
+  noProfileContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+  },
+  noProfileText: {
+    fontSize: 18,
+    color: Colors.GRAY,
+    marginBottom: 20,
+    fontFamily: Font_Family.REGULAR,
+  },
+  createProfileButton: {
+    backgroundColor: Colors.BRIGHT_BLUE,
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  createProfileButtonText: {
+    color: '#FFF',
+    fontSize: 18,
+    fontFamily: Font_Family.BOLD,
   },
 });
 

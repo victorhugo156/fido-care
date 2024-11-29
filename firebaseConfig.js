@@ -1,5 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from "@firebase/firestore";
+import { getStorage } from 'firebase/storage'; // Import Firebase Storage
+
 // import firestore from "@react-native-firebase/firestore";
 // import messaging from "@react-native-firebase/messaging";
 
@@ -17,9 +19,13 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
+// Firestore database
 const db = getFirestore(app);
+
+// Firebase Storage
+const storage = getStorage(app); // Initialize Firebase Storage
 
 // const db = firestore();
 //const firebaseMessaging  = messaging();
 
-export { db  };
+export { db,storage};

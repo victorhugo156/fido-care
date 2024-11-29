@@ -1,11 +1,11 @@
 import React from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { View, Text, TextInput, StyleSheet,ScrollView } from 'react-native';
 import Colors from '../../constants/Colors';
 import Font_Family from '../../constants/Font_Family';
 
 const ExperienceInput = ({ handleChange, handleBlur, value, error, touched }) => {
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text style={styles.label}>Years of Experience</Text>
       <TextInput
         style={styles.input}
@@ -15,7 +15,7 @@ const ExperienceInput = ({ handleChange, handleBlur, value, error, touched }) =>
         value={value}
       />
       {touched && error && <Text style={styles.errorText}>{error}</Text>}
-    </View>
+    </ScrollView>
   );
 };
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../../../firebaseConfig';
 import { useRoute, useFocusEffect } from '@react-navigation/native';
 import Font_Family from '../../../constants/Font_Family';
@@ -34,6 +34,33 @@ const PetDetailScreen = () => {
     }
   };
 
+  const handleDeletePet = async () => {
+    Alert.alert(
+      'Delete Pet',
+      'Are you sure you want to delete this pet profile? This action cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteDoc(doc(db, 'Pet', petId));
+              Alert.alert('Success', 'Pet profile deleted successfully.');
+              router.replace('/screens/PetList'); // Navigate to pet list or main screen
+            } catch (error) {
+              console.error('Error deleting pet:', error);
+              Alert.alert('Error', 'Failed to delete the pet profile. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   if (!pet) return null;
 
   return (
@@ -50,8 +77,18 @@ const PetDetailScreen = () => {
         <Text style={styles.detailLabel}>Medical History: <Text style={styles.detailValue}>{pet.medicalHistory}</Text></Text>
       </View>
 
-      <TouchableOpacity style={styles.button} onPress={() => router.push({ pathname: '/screens/PetForm', params: { petId, ...pet } })}>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => router.push({ pathname: '/screens/PetForm', params: { petId, ...pet } })}
+      >
         <Text style={styles.buttonText}>Edit Pet</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.button, styles.deleteButton]}
+        onPress={handleDeletePet}
+      >
+        <Text style={styles.buttonText}>Delete Pet</Text>
       </TouchableOpacity>
     </View>
   );
@@ -112,15 +149,22 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
     marginTop: 20,
+    width: '80%', 
+  },
+  deleteButton: {
+    backgroundColor: Colors.CORAL_PINK,
+    marginTop: 15,
   },
   buttonText: {
-    color: '#fff',
+    color: Colors.WHITE,
     fontWeight: 'bold',
     fontSize: Font_Size.LG,
   },
 });
 
 export default PetDetailScreen;
+
+
 
 
 

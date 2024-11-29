@@ -58,6 +58,20 @@ export default function Rootlayout() {
                     />
 
                     <Stack.Screen
+                        name="screens/BecomePetSitterMenu/index"
+                        options={{
+                            title: "Become Pet Sitter Menu",  // Title for chat screen
+                            headerStyle: {
+                                backgroundColor: '#3772FF', // Set background color here
+                            },
+                            headerTitleAlign: 'center', // Center the title
+                            headerTintColor: '#fff', // Set the title color
+                        }}
+                    />
+
+
+
+                    <Stack.Screen
                         name="index"
                         options={{
                             headerShown: false,  // No header for index

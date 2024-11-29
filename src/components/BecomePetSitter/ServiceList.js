@@ -1,12 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import Colors from '../../constants/Colors';
 import Font_Family from '../../constants/Font_Family';
 
 const ServiceList = ({ services, setFieldValue, serviceOptions }) => {
   return (
-    <View>
+    <ScrollView>
       <Text style={styles.sectionTitle}>Services</Text>
       {services.map((service, index) => (
         <View key={index} style={styles.serviceRow}>
@@ -44,7 +44,7 @@ const ServiceList = ({ services, setFieldValue, serviceOptions }) => {
       >
         <Text style={styles.addButtonText}>Add Service</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 };
 
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   serviceRow: {
-    backgroundColor: Colors.GRAY_200,
+    backgroundColor: Colors.SOFT_CREAM,
     padding: 10,
     borderRadius: 10,
     marginBottom: 10,
