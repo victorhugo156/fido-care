@@ -1,9 +1,10 @@
 import { View, Text, StyleSheet, Image, TextInput, Alert, Button, ViewComponent } from 'react-native';
 import React, { useState } from 'react';
-import { Link } from 'expo-router';
 import { useRouter } from 'expo-router';
-import { LoginStorage } from '../../../data/storage/loginStorage';
-import { useForm, Controller } from "react-hook-form"
+
+
+import { useForm, Controller } from "react-hook-form";
+import { UseRegisterService } from '../../hook/useRegisterService';
 
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
@@ -11,19 +12,17 @@ import Font_Size from '../../../constants/Font_Size';
 import Input from '../../../components/Input';
 import ButtonGreen from '../../../components/ButtonGreen';
 
-
-export default function formStepThree() {
+export default function(){
 
     const router = useRouter(); // Initialize router
+    const { currentUser, setCurrentUser } = UseRegisterService(); // Access context
 
-    const { control, handleSubmit, formState: { errors } } = useForm();
-
-    console.log(errors)
-
-
-    function handleNextStep(data) {
-        console.log(data);
-    }
+    const { control, handleSubmit, formState: { errors } } = useForm({
+        defaultValues:{
+            name: currentUser.name || "",
+            address: currentUser.address || "",
+        }
+    });
 
     return (
         <View style={styles.container}>
@@ -33,7 +32,7 @@ export default function formStepThree() {
                 </Image>
                 <Text style={styles.welcomeText}>Register!</Text>
             </View>
-
+    
             <View style={styles.containerForm}>
                 <Controller
                     control={control}
@@ -42,8 +41,10 @@ export default function formStepThree() {
                         required: "Inform your name",
                     }}
                     render={({ field: { onChange, value } }) => (
-
+    
                         <Input
+                            iconName="user"
+                            iconSize={25}
                             placeholder='type your name'
                             placeholderTextColor={Colors.GRAY_700}
                             style={styles.input}
@@ -52,10 +53,10 @@ export default function formStepThree() {
                             value={value}
                             
                         />
-
+    
                     )}
                 />
-
+    
                 <Controller
                     control={control}
                     name='address'
@@ -64,7 +65,9 @@ export default function formStepThree() {
                     }}
                     render={({ field: { onChange, value } }) => (
                         <Input
-                            placeholder='type your address'
+                            iconName="map"
+                            iconSize={20}
+                            placeholder='type your suburb'
                             placeholderTextColor={Colors.GRAY_700}
                             style={styles.input}
                             error = {errors.address?.message}
@@ -78,52 +81,5 @@ export default function formStepThree() {
             <ButtonGreen btnName="NEXT" onPress={handleSubmit(handleNextStep)} />
         </View>
     );
+
 }
-
-const styles = StyleSheet.create({
-    container: {
-        backgroundColor: Colors.BRIGHT_BLUE,
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-
-    containerHeader: {
-        alignItems: "center",
-
-        marginBottom: 30
-    },
-
-    logo: {
-        width: 200,
-        resizeMode: "contain"
-
-    },
-
-    welcomeText: {
-        fontSize: Font_Size.XL,
-        fontFamily: Font_Family.BOLD,
-        color: Colors.WHITE
-
-    },
-
-    containerForm: {
-        width: 350,
-        justifyContent: "center",
-        alignItems: "center",
-
-        padding: 10,
-        gap: 20,
-
-        marginBottom: 60
-    },
-
-    containerButtons: {
-        alignItems: "center",
-
-        gap: 15
-
-    },
-
-
-});

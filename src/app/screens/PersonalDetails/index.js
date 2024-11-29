@@ -4,6 +4,9 @@ import { useRouter } from 'expo-router';
 import { GetUserToken } from '../../../data/storage/getUserToken';
 import { db } from '../../../../firebaseConfig';
 import { doc, setDoc, getDoc } from '@firebase/firestore';
+import { UseRegisterService } from '../../hook/useRegisterService';
+
+
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 
@@ -12,6 +15,7 @@ import LocationPicker from '../../../components/BecomePetSitter/LocationPicker';
 
 const PersonalDetails = () => {
   const router = useRouter();
+  const { currentUser, setCurrentUser } = UseRegisterService(); // Use context for the current user
   const [userData, setUserData] = useState({});
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -23,20 +27,24 @@ const PersonalDetails = () => {
     latitudeDelta: 0.01,
     longitudeDelta: 0.01,
   });
+  
 
   // Fetch authenticated user data
-  async function getUser() {
-    try {
-      const userToken = await GetUserToken("user_data");
-      const user = userToken ? JSON.parse(userToken) : null;
+  const fetchUserDetails = async () => {
+    if (!currentUser || !currentUser.userId) {
+      console.error("No authenticated user found in context.");
+      router.push("/screens/EntryPoint");
+      return;
+    }
 
-      if (user) {
-        const docRef = doc(db, "Users", user.id);
-        const docSnap = await getDoc(docRef);
+    try {
+      const userId = currentUser.userId; // Authenticated user ID
+      const docRef = doc(db, "Users", userId);
+      const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
           const data = docSnap.data();
-          setUserData({ id: user.id, name: user.name, email: user.email, ...data });
+          setUserData({ id: user.id, ...data });
           if (data.latitude && data.longitude) {
             setLatitude(data.latitude);
             setLongitude(data.longitude);
@@ -56,33 +64,66 @@ const PersonalDetails = () => {
             phoneNumber: "",
           };
           await setDoc(docRef, newUserData);
-          setUserData({ id: user.id, name: user.name, email: user.email, ...newUserData });
+          setUserData({ id: user.id, ...newUserData });
         }
       } else {
         console.log("User is not authenticated");
         router.push("/screens/EntryPoint");
       }
-      setLoading(false);
     } catch (error) {
-      console.log(error);
+      console.error("Error fetching user details:", error);
+    } finally {
       setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    getUser();
+    fetchUserDetails();
   }, []);
 
+
   const handleSave = async () => {
+    // if (!userData.name || !userData.address || !userData.phoneNumber) {
+    //   Alert.alert("Error", "Please fill in all mandatory fields.");
+    //   return;
+    // }
+
     try {
+      console.log("Current User in Context:", currentUser);
+      console.log("User Data:", userData);
+      console.log("Saving user data:", userData);
       const userRef = doc(db, "Users", userData.id);
-      await setDoc(userRef, { ...userData, latitude, longitude });
-      Alert.alert('Success', 'Your details have been updated successfully.');
+      await setDoc(
+        userRef, 
+        { name: userData.name || "",
+          email: userData.email || currentUser.email || "",
+          address: userData.address || "",
+          phoneNumber: userData.phoneNumber || "",
+          latitude: latitude || null,
+          longitude: longitude || null,
+          roles: userData.roles || ["petOwner"],
+         },
+        { merge: true });
+      Alert.alert("Success", "Your details have been updated successfully.");
       setEditMode(false);
+
+      // Update context with new data
+       setCurrentUser((prev) => ({
+        ...prev,
+        name: userData.name,
+        email: userData.email,
+        address: userData.address,
+        phoneNumber: userData.phoneNumber,
+        roles: userData.roles || ["petOwner"], // Include roles in context
+      }));
+      router.push("Home");
     } catch (error) {
-      console.log(error);
-      Alert.alert('Error', 'An error occurred while saving your details.');
+      console.error("Error updating user details:", error);
+      Alert.alert("Error", "An error occurred while saving your details.");
     }
+
+    console.log("After Add data into Current User in Context:", currentUser);
+    console.log("After Add data into User Data:", userData.address);
   };
 
   const handleChange = (key, value) => {
@@ -101,6 +142,37 @@ const PersonalDetails = () => {
   }
 
   return (
+
+    // <View style={styles.formContainer}>
+    //   <Text style={styles.label}>Name</Text>
+    //   <TextInput
+    //     style={styles.input}
+    //     value={userData.name}
+    //     onChangeText={(text) => handleChange('name', text)}
+    //   />
+
+    //   <Text style={styles.label}>Email</Text>
+    //   <TextInput
+    //     style={styles.input}
+    //     value={userData.email}
+    //     editable={false}
+    //   />
+
+    //   <Text style={styles.label}>Address</Text>
+    //   <TextInput
+    //     style={styles.input}
+    //     value={userData.address}
+    //     editable={false}
+    //   />
+
+    //   <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
+    //     <Text style={styles.saveButtonText}>Save</Text>
+    //   </TouchableOpacity>
+    // </View>
+
+
+
+
     <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <Text style={styles.headerText}>My Personal Details</Text>
 
@@ -109,7 +181,7 @@ const PersonalDetails = () => {
         <TextInput
           style={styles.input}
           value={userData.name}
-          editable={editMode}
+          // editable={editMode}
           onChangeText={(text) => handleChange('name', text)}
         />
 
@@ -117,11 +189,18 @@ const PersonalDetails = () => {
         <TextInput
           style={styles.input}
           value={userData.email}
-          editable={false}
+          // editable={false}
+          onChangeText={(text) => handleChange('email', text)}
         />
 
         <Text style={styles.label}>Address</Text>
-        {editMode ? (
+
+        <TextInput
+            style={styles.input}
+            value={userData.address}
+            // editable={false}
+          />
+        {/* {editMode ? (
           <LocationPicker
             latitude={latitude}
             longitude={longitude}
@@ -136,20 +215,24 @@ const PersonalDetails = () => {
           <TextInput
             style={styles.input}
             value={userData.address}
-            editable={false}
+            // editable={false}
           />
-        )}
+        )} */}
 
         <Text style={styles.label}>Phone Number</Text>
         <TextInput
           style={styles.input}
           value={userData.phoneNumber}
-          editable={editMode}
+          // editable={editMode}
           onChangeText={(text) => handleChange('phoneNumber', text)}
         />
       </View>
 
-      {editMode ? (
+      <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
+          <Text style={styles.saveButtonText}>Save</Text>
+        </TouchableOpacity>
+
+      {/* {editMode ? (
         <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
           <Text style={styles.saveButtonText}>Save</Text>
         </TouchableOpacity>
@@ -157,7 +240,7 @@ const PersonalDetails = () => {
         <TouchableOpacity onPress={() => setEditMode(true)} style={styles.editButton}>
           <Text style={styles.editButtonText}>Edit</Text>
         </TouchableOpacity>
-      )}
+      )} */}
     </KeyboardAvoidingView>
   );
 };

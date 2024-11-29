@@ -19,7 +19,6 @@ export default function FeedScreen() {
 
     //Use Context variable with data from Filter Service stored
     const { filter } = UseContextService();
-
     const { service } = UseContextService();
     const { sourceScreen } = UseContextService();
 
@@ -166,9 +165,7 @@ export default function FeedScreen() {
                                 rate={item.Rating}
                             />
                         </TouchableOpacity>
-
                     )}
-
                 />
             </View>
         </SafeAreaView>

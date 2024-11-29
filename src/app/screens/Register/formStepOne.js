@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import { Link } from 'expo-router';
 import { useRouter } from 'expo-router';
 import { LoginStorage } from '../../../data/storage/loginStorage';
-import { useForm, Controller } from "react-hook-form"
+import { useForm, Controller } from "react-hook-form";
+import { UseRegisterService } from '../../hook/useRegisterService';
 
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
@@ -12,16 +13,28 @@ import Input from '../../../components/Input';
 import ButtonGreen from '../../../components/ButtonGreen';
 
 
+
 export default function formStepOne() {
 
     const router = useRouter(); // Initialize router
+    const { currentUser, setCurrentUser } = UseRegisterService(); // Access context
 
-    const { control, handleSubmit, formState: { errors } } = useForm();
+    const { control, handleSubmit, formState: { errors } } = useForm({
+        defaultValues:{
+            name: currentUser.name || "",
+            address: currentUser.address || "",
+        }
+    });
 
-    console.log(errors)
+    console.log(errors);
 
 
     function handleNextStep(data) {
+        setCurrentUser((prev)=>({
+            ...prev,
+            name: data.name,
+            address: data.address,
+        }));
         router.push("screens/Register/formStepTwo");
     }
 
@@ -44,6 +57,8 @@ export default function formStepOne() {
                     render={({ field: { onChange, value } }) => (
 
                         <Input
+                            iconName="user"
+                            iconSize={25}
                             placeholder='type your name'
                             placeholderTextColor={Colors.GRAY_700}
                             style={styles.input}
@@ -64,7 +79,9 @@ export default function formStepOne() {
                     }}
                     render={({ field: { onChange, value } }) => (
                         <Input
-                            placeholder='type your address'
+                            iconName="map"
+                            iconSize={20}
+                            placeholder='type your suburb'
                             placeholderTextColor={Colors.GRAY_700}
                             style={styles.input}
                             error = {errors.address?.message}

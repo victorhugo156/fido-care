@@ -2,7 +2,6 @@ import { StyleSheet, SafeAreaView, ActivityIndicator } from "react-native";
 import React, { useState, createContext, useEffect } from 'react';
 import messaging from "@react-native-firebase/messaging";
 
-
 import {
   useFonts,
   Nunito_300Light,
@@ -14,6 +13,8 @@ import { Loading } from "../components/loading";
 import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { RegisterContextProvider } from "./Context/registerContext";
+import useAuthListener from "./hook/useAuthListener";
 
 
 import EntryPoint from "./screens/EntryPoint";
@@ -23,12 +24,10 @@ import Register from "./screens/Register";
 import { OneSignal } from "react-native-onesignal";
 
 
-//OneSignal.initialize("56418014-2ca0-45b0-bd36-6ea04a3d655a");
-
 export default function index() {
 
   const [fontsLoaded] = useFonts({ Nunito_300Light, Nunito_400Regular, Nunito_700Bold, Nunito_900Black });
-
+  
 
   useEffect(() => {
     // Initialize OneSignal with your App ID
@@ -49,6 +48,8 @@ export default function index() {
   };
 
 
+  // useAuthListener();
+
   //Condition to check if the font was loaded
   if (!fontsLoaded) {
     return (
@@ -57,15 +58,18 @@ export default function index() {
   }
 
   return (
-
-      <GestureHandlerRootView style={{ flex: 1 }}>
+    <RegisterContextProvider>
+            <GestureHandlerRootView style={{ flex: 1 }}>
         <BottomSheetModalProvider>
           <SafeAreaView style={styles.Container}>
+
             <EntryPoint />
+
           </SafeAreaView>
         </BottomSheetModalProvider>
       </GestureHandlerRootView>
-
+      
+    </RegisterContextProvider>
 
   );
 }

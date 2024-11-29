@@ -18,7 +18,7 @@
     "@react-native-community/datetimepicker": "8.0.1",
     "@react-native-community/slider": "^4.5.2",
     "@react-native-firebase/app": "^21.3.0",
-    "@react-native-firebase/auth": "^21.3.0",
+    "@react-native-firebase/auth": "^21.0.0",
     "@react-native-firebase/firestore": "^21.3.0",
     "@react-native-firebase/messaging": "^21.3.0",
     "@react-native-google-signin/google-signin": "^13.1.0",
@@ -43,6 +43,7 @@
     "react-hook-form": "^7.53.1",
     "react-native": "0.74.5",
     "react-native-calendars": "^1.1307.0",
+    "react-native-dropdown-select-list": "^2.0.5",
     "react-native-gesture-handler": "~2.16.1",
     "react-native-get-random-values": "^1.11.0",
     "react-native-gifted-chat": "^2.6.4",
@@ -58,7 +59,8 @@
     "react-native-vector-icons": "^10.2.0",
     "styled-components": "^6.1.13",
     "uuid": "^10.0.0",
-    "yup": "^1.4.0"
+    "yup": "^1.4.0",
+    "@react-native-segmented-control/segmented-control": "2.5.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0",

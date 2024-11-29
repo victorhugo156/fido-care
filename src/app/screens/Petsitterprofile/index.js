@@ -1,14 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import React, { useEffect, useState, useRef, useContext } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, ActivityIndicator, Alert, TextInput } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { collection, doc, getDocs, onSnapshot, query, where, addDoc } from 'firebase/firestore';
+import { collection, doc, getDocs, onSnapshot, query, where, addDoc, getDoc } from 'firebase/firestore';
 import { db } from '../../../../firebaseConfig';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { UseRegisterService } from '../../hook/useRegisterService'; 
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import CalendarPicker from '../../../components/Calendar';
+import { MultipleSelectList } from 'react-native-dropdown-select-list'
+
+import ServicePicker from '../../../components/SegmentControlMenu';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 import MarkFavSitter from '../../../components/MarkFavSitter/index';
 import ButtonApply from '../../../components/ButtonApply/idex';
+import CustomBottomSheet from '../../../components/CustomBottomSheet';
+import { UseContextService } from '../../hook/useContextService';
+import Font_Size from '../../../constants/Font_Size';
 
 // Skeleton loading component for smoother transitions
 const SkeletonProfile = () => (
@@ -24,39 +33,74 @@ const SkeletonProfile = () => (
 
 const PetSitterProfile = () => {
   const { id } = useLocalSearchParams();
+  const { currentUser } = UseRegisterService();
+  const { bookingDetails, setBookingDetails } = UseContextService({
+    PetOwnerId: null,
+    PetSitterId: null,
+    status: null,
+    title: null,
+    date: null,
+    petName: null,
+    time: null
+  })
   const petSitterId = id;
+  //This will get the reference of the bottom sheet
+  const bottomSheetRef = useRef(null);
+
   const router = useRouter();
+  const [dropDownMenuselected, setDropDownMenuSelected] = useState([]);
+  const [timeText, setTimeText] = useState('Select Your Time');
+  const [petName, setPetName] = useState(''); //Modal Options - > For pet's name
+  const [dates, setDates] = useState(null);
+  const [selectedTime, setSelectedTime] = useState(null); // Modal Options - > For time (morning/afternoon/night)
+  const [selectedService, setSelectedService] = useState(null); // Modal Options - > For service
+  const [days, setDays] = useState([]); // Modal Options - > For calendar date
   const [petSitter, setPetSitter] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState(null);
+  //const [user, setUser] = useState(null);
   const [averageRating, setAverageRating] = useState(null);
   const [reviewCount, setReviewCount] = useState(0);
   const [showFullText, setShowFullText] = useState(false);
 
-  // Service details for booking
-  const serviceDetails = {
-    title: "Pet Sitting",
-    date: "10-11-2024"
-  };
+
+
+  //Modal Controls
+  const handleClosePress = () => bottomSheetRef.current?.close();
+  const handleOpenPress = () => bottomSheetRef.current?.present();
 
   useEffect(() => {
-    const fetchUserAndPetSitter = async () => {
-      try {
-        const currentUser = await GoogleSignin.getCurrentUser();
-        if (currentUser) setUser(currentUser.user);
+    /*------ Formating Calendar Date ------ */
+    const date = new Date();
+    const day = String(date.getDate()).padStart(2, "0") // Get day and add add zero if needed
+    const month = String(date.getMonth() + 1).padStart(2, "0")
+    const year = date.getFullYear();
+    const formattedDefaultDate = `${day}/${month}/${year}`;
+    setDays([formattedDefaultDate]);
 
-        if (petSitterId) {
-          const docRef = doc(db, 'PetSitterProfile', petSitterId);
-          const unsubscribeProfile = onSnapshot(docRef, (docSnap) => {
-            if (docSnap.exists()) {
-              setPetSitter(docSnap.data());
-            } else {
-              console.error('No such document found in the database!');
-            }
-          });
-          return unsubscribeProfile;
+    /*------ END Formating Calendar Date ------ */
+
+    console.log('This is the currentUser in PetSitterProFile ->>>>', currentUser);
+
+    // Function to fetch the pet sitter's profile
+    const fetchPetSitter = async () => {
+      if (!petSitterId) {
+        console.error("Invalid petSitterId:", petSitterId);
+        Alert.alert("Error", "Pet sitter ID is not provided.");
+        setLoading(false);
+        return;
+    }
+      try {
+        // const currentUser = await GoogleSignin.getCurrentUser();
+        // if (currentUser) setUser(currentUser.user);
+
+        const docRef = doc(db, "PetSitterProfile", petSitterId);
+        const petSitterDoc = await getDoc(docRef);
+    
+        if (petSitterDoc.exists()) {
+          const petSitterData = petSitterDoc.data();
+          setPetSitter({ id: petSitterId, ...petSitterData }); // Include the document ID
         } else {
-          console.error('Pet Sitter ID is undefined');
+            Alert.alert("Error", "Pet sitter not found.");
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -65,13 +109,17 @@ const PetSitterProfile = () => {
       }
     };
 
-    const unsubscribeProfile = fetchUserAndPetSitter();
+    // const unsubscribeProfile = fetchPetSitter();
 
-    return () => {
-      if (typeof unsubscribeProfile === 'function') {
-        unsubscribeProfile();
-      }
-    };
+    // return () => {
+    //   if (typeof unsubscribeProfile === 'function') {
+    //     unsubscribeProfile();
+    //   }
+    // };
+
+
+    // Calling the function to fetch the data
+  fetchPetSitter();
   }, [petSitterId]);
 
   useEffect(() => {
@@ -106,28 +154,71 @@ const PetSitterProfile = () => {
   }, [petSitterId]);
 
   /** ---------- BOOKING FUNCTIONS ---------------- */
-  const createBookingRequest = async () => {
-    console.log("currentUser.id:", user?.id);
-    console.log("petSitter.id:", petSitter?.id);
 
-    if (!user?.id || !petSitter?.id) {
-      console.error("Error: petOwnerId or petSitterId is undefined.");
-      alert("Booking request cannot be created: Pet Owner or Pet Sitter ID is missing.");
+  const createBookingRequest = async () => {
+    if (!currentUser || !currentUser.roles || !currentUser.roles.includes("petOwner")) {
+      Alert.alert("Error", "You must be a Pet Owner to create a booking.");
       return;
     }
-    try {
-      await addDoc(collection(db, "Booking"), {
-        PetOwnerID: user.id,
-        PetSitterID: petSitter.id,
-        BookingStatus: "waiting",
-        ServiceDetails: serviceDetails
-      });
 
-      alert("Booking request Sent");
+    if (!petSitter || !petSitter.id) {
+      Alert.alert("Error", "Pet sitter information is missing.");
+      return;
+    }
+
+    // setBookingDetails({
+    //   petOwnerID: currentUser.userId,
+    //   petSitterID: petSitter.id,
+    //   status: "waiting",
+    //   title: selectedService,
+    //   petName: petName,
+    //   time: selectedTime,
+    //   date: days,
+    // });
+
+    const bookingData = {
+      PetOwnerID: currentUser.userId,
+      PetSitterID: petSitter.id,
+      BookingStatus: "Pending",
+      ServiceDetails: {
+        title: selectedService,
+        date: days,
+        time: selectedTime,
+        petName: petName,
+      },
+    };
+ 
+    console.log("Booking data being sent:", bookingDetails);
+    try {
+      await addDoc(collection(db, "Booking"), bookingData);
+      Alert.alert("Success", "Booking request sent.");
+      router.push("Bookings");
     } catch (error) {
       console.error("Error creating booking request:", error);
+      Alert.alert("Error", "Failed to create booking.");
     }
   };
+
+  const handleDateValue = (dates) => {
+    setBookingDetails({date:setDates(dates)});
+    console.log("Thhis is the Pet Sitter Info From DB --->> ", petSitter)
+
+}
+
+const handleTestFunction = () => {
+
+  //console.log("The dates Selectes are: ", dates)
+
+  // console.log("The dates Selectes are: ", days);
+  // console.log("The Time Selectes are: ", timeText);
+  // console.log("The Service Selectes are: ", dropDownMenuselected);
+  // console.log("The Pet Name Selectes are: ", petName);
+
+  console.log("These are the pet sitter information --->>", petSitter?.Services);
+
+}
+
+  /** ---------- END BOOKING FUNCTIONS ---------------- */
 
   const handleChatNavigation = async () => {
     if (!user) {
@@ -185,82 +276,165 @@ const PetSitterProfile = () => {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.headerImageContainer}>
-        <Image source={{ uri: petSitter.Avatar }} style={styles.headerImage} />
-        <View style={styles.imageOverlay}>
-          <MarkFavSitter petSitterId={petSitterId} color={Colors.CORAL_PINK} />
-          <TouchableOpacity style={styles.imageButton}>
-            <Ionicons name="share-outline" size={20} color={Colors.CORAL_PINK} />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <ScrollView style={styles.container}>
+        <View style={styles.headerImageContainer}>
+          <Image source={{ uri: petSitter.Avatar }} style={styles.headerImage} />
+          <View style={styles.imageOverlay}>
+            <MarkFavSitter petSitterId={petSitterId} color={Colors.CORAL_PINK} />
+            <TouchableOpacity style={styles.imageButton}>
+              <Ionicons name="share-outline" size={20} color={Colors.CORAL_PINK} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.profileInfoContainer}>
+          <Text style={styles.sitterName}>{petSitter.Name}</Text>
+          <Text style={styles.location}>{petSitter.Location}</Text>
+          <TouchableOpacity style={styles.ratingContainer} onPress={handleNavigateToReviews}>
+            <Ionicons name="star" size={16} color={Colors.CORAL_PINK} />
+            <Text style={styles.ratingText}>
+              {averageRating ? `${averageRating} / 5` : 'N/A'}
+            </Text>
+            <Text style={styles.reviewCount}>
+              ({reviewCount} {reviewCount === 1 ? 'Review' : 'Reviews'})
+            </Text>
           </TouchableOpacity>
         </View>
-      </View>
 
-      <View style={styles.profileInfoContainer}>
-        <Text style={styles.sitterName}>{petSitter.Name}</Text>
-        <Text style={styles.location}>{petSitter.Location}</Text>
-        <TouchableOpacity style={styles.ratingContainer} onPress={handleNavigateToReviews}>
-          <Ionicons name="star" size={16} color={Colors.CORAL_PINK} />
-          <Text style={styles.ratingText}>
-            {averageRating ? `${averageRating} / 5` : 'N/A'}
+        <View style={styles.actionButtonsContainer}>
+          <TouchableOpacity style={[styles.button, styles.meetButton]} onPress={handleChatNavigation}>
+            <Text style={styles.buttonText}>MEETING PET SITTER</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.button, styles.messageButton]} onPress={handleChatNavigation}>
+            <Text style={styles.buttonText}>MESSAGE PET SITTER</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>ABOUT ME</Text>
+          <Text style={styles.aboutText} numberOfLines={showFullText ? undefined : 3}>
+            {petSitter.About}
           </Text>
-          <Text style={styles.reviewCount}>
-            ({reviewCount} {reviewCount === 1 ? 'Review' : 'Reviews'})
-          </Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity onPress={() => setShowFullText(!showFullText)}>
+            <Text style={styles.readMoreText}>{showFullText ? 'Read Less' : 'Read More'}</Text>
+          </TouchableOpacity>
+        </View>
 
-      <View style={styles.actionButtonsContainer}>
-        <TouchableOpacity style={[styles.button, styles.meetButton]} onPress={handleChatNavigation}>
-          <Text style={styles.buttonText}>MEETING PET SITTER</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.button, styles.messageButton]} onPress={handleChatNavigation}>
-          <Text style={styles.buttonText}>MESSAGE PET SITTER</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>ABOUT ME</Text>
-        <Text style={styles.aboutText} numberOfLines={showFullText ? undefined : 3}>
-          {petSitter.About}
-        </Text>
-        <TouchableOpacity onPress={() => setShowFullText(!showFullText)}>
-          <Text style={styles.readMoreText}>{showFullText ? 'Read Less' : 'Read More'}</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>SERVICES</Text>
-        {petSitter.Services && petSitter.Services.map((service, index) => (
-          <View key={index} style={styles.serviceItem}>
-            <Text style={styles.serviceTitle}>{service.title}</Text>
-            <Text style={styles.servicePrice}>AU${service.price} / hour</Text>
-          </View>
-        ))}
-      </View>
-
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>AVAILABILITY</Text>
-        <View style={styles.availabilityCalendar}>
-          {petSitter.Availability && petSitter.Availability.map((date, index) => (
-            <Text key={index} style={styles.calendarText}>{date}</Text>
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>SERVICES</Text>
+          {petSitter.Services && petSitter.Services.map((service, index) => (
+            <View key={index} style={styles.serviceItem}>
+              <Text style={styles.serviceTitle}>{service.title}</Text>
+              <Text style={styles.servicePrice}>AU${service.price} / hour</Text>
+            </View>
           ))}
         </View>
-      </View>
 
-      <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>SKILLS</Text>
-        {petSitter.Skills && petSitter.Skills.map((skill, index) => (
-          <Text key={index} style={styles.skillText}>✔️ {skill}</Text>
-        ))}
-      </View>
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>AVAILABILITY</Text>
+          <View style={styles.availabilityCalendar}>
+            {petSitter.Availability && petSitter.Availability.map((date, index) => (
+              <Text key={index} style={styles.calendarText}>{date}</Text>
+            ))}
+          </View>
+        </View>
 
-      <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Apply"} onPress={createBookingRequest} />
-    </ScrollView>
+        <View style={styles.sectionContainer}>
+          <Text style={styles.sectionTitle}>SKILLS</Text>
+          {petSitter.Skills && petSitter.Skills.map((skill, index) => (
+            <Text key={index} style={styles.skillText}>✔️ {skill}</Text>
+          ))}
+        </View>
+
+        <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Book"} onPress={handleOpenPress} />
+      </ScrollView>
+
+      {/*-------------- Modal ------------------- */}
+
+      <CustomBottomSheet ref={bottomSheetRef} snapPointsStart={3}>
+        <View style={styles.containerModal}>
+
+          <View style={styles.containerModalCalendar}>
+            <Text style={styles.modalTitles}>Select the Date</Text>
+            <CalendarPicker handleDate={handleDateValue} />
+          </View>
+
+          <View style={styles.containerModalTime}>
+            <Text style={styles.modalTitles}>Select the TIME</Text>
+            <ServicePicker
+            values={["Morning", "Afternoon", "Night"]}
+            onValueChange={(time) => setSelectedTime(time)}
+            />
+          </View>
+
+
+
+          <View style={styles.containerModalService}>
+            <Text style={styles.modalTitles}>Select the Service your are After</Text>
+            <ServicePicker
+            values={petSitter?.Services?.map((service) => service.title) || []} // Extracting titles from Services
+            onValueChange={(service) => setSelectedService(service)}
+            />
+          </View>
+          
+          <View style={styles.containerModalPetName}>
+            <Text style={styles.modalTitles}>What is your Pet name?</Text>
+            <TextInput
+            placeholder="Pet Name"
+            value={petName}
+            onChangeText={setPetName}
+              // value={petName}
+            />
+          </View>
+        </View>
+        <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Send Booking"} onPress={createBookingRequest} />
+
+      </CustomBottomSheet>
+
+    </GestureHandlerRootView>
+
   );
 };
 
 const styles = StyleSheet.create({
+
+  /*-------------- Modal Style ------------------- */
+
+  containerModal:{
+    height: 670,
+
+    padding: 20,
+
+    justifyContent: "space-between"
+
+  },
+
+  modalTitles:{
+    fontFamily: Font_Family.BOLD,
+    color: Colors.GRAY_700,
+    fontSize: Font_Size.LG
+
+  },
+
+  containerModalPetName:{
+    height: 50,
+
+    justifyContent: "space-between",
+
+  },
+  containerModalService:{
+    height: 70,
+
+    justifyContent: "space-between",
+  },
+  containerModalTime:{
+    height: 50,
+
+    justifyContent: "space-between",
+  },
+
+  /*-------------- End Modal Style ------------------- */
   container: {
     flex: 1,
     backgroundColor: '#FFFFFF',

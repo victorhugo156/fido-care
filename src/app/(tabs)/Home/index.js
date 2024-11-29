@@ -36,7 +36,6 @@ export default function Home() {
 
   const router = useRouter(); // Initialize router
 
-
   return (
 
     <SafeAreaView style={styles.ContainerSafeArea}>

@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { UseRegisterService } from '../../hook/useRegisterService';
 import { useRouter } from 'expo-router';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 import { GetUserToken } from '../../../data/storage/getUserToken';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '../../../../firebaseConfig';
 
 // Define menu items with screen names and icons
 const menuItems = [
@@ -23,23 +26,63 @@ const menuItems = [
 ];
 
 const Menu = () => {
+  const { currentUser, setCurrentUser } = UseRegisterService();
   const router = useRouter();
   const [userAuthenticated, setUserAuthenticated] = useState(false);
   const [userData, setUserData] = useState({});
 
-  // Verify if user is authenticated
-  async function getUser() {
-    try {
-      const userToken = await GetUserToken("user_data");
-      const user = userToken ? JSON.parse(userToken) : null;
 
-      if (user) {
-        console.log("User is authenticated", user);
-        setUserAuthenticated(true);
-        setUserData(user);
-      } else {
-        console.log("User is not authenticated");
-      }
+  async function getUser() {
+
+    try {
+      // Check Firebase Authentication
+      const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+        if (firebaseUser) {
+          console.log("Firebase user authenticated:", firebaseUser);
+
+          // Use currentUser context as the primary source of truth
+          if (currentUser) {
+            console.log("Using currentUser context:", currentUser);
+            setUserAuthenticated(true);
+            setUserData({
+              uid: currentUser.userId,
+              email: currentUser.email,
+              name: currentUser.name,
+              photo: currentUser.photo || null,
+            });
+          } else {
+            console.log("Fetching Google Sign-In data...");
+            const googleUser = await GoogleSignin.getCurrentUser();
+            const name = googleUser?.user?.name || firebaseUser.displayName || "Anonymous User";
+
+            // Update state if Google Sign-In data is available
+            setUserAuthenticated(true);
+            setUserData({
+              uid: firebaseUser.uid,
+              email: firebaseUser.email,
+              name: name,
+              photo: googleUser?.user?.photo || firebaseUser.photoURL || null,
+            });
+          }
+        } else {
+          console.log("Firebase user is not authenticated");
+          setUserAuthenticated(false);
+          setUserData(null);
+        }
+      });
+      return unsubscribe; // Allow cleanup
+      // if (currentUser) {
+      //   console.log("User is authenticated", user);
+      //   setUserAuthenticated(true);
+      //   setUserData({
+      //     uid: currentUser.userId,
+      //     email: currentUser.email,
+      //     name: currentUser.name,
+      //     photo: currentUser.photo || null,
+      // });
+      // } else {
+      //   console.log("User is not authenticated");
+      // }
     } catch (error) {
       console.log(error);
     }
@@ -81,8 +124,18 @@ const Menu = () => {
   // Sign out Function from Google
   async function handleSignOut() {
     try {
+      // Clear Google Sign-In session
       await GoogleSignin.signOut();
-      await AsyncStorage.removeItem('user_data');
+
+      // Sign out from Google
+      await auth.signOut();
+
+
+      //await AsyncStorage.removeItem('user_data');
+      setUserAuthenticated(false); // Reset authentication state
+      setUserData(null);
+      setUserData(null);
+      setCurrentUser(null); // Clear context 
       console.log("User signed out successfully");
       router.push('screens/EntryPoint');
     } catch (error) {
@@ -91,8 +144,26 @@ const Menu = () => {
   }
 
   useEffect(() => {
-    getUser();
-  }, []);
+    const unsubscribe = getUser(); // Call the getUser function, which returns the unsubscribe function for onAuthStateChanged
+
+    console.log("The current User --->>", currentUser);
+
+    // Synchronize userData with currentUser
+    if (currentUser) {
+      setUserData({
+        uid: currentUser.userId,
+        email: currentUser.email,
+        name: currentUser.name,
+        photo: currentUser.photo || null,
+      });
+    }
+
+    return () => {
+      if (typeof unsubscribe === "function") {
+        unsubscribe();
+      }
+    };
+  }, [currentUser, userAuthenticated]);
 
   return (
     <ScrollView style={styles.container}>

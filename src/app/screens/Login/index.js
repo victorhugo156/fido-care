@@ -1,10 +1,17 @@
 import { View, Text, StyleSheet, Image, TextInput, Alert } from 'react-native';
 import React, { useState, useEffect } from 'react';
-import { Link } from 'expo-router';
-import { useForm, Controller } from "react-hook-form"
+import { Link, useRouter } from 'expo-router';
+//import { useRouter } from 'expo-router';
+import { useForm, Controller } from "react-hook-form";
+import { UseRegisterService } from "../../hook/useRegisterService";
+
 import { db } from '../../../../firebaseConfig';
+import { auth } from '../../../../firebaseConfig';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 import { OneSignal } from 'react-native-onesignal';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+import { LoginStorage } from '../../../data/storage/loginStorage';
 
 import { WEB_CLIENT_ID, IOS_CLIENT_ID } from '@env';
 
@@ -12,15 +19,10 @@ import { WEB_CLIENT_ID, IOS_CLIENT_ID } from '@env';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 import Font_Size from '../../../constants/Font_Size';
-
 import Input from '../../../components/Input';
 import ButtonGreen from '../../../components/ButtonGreen';
 import ButtonGoogle from '../../../components/ButtonGoogle';
 import ButtonTransparent from '../../../components/ButtonTransparent';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { LoginStorage } from '../../../data/storage/loginStorage';
-
-import { useRouter } from 'expo-router';
 
 
 GoogleSignin.configure({
@@ -36,6 +38,8 @@ export default function LoginScreen() {
   const { control, handleSubmit, formState: { errors } } = useForm();
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [oneSignalPlayerId, setOneSignalPlayerId] = useState(null);
+  //const { newUser, setNewUser } = UseRegisterService();
+  const { currentUser, setCurrentUser } = UseRegisterService();
 
   useEffect(() => {
     // Initialize OneSignal
@@ -51,6 +55,10 @@ export default function LoginScreen() {
         if (playerId) {
           setOneSignalPlayerId(playerId);
           console.log('OneSignal Player ID:', playerId);
+          setCurrentUser((prev) => ({
+            ...prev, oneSignalId: playerId,
+          }));
+
         } else {
           console.warn('OneSignal Player ID is not available.');
         }
@@ -61,6 +69,8 @@ export default function LoginScreen() {
 
     fetchPlayerId();
   }, []);
+
+  console.log("this is the new user OneSIgnalPlayer", currentUser)
 
   // Save Player ID to Firestore
   const savePlayerId = async (userId) => {
@@ -77,21 +87,39 @@ export default function LoginScreen() {
     }
   };
 
+  //Google Authentication Function
   async function handleGoogleSignIn() {
 
     try {
-      setIsAuthenticating(true)
+      setIsAuthenticating(true);
 
+      // Perform Google Sign-In
       const response = await GoogleSignin.signIn();
 
+        // Extract user data from Google Sign-In
       const userData = response.data.user;
-
-      // Log user data to verify
       console.log("This is the user data:", userData);
 
       if (userData) {
+      // Retrieve the ID Token for Firebase Authentication
+      const idToken = await GoogleSignin.getTokens().then(tokens => tokens.idToken);
+
+      // Sign in to Firebase using the Google ID Token
+      const credential = GoogleAuthProvider.credential(idToken);
+      const firebaseUser = await signInWithCredential(auth, credential);
+
+      console.log("User signed in to Firebase:", firebaseUser);
+
+      // Save user in Firestore if not already saved
+      await savePlayerId(firebaseUser.user.uid); // Save the OneSignal Player ID
+      await fetchCurrentUser(firebaseUser.user.uid); // Fetch and update the user in the currentUser context
+
         await LoginStorage(userData);
         await savePlayerId(userData.id);
+        await fetchCurrentUser(userData.id);
+        // await setCurrentUser((prev) => ({
+        //   ...prev, userId: userData.id,
+        // }));
         router.push("Home");
 
       }
@@ -110,15 +138,60 @@ export default function LoginScreen() {
 
   }
 
-  function handleLogin() {
-    console.log("I am here in Login")
+
+  const onSubmit = (data) => {
+    const { email, password } = data;
+    handleLogin(email, password); // Call the login function
+  };
+
+  // Authenticate the user using Firebase Auth
+  const handleLogin = async (email, password) => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+
+      // Retrieve authenticated user's information
+      const user = userCredential.user;
+
+      console.log("User signed in successfully:", user.uid);
+
+      // Fetch user data from Firestore
+      await fetchCurrentUser(user.uid);
+
+      router.push("Home");
+    } catch (error) {
+      // Handle authentication errors
+      console.error("Error signing in:", error);
+
+      // User-friendly error handling
+      if (error.code === "auth/user-not-found") {
+        alert("No user found with this email.");
+      } else if (error.code === "auth/wrong-password") {
+        alert("Incorrect password.");
+      } else {
+        alert("Error signing in: " + error.message);
+      }
+    }
   }
+
+  //Function That will save User into DB
+  const fetchCurrentUser = async (userId) => {
+    try {
+        const userDoc = await getDoc(doc(db, "Users", userId));
+        if (userDoc.exists()) {
+            setCurrentUser({ ...userDoc.data(), userId });
+            console.log("User data fetched and stored in context:", userDoc.data());
+        } else {
+            console.error("User document not found in Firestore.");
+        }
+    } catch (error) {
+        console.error("Error fetching user data from Firestore:", error);
+    }
+};
+
 
   function handleRegister() {
     router.push("screens/Register/formStepOne");
   }
-
- 
 
 
   return (
@@ -139,14 +212,14 @@ export default function LoginScreen() {
             name='email'
             rules={{
               required: "Inform your email",
-              
-    
+
             }}
             render={({ field: { onChange, value } }) => (
               <Input
                 iconName="envelope"
+                iconSize={20}
                 placeholder='Email address'
-                keyboardType = "email-address"
+                keyboardType="email-address"
                 placeholderTextColor={Colors.GRAY_700}
                 style={styles.input}
                 onChangeText={onChange}
@@ -171,13 +244,16 @@ export default function LoginScreen() {
             }}
             render={({ field: { onChange, value } }) => (
               <Input
-              iconName="lock"
+                iconName="lock"
+                iconSize={25}
                 placeholder='Password'
+                secureTextEntry={true}
+
                 placeholderTextColor={Colors.GRAY_700}
                 style={styles.input}
                 onChangeText={onChange}
                 value={value}
-                error= {errors.password?.message}
+                error={errors.password?.message}
               />
             )}
           />
@@ -192,7 +268,7 @@ export default function LoginScreen() {
             <Text style={styles.recoverPasswordLink}>Forgot your password?</Text>
           </Link>
 
-          <ButtonGreen btnName="LOGIN" onPress={handleSubmit(handleLogin)} />
+          <ButtonGreen btnName="LOGIN" onPress={handleSubmit(onSubmit)} />
         </View>
       </View>
 
@@ -253,15 +329,15 @@ const styles = StyleSheet.create({
     marginBottom: 20
   },
 
-  ErrorMsg:{
+  ErrorMsg: {
     fontFamily: Font_Family.BOLD,
     fontSize: Font_Size.SM,
     color: Colors.CORAL_PINK,
 
     padding: 0,
-    margin:0
+    margin: 0
 
-},
+  },
 
   containerBtnLogin: {
     alignItems: "center",

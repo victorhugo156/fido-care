@@ -3,6 +3,7 @@ import { SafeAreaView, Image, TouchableOpacity } from "react-native";
 import React, { useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import { StatusBar } from 'expo-status-bar';
+import { RegisterContextProvider } from "./Context/registerContext";
 
 
 import { ContextProvider } from "./Context/globalContext";
@@ -14,7 +15,8 @@ export default function Rootlayout() {
     // const [service, setService] = useState("Pet Sitter");
 
     return (
-        <ContextProvider>
+        <RegisterContextProvider>
+                    <ContextProvider>
             <SafeAreaView style={{ flex: 1 }}>
                 <StatusBar style="auto" />
                 <Stack>
@@ -327,5 +329,6 @@ export default function Rootlayout() {
             </SafeAreaView>
         </ContextProvider>
 
+        </RegisterContextProvider>
     );
 }

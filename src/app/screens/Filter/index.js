@@ -27,7 +27,11 @@ export default function FilterScreen() {
     const { service } = UseContextService();
     const { petInfo } = UseContextService();
     const { sourceScreen, setSourceScreen } = UseContextService();
-    const { filter, setFilter } = UseContextService({servicePicked: null, pricePicked: null, datePicked: null, locationPicked: null});
+    const { filter, setFilter } = UseContextService({
+        servicePicked: null,
+        pricePicked: null, 
+        datePicked: null, 
+        locationPicked: null});
 
     const [price, setPrice] = useState(0);
     const [dates, setDates] = useState(null);
@@ -169,7 +173,7 @@ export default function FilterScreen() {
                     <ButtonApply bgColor={Colors.GRAY_200} btnTitle={"Clean"} />
                 </View>
 
-                <CustomBottomSheet ref={bottomSheetRef}>
+                <CustomBottomSheet ref={bottomSheetRef} snapPointsStart= {2}>
                     <View style={styles.ContainerCalendar}>
                         <CalendarPicker handleDate={handleDateValue} />
                         <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Apply"} onPress={handleApply} />
