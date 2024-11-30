@@ -15,7 +15,8 @@ import Font_Size from "../../constants/Font_Size";
 export default function TabLayout() {
 
     return (
-            <Tabs screenOptions={{
+        <SafeAreaView style={styles.safeContainer}>
+                        <Tabs screenOptions={{
                 tabBarActiveTintColor: Colors.BRIGHT_BLUE,
                 tabBarInactiveTintColor: 'white',
 
@@ -24,8 +25,9 @@ export default function TabLayout() {
                     backgroundColor: Colors.TURQUOISE_GREEN,
                     borderTopColor: 'transparent',
                     elevation: 0,
-                    height: 70,
-                    alignItems: " center",
+                    height: 90,
+                    justifyContent: 'center', // Center items vertically
+                    paddingBottom: 10, // Add spacing for text alignment
                 },
 
                 tabBarLabelStyle: {
@@ -79,10 +81,17 @@ export default function TabLayout() {
             />
         </Tabs>
 
+        </SafeAreaView>
+
+
     );
 }
 
 const styles = StyleSheet.create({
+    safeContainer: {
+        flex: 1,
+        backgroundColor: Colors.CORAL_PINK, // Adjust to match your app theme
+    },
     ContainerSafeArea: {
         paddingTop: 20,
 

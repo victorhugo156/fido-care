@@ -41,8 +41,16 @@ target 'fidocare' do
 # @generated end react-native-maps
   config = use_native_modules!
 
-  use_frameworks! :linkage => podfile_properties['ios.useFrameworks'].to_sym if podfile_properties['ios.useFrameworks']
-  use_frameworks! :linkage => ENV['USE_FRAMEWORKS'].to_sym if ENV['USE_FRAMEWORKS']
+    # Firebase Pods
+    pod 'Firebase/Core', $FirebaseSDKVersion, :modular_headers => true
+    pod 'Firebase/Auth', $FirebaseSDKVersion, :modular_headers => true
+    pod 'Firebase/Firestore', $FirebaseSDKVersion, :modular_headers => true
+
+  # use_frameworks! :linkage => podfile_properties['ios.useFrameworks'].to_sym if podfile_properties['ios.useFrameworks']
+  # use_frameworks! :linkage => ENV['USE_FRAMEWORKS'].to_sym if ENV['USE_FRAMEWORKS']
+
+  use_frameworks! :linkage => :static
+
 
   use_react_native!(
     :path => config[:reactNativePath],

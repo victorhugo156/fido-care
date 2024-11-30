@@ -1,9 +1,10 @@
-import { View, Text, StyleSheet, Image, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, Image, TextInput, Alert, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import { Link, useRouter } from 'expo-router';
 //import { useRouter } from 'expo-router';
 import { useForm, Controller } from "react-hook-form";
 import { UseRegisterService } from "../../hook/useRegisterService";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { db } from '../../../../firebaseConfig';
 import { auth } from '../../../../firebaseConfig';
@@ -40,6 +41,7 @@ export default function LoginScreen() {
   const [oneSignalPlayerId, setOneSignalPlayerId] = useState(null);
   //const { newUser, setNewUser } = UseRegisterService();
   const { currentUser, setCurrentUser } = UseRegisterService();
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     // Initialize OneSignal
@@ -195,7 +197,12 @@ export default function LoginScreen() {
 
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    style={{ flex: 1 }}
+    >
+      <SafeAreaView style={[styles.safeContainer, { paddingTop: insets.top }]}>
+          <View style={styles.container}>
       <View style={styles.containerHeader}>
         <Image source={require('../../../assets/images/fido_logo_cream.png')}
           style={styles.logo}>
@@ -280,10 +287,18 @@ export default function LoginScreen() {
         <ButtonGoogle btnName="Login with Google" onPress={handleGoogleSignIn} />
       </View>
     </View>
+
+    </SafeAreaView>
+    </KeyboardAvoidingView>
+    
   );
 }
 
 const styles = StyleSheet.create({
+  safeContainer:{
+    flex: 1,
+    backgroundColor: Colors.CORAL_PINK, // Ensure it matches your theme
+  },
   container: {
     backgroundColor: Colors.BRIGHT_BLUE,
     flex: 1,

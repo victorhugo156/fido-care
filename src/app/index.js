@@ -13,7 +13,7 @@ import { Loading } from "../components/loading";
 import { BottomSheetModal, BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
-import { RegisterContextProvider } from "./Context/registerContext";
+import { RegisterContextProvider, SafeAreaProvider } from "./Context/registerContext";
 import useAuthListener from "./hook/useAuthListener";
 
 
@@ -58,7 +58,7 @@ export default function index() {
   }
 
   return (
-    <RegisterContextProvider>
+          <RegisterContextProvider>
             <GestureHandlerRootView style={{ flex: 1 }}>
         <BottomSheetModalProvider>
           <SafeAreaView style={styles.Container}>
@@ -68,7 +68,6 @@ export default function index() {
           </SafeAreaView>
         </BottomSheetModalProvider>
       </GestureHandlerRootView>
-      
     </RegisterContextProvider>
 
   );

@@ -39,6 +39,7 @@ export default function Home() {
   return (
 
     <SafeAreaView style={styles.ContainerSafeArea}>
+      <View style={styles.Container}>
 
       {/* Search Bar */}
       <View style={styles.ContainerSearchBar}>
@@ -96,17 +97,32 @@ export default function Home() {
         </TouchableOpacity>
       </View>
 
+      </View>
+
+
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   ContainerSafeArea: {
+    backgroundColor: "blue",
     flex: 1,
-    justifyContent: "flex-start",
+    height: " 100%",
+
     alignItems: 'center',
-    paddingTop: 50,
+    //justifyContent: " center"
+    // paddingTop: 10,
   },
+  Container:{
+    backgroundColor: " orange",
+    height: 150,
+    justifyContent: " center"
+
+    // padding: 70
+
+  },
+  
   ContainerSearchBar: {
     width: 327,
     height: 38,
@@ -115,7 +131,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: Colors.GRAY_200,
     borderRadius: 9,
-    marginBottom: 80,
+    marginBottom: 60,
   },
   SearchBar: {
     flexDirection: "row",
