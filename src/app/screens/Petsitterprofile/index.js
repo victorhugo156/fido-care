@@ -4,7 +4,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { collection, doc, getDocs, onSnapshot, query, where, addDoc, getDoc } from 'firebase/firestore';
 import { db } from '../../../../firebaseConfig';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { UseRegisterService } from '../../hook/useRegisterService'; 
+import { UseRegisterService } from '../../hook/useRegisterService';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import CalendarPicker from '../../../components/Calendar';
 import { MultipleSelectList } from 'react-native-dropdown-select-list'
@@ -61,6 +61,9 @@ const PetSitterProfile = () => {
   const [averageRating, setAverageRating] = useState(null);
   const [reviewCount, setReviewCount] = useState(0);
   const [showFullText, setShowFullText] = useState(false);
+  const [petQuantity, setPetQuantity] = useState(1);
+  const [totalPrice, setTotalPrice] = useState(0);
+  const [modalSelectedService, setModalSelectedService] = useState(null); // Currently selected service
 
 
 
@@ -88,19 +91,24 @@ const PetSitterProfile = () => {
         Alert.alert("Error", "Pet sitter ID is not provided.");
         setLoading(false);
         return;
-    }
+      }
       try {
         // const currentUser = await GoogleSignin.getCurrentUser();
         // if (currentUser) setUser(currentUser.user);
 
         const docRef = doc(db, "PetSitterProfile", petSitterId);
         const petSitterDoc = await getDoc(docRef);
-    
+
         if (petSitterDoc.exists()) {
           const petSitterData = petSitterDoc.data();
           setPetSitter({ id: petSitterId, ...petSitterData }); // Include the document ID
+
+          if (petSitterData.Services && petSitterData.Services.length > 0) {
+            setSelectedService(petSitterData.Services[0].title); // Default to the first service
+            setTotalPrice(parseInt(petSitterData.Services[0].price, 10)); // Initialize price
+          }
         } else {
-            Alert.alert("Error", "Pet sitter not found.");
+          Alert.alert("Error", "Pet sitter not found.");
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -108,21 +116,12 @@ const PetSitterProfile = () => {
         setLoading(false);
       }
     };
-
-    // const unsubscribeProfile = fetchPetSitter();
-
-    // return () => {
-    //   if (typeof unsubscribeProfile === 'function') {
-    //     unsubscribeProfile();
-    //   }
-    // };
-
-
     // Calling the function to fetch the data
-  fetchPetSitter();
+    fetchPetSitter();
   }, [petSitterId]);
 
   useEffect(() => {
+
     if (petSitterId) {
       const reviewsRef = collection(db, 'Feedback');
       const q = query(reviewsRef, where('petSitterId', '==', petSitterId));
@@ -185,9 +184,10 @@ const PetSitterProfile = () => {
         date: days,
         time: selectedTime,
         petName: petName,
+        totalPrice: totalPrice
       },
     };
- 
+
     console.log("Booking data being sent:", bookingDetails);
     try {
       await addDoc(collection(db, "Booking"), bookingData);
@@ -200,23 +200,23 @@ const PetSitterProfile = () => {
   };
 
   const handleDateValue = (dates) => {
-    setBookingDetails({date:setDates(dates)});
+    setBookingDetails({ date: setDates(dates) });
     console.log("Thhis is the Pet Sitter Info From DB --->> ", petSitter)
 
-}
+  }
 
-const handleTestFunction = () => {
+  const handleTestFunction = () => {
 
-  //console.log("The dates Selectes are: ", dates)
+    //console.log("The dates Selectes are: ", dates)
 
-  // console.log("The dates Selectes are: ", days);
-  // console.log("The Time Selectes are: ", timeText);
-  // console.log("The Service Selectes are: ", dropDownMenuselected);
-  // console.log("The Pet Name Selectes are: ", petName);
+    // console.log("The dates Selectes are: ", days);
+    // console.log("The Time Selectes are: ", timeText);
+    // console.log("The Service Selectes are: ", dropDownMenuselected);
+    // console.log("The Pet Name Selectes are: ", petName);
 
-  console.log("These are the pet sitter information --->>", petSitter?.Services);
+    console.log("These are the pet sitter information --->>", petSitter?.Services);
 
-}
+  }
 
   /** ---------- END BOOKING FUNCTIONS ---------------- */
 
@@ -274,6 +274,58 @@ const handleTestFunction = () => {
   if (!petSitter) {
     return <SkeletonProfile />;
   }
+
+  //Function Inside Modal to select pet quantity
+  const handleNext = (servicePrice) => {
+    console.log('Service Price Received:', servicePrice); // Add this
+    setPetQuantity((prevQuantity) => {
+      console.log("Previous Quantity:", prevQuantity);
+      const newQuantity = prevQuantity + 1;
+
+      setTotalPrice((prevPrice) => {
+        console.log("Previous Total Price:", prevPrice);
+        console.log("Adding Service Price:", parseInt(servicePrice, 10));
+        const additionalCost = (newQuantity - 1) * 10; // Extra cost for additional pets
+        const updatedTotalPrice = parseInt(servicePrice, 10) + additionalCost;
+        return updatedTotalPrice;
+      });
+      return newQuantity;
+    });
+  };
+  //This function is the back Pet
+  const handlePrevious = function (servicePrice) {
+    console.log('Service Price Received:', servicePrice); // Debugging
+  
+    setPetQuantity((prevQuantity) => {
+      if (prevQuantity <= 1) {
+        console.log("Cannot decrease below 1 pet.");
+        return prevQuantity; // Prevent decreasing below 1
+      }
+  
+      const newQuantity = prevQuantity - 1;
+      console.log("New Pet Quantity:", newQuantity);
+  
+      // Update total price
+      setTotalPrice((prevPrice) => {
+        const additionalCost = (newQuantity - 1) * 10; // Extra cost for additional pets
+        const updatedTotalPrice = parseInt(servicePrice, 10) + additionalCost;
+        console.log("Updated Total Price:", updatedTotalPrice);
+        return updatedTotalPrice;
+      });
+  
+      return newQuantity;
+    });
+  };
+
+  const handleServiceChange = (serviceTitle) => {
+    // Find the selected service in petSitter.Services
+    const selected = petSitter.Services.find(service => service.title === serviceTitle);
+  
+    if (selected) {
+      setSelectedService(selected.title); // Update the selected service
+      setTotalPrice(parseInt(selected.price, 10)); // Update total price
+    }
+  };
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -349,49 +401,79 @@ const handleTestFunction = () => {
 
         <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Book"} onPress={handleOpenPress} />
       </ScrollView>
-
       {/*-------------- Modal ------------------- */}
 
       <CustomBottomSheet ref={bottomSheetRef} snapPointsStart={3}>
-        <View style={styles.containerModal}>
+        <ScrollView style={{ flex: 1 }} >
+          <View style={styles.containerModal}>
+            <View style={styles.containerModalCalendar}>
+              <Text style={styles.modalTitles}>Select the Date</Text>
+              <CalendarPicker handleDate={handleDateValue} />
+            </View>
 
-          <View style={styles.containerModalCalendar}>
-            <Text style={styles.modalTitles}>Select the Date</Text>
-            <CalendarPicker handleDate={handleDateValue} />
-          </View>
-
-          <View style={styles.containerModalTime}>
-            <Text style={styles.modalTitles}>Select the TIME</Text>
-            <ServicePicker
-            values={["Morning", "Afternoon", "Night"]}
-            onValueChange={(time) => setSelectedTime(time)}
-            />
-          </View>
+            <View style={styles.containerModalTime}>
+              <Text style={styles.modalTitles}>Select the TIME</Text>
+              <ServicePicker
+                values={["Morning", "Afternoon", "Night"]}
+                onValueChange={(time) => setSelectedTime(time)}
+              />
+            </View>
 
 
+            <View style={styles.containerModalService}>
+              <Text style={styles.modalTitles}>Current Services Provided</Text>
+              <ServicePicker
+                values={petSitter?.Services?.map((service) => service.title) || []} // Extracting titles from Services
+                onValueChange={handleServiceChange}
+              />
+            </View>
 
-          <View style={styles.containerModalService}>
-            <Text style={styles.modalTitles}>Select the Service your are After</Text>
-            <ServicePicker
-            values={petSitter?.Services?.map((service) => service.title) || []} // Extracting titles from Services
-            onValueChange={(service) => setSelectedService(service)}
-            />
-          </View>
-          
-          <View style={styles.containerModalPetName}>
-            <Text style={styles.modalTitles}>What is your Pet name?</Text>
-            <TextInput
-            placeholder="Pet Name"
-            value={petName}
-            onChangeText={setPetName}
+            <View style={styles.containerModalPetName}>
+              <Text style={styles.modalTitles}>What is your Pet name?</Text>
+              <TextInput
+                style={styles.inputPetName}
+                placeholder="Pet Name"
+                value={petName}
+                onChangeText={setPetName}
               // value={petName}
-            />
+              />
+            </View>
+
+            <View style={styles.containerModalPetQuantity}>
+              <Text style={styles.modalTitles}>How many Pets: </Text>
+              <View style={styles.ContainerSwapper}>
+                <TouchableOpacity onPress={()=>{handlePrevious(totalPrice)}}>
+                  <Image style={styles.BtnControlMinus} source={require("../../../assets/icons/btn_minus.png")} />
+                </TouchableOpacity>
+
+                <View style={styles.ContainerDataDisplay}>
+                  <Text style={styles.InfoData}>{petQuantity}</Text>
+                </View>
+
+
+                  <TouchableOpacity onPress={() => handleNext(totalPrice)}>
+                    <Image style={styles.BtnControlPlus} source={require("../../../assets/icons/btn_plus.png")} />
+                  </TouchableOpacity>
+
+
+                {/* <TouchableOpacity onPress={handleNext()}>
+                  <Image style={styles.BtnControlPlus} source={require("../../../assets/icons/btn_plus.png")} />
+                </TouchableOpacity> */}
+              </View>
+            </View>
+
+            <View style={styles.containerModalTotalPrice}>
+              <Text>Total:</Text>
+              <View style={styles.serviceItem}>
+                <Text style={styles.servicePrice}>AU${totalPrice} / hour</Text>
+              </View>
+
+            </View>
           </View>
-        </View>
-        <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Send Booking"} onPress={createBookingRequest} />
+          <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Send Booking"} onPress={createBookingRequest} />
+        </ScrollView>
 
       </CustomBottomSheet>
-
     </GestureHandlerRootView>
 
   );
@@ -401,37 +483,92 @@ const styles = StyleSheet.create({
 
   /*-------------- Modal Style ------------------- */
 
-  containerModal:{
-    height: 670,
+  containerModal: {
+    flexGrow: 1,
 
     padding: 20,
-
-    justifyContent: "space-between"
-
   },
 
-  modalTitles:{
+  modalTitles: {
     fontFamily: Font_Family.BOLD,
     color: Colors.GRAY_700,
     fontSize: Font_Size.LG
 
   },
+  containerModalCalendar: {
+    marginBottom: 30
 
-  containerModalPetName:{
-    height: 50,
+  },
+
+  containerModalPetName: {
+    height: 90,
 
     justifyContent: "space-between",
 
+    marginBottom: 30
   },
-  containerModalService:{
+
+  inputPetName: {
+    backgroundColor: Colors.GRAY_50,
+
+    width: "100%",
+
+    padding: 10,
+
+    borderRadius: 5
+  },
+
+  containerModalService: {
     height: 70,
 
     justifyContent: "space-between",
+
+    marginBottom: 30
   },
-  containerModalTime:{
-    height: 50,
+
+  containerModalTime: {
+    height: 70,
 
     justifyContent: "space-between",
+
+    marginBottom: 30
+  },
+
+  containerModalPetQuantity: {
+    width: "100%",
+    height: 70,
+
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 20,
+
+    marginBottom: 30
+
+  },
+
+  ContainerSwapper: {
+    width: 90,
+    height: 170,
+
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between"
+
+  },
+  ContainerDataDisplay: {
+    alignItems: "center",
+    gap: 5
+
+  },
+  BtnControlMinus: {
+    width: 30,
+    height: 30,
+    resizeMode: "contain"
+  },
+  BtnControlPlus: {
+    width: 33,
+    height: 33,
+    resizeMode: "contain"
   },
 
   /*-------------- End Modal Style ------------------- */

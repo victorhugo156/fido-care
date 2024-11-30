@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, TextInput, Image, ScrollView } from 'react-native';
 
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Colors from '../../constants/Colors';
@@ -34,7 +34,7 @@ export default function CardBooking({
 
     const isPetSitter = currentUserId === petSitterId; // Check if the current user is the Pet Sitter
     return (
-        <View style={styles.itemContainer}>
+                   <View style={styles.itemContainer}>
             <View style={styles.itemHeader}>
                 <View style={styles.petNameContainer}>
                     <Icon name="pets" size={20} color={Colors.TURQUOISE_GREEN} style={styles.petIcon} />
@@ -96,6 +96,7 @@ export default function CardBooking({
             </View>
 
         </View>
+ 
     )
 }
 

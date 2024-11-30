@@ -37,38 +37,64 @@ const Menu = () => {
     try {
       // Check Firebase Authentication
       const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-        if (firebaseUser) {
-          console.log("Firebase user authenticated:", firebaseUser);
-
-          // Use currentUser context as the primary source of truth
-          if (currentUser) {
-            console.log("Using currentUser context:", currentUser);
-            setUserAuthenticated(true);
-            setUserData({
-              uid: currentUser.userId,
-              email: currentUser.email,
-              name: currentUser.name,
-              photo: currentUser.photo || null,
-            });
-          } else {
-            console.log("Fetching Google Sign-In data...");
-            const googleUser = await GoogleSignin.getCurrentUser();
-            const name = googleUser?.user?.name || firebaseUser.displayName || "Anonymous User";
-
-            // Update state if Google Sign-In data is available
-            setUserAuthenticated(true);
-            setUserData({
-              uid: firebaseUser.uid,
-              email: firebaseUser.email,
-              name: name,
-              photo: googleUser?.user?.photo || firebaseUser.photoURL || null,
-            });
-          }
+        if (firebaseUser && currentUser) {
+          console.log("Using currentUser context:", currentUser);
+          setUserAuthenticated(true);
+          setUserData({
+            uid: currentUser.userId,
+            email: currentUser.email,
+            name: currentUser.name,
+            photo: currentUser.photo || null,
+          });
+        } else if (firebaseUser) {
+          console.log("Fetching Google Sign-In data...");
+          const googleUser = await GoogleSignin.getCurrentUser();
+          const name = googleUser?.user?.name || firebaseUser.displayName || "Anonymous User";
+        
+          setUserAuthenticated(true);
+          setUserData({
+            uid: firebaseUser.uid,
+            email: firebaseUser.email,
+            name: name,
+            photo: googleUser?.user?.photo || firebaseUser.photoURL || null,
+          });
         } else {
           console.log("Firebase user is not authenticated");
           setUserAuthenticated(false);
           setUserData(null);
         }
+        // if (firebaseUser) {
+        //   console.log("Firebase user authenticated:", firebaseUser);
+
+        //   // Use currentUser context as the primary source of truth
+        //   if (currentUser) {
+        //     console.log("Using currentUser context:", currentUser);
+        //     setUserAuthenticated(true);
+        //     setUserData({
+        //       uid: currentUser.userId,
+        //       email: currentUser.email,
+        //       name: currentUser.name,
+        //       photo: currentUser.photo || null,
+        //     });
+        //   } else {
+        //     console.log("Fetching Google Sign-In data...");
+        //     const googleUser = await GoogleSignin.getCurrentUser();
+        //     const name = googleUser?.user?.name || firebaseUser.displayName || "Anonymous User";
+
+        //     // Update state if Google Sign-In data is available
+        //     setUserAuthenticated(true);
+        //     setUserData({
+        //       uid: firebaseUser.uid,
+        //       email: firebaseUser.email,
+        //       name: name,
+        //       photo: googleUser?.user?.photo || firebaseUser.photoURL || null,
+        //     });
+        //   }
+        // } else {
+        //   console.log("Firebase user is not authenticated");
+        //   setUserAuthenticated(false);
+        //   setUserData(null);
+        // }
       });
       return unsubscribe; // Allow cleanup
       // if (currentUser) {
@@ -130,7 +156,6 @@ const Menu = () => {
       // Sign out from Google
       await auth.signOut();
 
-
       //await AsyncStorage.removeItem('user_data');
       setUserAuthenticated(false); // Reset authentication state
       setUserData(null);
@@ -156,6 +181,8 @@ const Menu = () => {
         name: currentUser.name,
         photo: currentUser.photo || null,
       });
+    }else {
+      setUserData(null); // Clear userData when currentUser is null
     }
 
     return () => {

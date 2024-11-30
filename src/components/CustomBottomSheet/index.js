@@ -15,6 +15,7 @@ the user change the size of the modal*/
                 index={snapPointsStart}
                 snapPoints={snapPoints}
                 enablePanDownToClose={true}
+                enableContentPanningGesture={false}
                 backgroundStyle={{ backgroundColor: Colors.WHITE }}
                 handleIndicatorStyle={{ backgroundColor: Colors.BRIGHT_BLUE }}
                 style={{ borderRadius: 60, overflow: 'hidden' }}
