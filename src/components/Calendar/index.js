@@ -7,24 +7,38 @@ import Colors from '../../constants/Colors';
 import Font_Family from '../../constants/Font_Family';
 import Font_Size from '../../constants/Font_Size';
 
-export default function CalendarPicker({handleDate}) {
+export default function CalendarPicker({ handleDate, markedDates = {}, isReadOnly = false }) {
 
     const [selectedDays, setSelectedDays] = useState({});
 
-    const handleSetDate= (day)=>{
+    // Combine `markedDates` with `selectedDays`
+    const combinedMarkedDates = { ...markedDates, ...selectedDays };
+
+    const handleSetDate = (day) => {
+        if (isReadOnly) return; // Prevent interaction if the calendar is in read-only mode
         const dateString = day.dateString;
 
-        if(selectedDays[dateString]){
-            const updateDays = {...selectedDays};
-            delete updateDays[dateString];
-            setSelectedDays(updateDays)
-        }else{
-
-            setSelectedDays({
-                ...selectedDays,
-                [dateString]: {selected: true, selectedColor: Colors.BRIGHT_BLUE}
-            });
+        // Toggle selection
+        const updatedDays = { ...selectedDays };
+        if (updatedDays[dateString]) {
+            delete updatedDays[dateString]; // Deselect the date
+        } else {
+            updatedDays[dateString] = { selected: true, selectedColor: Colors.CORAL_PINK };
         }
+        setSelectedDays(updatedDays);
+        handleDate(updatedDays);
+
+        // if(selectedDays[dateString]){
+        //     const updateDays = {...selectedDays};
+        //     delete updateDays[dateString];
+        //     setSelectedDays(updateDays)
+        // }else{
+
+        //     setSelectedDays({
+        //         ...selectedDays,
+        //         [dateString]: {selected: true, selectedColor: Colors.BRIGHT_BLUE}
+        //     });
+        // }
     }
 
     // Whenever the dates change, we pass them back to the parent via the handleDate function
@@ -53,12 +67,9 @@ export default function CalendarPicker({handleDate}) {
                 minDate={new Date().toDateString()}
                 hideExtraDays={true}
                 onDayPress={(day) => handleSetDate(day)}
-                markedDates={selectedDays}
+                markedDates={combinedMarkedDates} // Combine pre-marked and user-selected dates
             />
         </View>
-
-
-
     )
 }
 
@@ -71,7 +82,7 @@ const styles = StyleSheet.create({
     Calendar: {
         backgroundColor: "transparent"
     },
-    Selected:{
+    Selected: {
         color: Colors.GRAY_700,
         fontSize: Font_Size.LG,
         marginTop: 42

@@ -47,9 +47,12 @@ export default function CardBooking({
             </View>
                 <Text style={styles.sitterName}>{isPetSitter ? `Pet Owner: ${ownerName}` : `Pet Sitter: ${sitterName}`}</Text>
             <View style={styles.detailRow}>
-                <View style={styles.detailItem}>
+                <View style={styles.detailItemDate}>
                     <Text style={styles.detailLabel}>Date:</Text>
-                    <Text style={styles.date}>{date}</Text>
+                    <View style={styles.detailLabelText}>
+                        <Text style={styles.date}>{date}</Text>
+                    </View>
+                    
                 </View>
                 <View style={styles.detailItem}>
                     <Text style={styles.detailLabel}>Price:</Text>
@@ -158,6 +161,11 @@ const styles = StyleSheet.create({
     detailItem: {
         flexDirection: 'row',
     },
+
+    detailLabelText:{
+        width: 90,
+    },
+
     detailLabel: {
         fontSize: Font_Size.MD,
         fontFamily: Font_Family.BLACK,

@@ -297,7 +297,6 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   safeContainer:{
     flex: 1,
-    backgroundColor: Colors.CORAL_PINK, // Ensure it matches your theme
   },
   container: {
     backgroundColor: Colors.BRIGHT_BLUE,

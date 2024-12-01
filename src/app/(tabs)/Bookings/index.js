@@ -358,9 +358,8 @@ const styles = StyleSheet.create({
 
   BookingsList:{
     alignItems: "center",
+    padding: 0,
   },
-
-
 
   ContainerTitleBookingsCards:{
     paddingLeft: 12,

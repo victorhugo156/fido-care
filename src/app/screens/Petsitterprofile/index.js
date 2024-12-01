@@ -65,6 +65,7 @@ const PetSitterProfile = () => {
   const [petQuantity, setPetQuantity] = useState(1);
   const [totalPrice, setTotalPrice] = useState(0);
   const [modalSelectedService, setModalSelectedService] = useState(null); // Currently selected service
+  const [markedDates, setMarkedDates] = useState({});
 
 
 
@@ -108,6 +109,19 @@ const PetSitterProfile = () => {
             setSelectedService(petSitterData.Services[0].title); // Default to the first service
             setTotalPrice(parseInt(petSitterData.Services[0].price, 10)); // Initialize price
           }
+
+          // Setting markedDates after setting petSitter to display in the calendar
+          if (petSitterData.Availability) {
+            const markedDates = petSitterData.Availability.reduce((acc, date) => {
+              const [month, day, year] = date.split('/');
+              const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+              acc[formattedDate] = { selected: true, selectedColor: 'blue' };
+              return acc;
+            }, {});
+
+          setMarkedDates(markedDates); // Use state to store markedDates
+        }
+
         } else {
           Alert.alert("Error", "Pet sitter not found.");
         }
@@ -166,15 +180,10 @@ const PetSitterProfile = () => {
       return;
     }
 
-    // setBookingDetails({
-    //   petOwnerID: currentUser.userId,
-    //   petSitterID: petSitter.id,
-    //   status: "waiting",
-    //   title: selectedService,
-    //   petName: petName,
-    //   time: selectedTime,
-    //   date: days,
-    // });
+    if (!days || days.length === 0) {
+      Alert.alert("Error", "Please select at least one date for the booking.");
+      return;
+  }
 
     const bookingData = {
       PetOwnerID: currentUser.userId,
@@ -203,9 +212,16 @@ const PetSitterProfile = () => {
     }
   };
 
-  const handleDateValue = (dates) => {
-    setBookingDetails({ date: setDates(dates) });
-    console.log("Thhis is the Pet Sitter Info From DB --->> ", petSitter)
+  const handleDateValue = (selectedDates) => {
+    // Extract date keys (e.g., "2024-12-05") from selectedDates
+    const selectedDateKeys = Object.keys(selectedDates);
+    setDays(selectedDateKeys)
+    setBookingDetails((prevDetails) => ({
+      ...prevDetails, // Spread previous booking details
+      date: selectedDateKeys, // Add or update the date field
+  }));
+  console.log("Selected dates for booking:", selectedDateKeys);
+  console.log("Updated booking details:", bookingDetails);
 
   }
 
@@ -395,19 +411,19 @@ const PetSitterProfile = () => {
           ))}
         </View>
 
-        <View style={styles.sectionContainer}>
+        <View style={styles.sectionContainerAvailability}>
           <Text style={styles.sectionTitle}>AVAILABILITY</Text>
 
           <View style={styles.availabilityCalendar}>
-            {petSitter.Availability && petSitter.Availability.map((date, index) => (
+            {markedDates ? (
               <CalendarPicker
-                key={date || index} // Use `date` if it's unique; fallback to `index` if necessary
-                handleDate={() => {
-                  handleDateCalendar(date);
-                }}
+                markedDates={markedDates} // Highlight available dates
+                isReadOnly={true} // Disable user interaction
+                handleDate={() => { }} // No-op since it's read-only
               />
-              // <Text key={date || index} style={styles.calendarText}>{date}</Text>
-            ))}
+            ) : (
+              <Text style={styles.errorText}>No availability data found.</Text>
+            )}
           </View>
         </View>
 
@@ -418,7 +434,15 @@ const PetSitterProfile = () => {
           ))}
         </View>
 
-        <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Book"} onPress={handleOpenPress} />
+        <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Book"} onPress={()=>{
+          if(currentUser.name){
+            handleOpenPress()
+          }else{
+            Alert.alert("You have To finish your register");
+            router.push('screens/PersonalDetails');
+          }
+
+        }} />
       </ScrollView>
       {/*-------------- Modal ------------------- */}
 
@@ -427,7 +451,10 @@ const PetSitterProfile = () => {
           <View style={styles.containerModal}>
             <View style={styles.containerModalCalendar}>
               <Text style={styles.modalTitles}>Select the Date</Text>
-              <CalendarPicker handleDate={handleDateValue} />
+              <CalendarPicker
+                markedDates={markedDates}
+                handleDate={handleDateValue}
+              />
             </View>
 
             <View style={styles.containerModalTime}>
@@ -696,6 +723,22 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
   },
+
+  sectionContainerAvailability:{
+
+
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+
+  },
+
+  availabilityCalendar: {
+    backgroundColor: '#F0F0F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 10,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -728,13 +771,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  availabilityCalendar: {
-    height: 200,
-    backgroundColor: '#F0F0F0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 10,
-  },
+
+
   calendarText: {
     color: '#999',
   },
