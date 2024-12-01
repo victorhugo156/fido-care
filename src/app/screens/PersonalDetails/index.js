@@ -42,33 +42,29 @@ const PersonalDetails = () => {
       const docRef = doc(db, "Users", userId);
       const docSnap = await getDoc(docRef);
 
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          setUserData({ id: user.id, ...data });
-          if (data.latitude && data.longitude) {
-            setLatitude(data.latitude);
-            setLongitude(data.longitude);
-            setRegion({
-              latitude: data.latitude,
-              longitude: data.longitude,
-              latitudeDelta: 0.01,
-              longitudeDelta: 0.01,
-            });
-          }
-        } else {
-          console.log("No such document!");
-          const newUserData = {
-            name: user.name || "",
-            email: user.email || "",
-            address: "",
-            phoneNumber: "",
-          };
-          await setDoc(docRef, newUserData);
-          setUserData({ id: user.id, ...newUserData });
-        }
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setUserData({
+          id: userId,
+          name: data.name || "",
+          email: data.email || currentUser.email || "",
+          address: data.address || "",
+          phoneNumber: data.phoneNumber || "",
+          latitude: data.latitude || null,
+          longitude: data.longitude || null,
+          roles: data.roles || ["petOwner"], // Store roles as an array
+        });
       } else {
-        console.log("User is not authenticated");
-        router.push("/screens/EntryPoint");
+        // Initialize user data in Firestore
+        console.log("No existing user document found. Creating a new one.");
+        const newUserData = {
+          name: currentUser.displayName || "",
+          email: currentUser.email || "",
+          address: "",
+          phoneNumber: "",
+        };
+        await setDoc(docRef, newUserData);
+        setUserData({ id: userId, ...newUserData });
       }
     } catch (error) {
       console.error("Error fetching user details:", error);
