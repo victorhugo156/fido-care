@@ -20,9 +20,14 @@ export default function ServicePicker({
 
             <SegmentedControl
                 style={styles.segmentedControl}
+                tintColor={Colors.BRIGHT_BLUE} // Active segment color
                 values={values} //Passing the options
                 selectedIndex={selectedIndex} //The current selected index
                 fontStyle={{color: Colors.GRAY_700, fontFamily: Font_Family.REGULAR, fontSize: Font_Size.SM }}
+                activeFontStyle={{
+                  color: 'white', // Font color for the active segment
+                  fontWeight: 'bold',
+                }}
                 onChange={(event) => {
                     const newIndex = event.nativeEvent.selectedSegmentIndex;
                     setSelectedIndex(newIndex);
@@ -40,11 +45,7 @@ const styles = StyleSheet.create({
     },
     segmentedControl: {
       width: '100%',
+      backgroundColor: Colors.GRAY_50
 
-    },
-    selectedService: {
-      fontSize: 18,
-      marginTop: 20,
-      color: '#333',
     },
   });

@@ -8,15 +8,24 @@
 #import <React/RCTBundleURLProvider.h>
 #import <React/RCTLinkingManager.h>
 
+// Import Firebase
+#import <Firebase.h>
+
 @implementation AppDelegate
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-// @generated begin react-native-maps-init - expo prebuild (DO NOT MODIFY) sync-5c41612b602eec24f37db68b578aff178ab6820c
+  // Initialize Firebase
+  if ([FIRApp defaultApp] == nil) {
+    [FIRApp configure];
+  }
+
+  // @generated begin react-native-maps-init - expo prebuild (DO NOT MODIFY) sync-5c41612b602eec24f37db68b578aff178ab6820c
 #if __has_include(<GoogleMaps/GoogleMaps.h>)
   [GMSServices provideAPIKey:@"AIzaSyBQJUBHGQfNam1-_zUiAFVMYIg8jQ5Vvdo"];
 #endif
-// @generated end react-native-maps-init
+  // @generated end react-native-maps-init
+
   self.moduleName = @"main";
 
   // You can add your custom initial props in the dictionary below.
