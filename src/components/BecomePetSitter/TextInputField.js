@@ -1,12 +1,12 @@
 import React from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { View, Text, TextInput, StyleSheet,ScrollView } from 'react-native';
 import Colors from '../../constants/Colors';
 import Font_Family from '../../constants/Font_Family';
 
 
 const TextInputField = ({ label, placeholder, value, onChangeText, onBlur, error, multiline = false }) => {
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text style={styles.label}>{label}</Text>
       <TextInput
         style={[styles.input, multiline && styles.multiline]}
@@ -17,7 +17,7 @@ const TextInputField = ({ label, placeholder, value, onChangeText, onBlur, error
         multiline={multiline}
       />
       {error && <Text style={styles.error}>{error}</Text>}
-    </View>
+    </ScrollView>
   );
 };
 

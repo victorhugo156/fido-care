@@ -1,12 +1,12 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity,ScrollView } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
 import Colors from '../../constants/Colors';
 import Font_Family from '../../constants/Font_Family';
 
 const SkillList = ({ skills, setFieldValue, skillOptions }) => {
   return (
-    <View>
+    <ScrollView>
       <Text style={styles.sectionTitle}>Skills</Text>
       {skills.map((skill, index) => (
         <View key={index} style={styles.skillRow}>
@@ -37,7 +37,7 @@ const SkillList = ({ skills, setFieldValue, skillOptions }) => {
       >
         <Text style={styles.addButtonText}>Add Skill</Text>
       </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 };
 

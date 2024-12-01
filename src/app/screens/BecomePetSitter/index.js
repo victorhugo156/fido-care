@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, FlatList, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, FlatList, Text, StyleSheet, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
@@ -13,6 +13,8 @@ import { db } from '../../../../firebaseConfig';
 import { doc, setDoc, getDoc,deleteDoc, updateDoc, arrayUnion, collection, query, where, getDocs} from 'firebase/firestore';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
+import { ProgressBar } from 'react-native-paper';
+
 
 // Importing modular components
 import AvatarPicker from './../../../components/BecomePetSitter/AvatarPicker';
@@ -41,11 +43,24 @@ const BecomePetSitter = () => {
   const [user, setUser] = useState(null);
   const [avatar, setAvatar] = useState(''); // Single avatar image
   const [profileDeleted, setProfileDeleted] = useState(false);
+  const [step, setStep] = useState(0);
+  const totalSteps = 8; // Total number of steps in the form
+  const nextStep = () => {
+    if (step < totalSteps - 1) {
+      setStep(step + 1);
+    }
+  };
+
+  const prevStep = () => {
+    if (step > 0) {
+      setStep(step - 1);
+    }
+  };
 
   const serviceOptions = [
     'Dog boarding',
     'Doggy day care',
-    'Dog walking',
+    'Dog Walking',
     '1x Home visit',
     '2x Home visits',
     'House sitting',
@@ -103,6 +118,11 @@ const BecomePetSitter = () => {
         setLoading(false); // Ensure loading is false even if an error occurs
       }
     };
+
+    
+
+
+
     // const fetchUserData = async () => {
     //   if (profileDeleted) return;
 
@@ -404,24 +424,20 @@ const validationSchema = Yup.object().shape({
       ListHeaderComponent={
         <Formik
           initialValues={{
-            name: '',
-            location: '',
-            experience: '',
-            about: '',
-            services: [{ title: '', price: '' }],
-            skills: [''],
-            // name: petSitterData.Name || '',
-            // location: petSitterData.Location || '',
-            // experience: petSitterData.Experience || '',
-            // about: petSitterData.About || '',
-            // avatar: avatar || '',
-            // services: petSitterData.Services || [{ title: '', price: '' }],
-            // skills: petSitterData.Skills || [''],
+            name: petSitterData.Name || '',
+            location: petSitterData.Location || '',
+            experience: petSitterData.Experience || '',
+            about: petSitterData.About || '',
+            services: petSitterData.Services || [{ title: '', price: '' }],
+            skills: petSitterData.Skills || [''],
           }}
          //validationSchema={validationSchema}
           onSubmit={(values) => {
-            console.log('Form submitted:', values); // Check if this triggers
-            handleSubmit(values);
+            if (step === totalSteps - 1) {
+              handleSubmit(values);
+            } else {
+              nextStep();
+            }
           }}
           //onSubmit={handleSubmit}
         >
@@ -429,80 +445,107 @@ const validationSchema = Yup.object().shape({
             <View style={styles.contentContainer}>
               <Text style={styles.header}>Form to Become a Pet Sitter</Text>
 
-              {/* Avatar Picker */}
-              <AvatarPicker avatar={avatar} setAvatar={setAvatar} setFieldValue={setFieldValue} />
-              {errors.avatar && <Text style={styles.errorText}>{errors.avatar}</Text>}
+              {step === 0 && (
+                <>
+                  <AvatarPicker avatar={avatar} setAvatar={setAvatar} setFieldValue={setFieldValue} />
+                  {errors.avatar && <Text style={styles.errorText}>{errors.avatar}</Text>}
+                </>
+              )}
 
-              {/* Name Input */}
-              <TextInputField
-                label="Name"
-                placeholder="Name and Surname"
-                value={values.name}
-                onChangeText={handleChange('name')}
-                onBlur={handleBlur('name')}
-                error={touched.name && errors.name}
-              />
-              {errors.name && touched.name && <Text>{errors.name}</Text>}
+              {step === 1 && (
+                <>
+                  <TextInputField
+                    label="Name"
+                    placeholder="Name and Surname"
+                    value={values.name}
+                    onChangeText={handleChange('name')}
+                    onBlur={handleBlur('name')}
+                    error={touched.name && errors.name}
+                  />
+                  {errors.name && touched.name && <Text>{errors.name}</Text>}
+                </>
+              )}
 
-              {/* Location Picker */}
-              <LocationPicker
-              latitude={latitude}
-              longitude={longitude}
-              setLatitude={setLatitude}
-              setLongitude={setLongitude}
-              region={region}
-              setRegion={setRegion}
-              setFieldValue={setFieldValue}
-              initialLocation={petSitterData.Location} // Pass current location
-            />
-              {errors.location && touched.location && <Text>{errors.location}</Text>}
+              {step === 2 && (
+                <>
+                  <LocationPicker
+                    latitude={latitude}
+                    longitude={longitude}
+                    setLatitude={setLatitude}
+                    setLongitude={setLongitude}
+                    region={region}
+                    setRegion={setRegion}
+                    setFieldValue={setFieldValue}
+                    initialLocation={values.location} // Use Formik value for location
+                  />
+                  {errors.location && touched.location && <Text>{errors.location}</Text>}
+                </>
+              )}
 
-              {touched.location && errors.location && <Text style={styles.errorText}>{errors.location}</Text>}
+              {step === 3 && (
+                <>
+                  <TextInputField
+                    label="Years of Experience"
+                    placeholder="Your Experience (in years)"
+                    value={values.experience}
+                    onChangeText={handleChange('experience')}
+                    onBlur={handleBlur('experience')}
+                    error={touched.experience && errors.experience}
+                  />
+                </>
+              )}
 
-              {/* Experience Input */}
-              <TextInputField
-                label="Years of Experience"
-                placeholder="Your Experience (in years)"
-                value={values.experience}
-                onChangeText={handleChange('experience')}
-                onBlur={handleBlur('experience')}
-                error={touched.experience && errors.experience}
-              />
+              {step === 4 && (
+                <>
+                  <TextInputField
+                    label="About Me"
+                    placeholder="About Me"
+                    value={values.about}
+                    onChangeText={handleChange('about')}
+                    onBlur={handleBlur('about')}
+                    error={touched.about && errors.about}
+                    multiline
+                  />
+                </>
+              )}
 
-              {/* About Input */}
-              <TextInputField
-                label="About Me"
-                placeholder="About Me"
-                value={values.about}
-                onChangeText={handleChange('about')}
-                onBlur={handleBlur('about')}
-                error={touched.about && errors.about}
-                multiline
-              />
+              {step === 5 && (
+                <ServiceList
+                  services={values.services}
+                  setFieldValue={setFieldValue}
+                  serviceOptions={serviceOptions}
+                />
+              )}
 
-              {/* Services Section */}
-              <ServiceList
-                services={values.services}
-                setFieldValue={setFieldValue}
-                serviceOptions={serviceOptions}
-              />
+              {step === 6 && (
+                <SkillList
+                  skills={values.skills}
+                  setFieldValue={setFieldValue}
+                  skillOptions={skillOptions}
+                />
+              )}
 
-              {/* Skills Section */}
-              <SkillList
-                skills={values.skills}
-                setFieldValue={setFieldValue}
-                skillOptions={skillOptions}
-              />
+              {step === 7 && (
+                <AvailabilityList availability={availability} setAvailability={setAvailability} />
+              )}
 
-              {/* Availability Section */}
-              <AvailabilityList availability={availability} setAvailability={setAvailability} />
+              <View style={styles.navigationButtons}>
+                {step > 0 && (
+                  <TouchableOpacity onPress={prevStep} style={styles.button}>
+                    <Text style={styles.buttonText}>Back</Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity onPress={handleSubmit} style={styles.button}>
+                  <Text style={styles.buttonText}>{step === totalSteps - 1 ? "Submit" : "Next"}</Text>
+                </TouchableOpacity>
+              </View>
 
-              <Text>{JSON.stringify(errors, null, 2)}</Text>
+              <ProgressBar progress={(step + 1) / totalSteps} color={Colors.CORAL_PINK} style={styles.progressBar} />
+              <Text style={styles.stepIndicator}>Question {step + 1} of {totalSteps}</Text>
+              
 
-              {/* Submit Button */}
-              <SubmitButton  onPress={handleSubmit} />
+              {Object.keys(errors).length > 0 && <Text>{JSON.stringify(errors, null, 2)}</Text>}
 
-              {/* Delete Button */}
               {petSitterData.id && (
                 <DeleteProfileButton
                   userId={petSitterData.id}
@@ -553,27 +596,37 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginBottom: 10,
   },
+  progressBar: {
+    height: 10,
+    borderRadius: 5,
+    marginTop: 20,
+  },
+  stepIndicator: {
+    marginTop: 10,
+    fontSize: 14,
+    color: Colors.CORAL_PINK,
+    fontFamily: Font_Family.BOLD,
+
+  },
+  navigationButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  button: {
+    backgroundColor: Colors.TURQUOISE_GREEN,
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    width: 100,
+
+  },
+  buttonText: {
+    color: Colors.WHITE,
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+
 });
 
 export default BecomePetSitter;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
