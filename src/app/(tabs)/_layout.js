@@ -16,7 +16,7 @@ export default function TabLayout() {
 
     return (
         <SafeAreaView style={styles.safeContainer}>
-                        <Tabs screenOptions={{
+            <Tabs screenOptions={{
                 tabBarActiveTintColor: Colors.BRIGHT_BLUE,
                 tabBarInactiveTintColor: 'white',
 
@@ -49,37 +49,37 @@ export default function TabLayout() {
 
                 />
 
-            <Tabs.Screen name="Bookings/index"
-                options={{
-                    path: 'Bookings',
-                    tabBarLabel: "Bookings",
-                    headerShown: false,
-                    tabBarIcon: ({ color }) => <Entypo name="calendar" size={32} color={color} />
-                }}
-            />
-            <Tabs.Screen name="Chat/index"
-                options={{
-                    path: 'Chat',
-                    tabBarLabel: "Chat",
-                    title: "Inbox",  // 
-                    headerShown: false,
-                    headerStyle: {
-                        backgroundColor: '#3772FF', // Set background color here
-                    },
-                    headerTitleAlign: 'center', // Center the title
-                    headerTintColor: '#fff', // Set the title color
-                    tabBarIcon: ({ color }) => <Ionicons name="chatbox" size={32} color={color} />
-                }}
-            />
-            <Tabs.Screen name="Menu/index"
-                options={{
-                    path: 'Menu',
-                    tabBarLabel: "Menu",
-                    headerShown: false,
-                    tabBarIcon: ({ color }) => <FontAwesome name="gear" size={32} color={color} />
-                }}
-            />
-        </Tabs>
+                <Tabs.Screen name="Bookings/index"
+                    options={{
+                        path: 'Bookings',
+                        tabBarLabel: "Bookings",
+                        headerShown: false,
+                        tabBarIcon: ({ color }) => <Entypo name="calendar" size={32} color={color} />
+                    }}
+                />
+                <Tabs.Screen name="Chat/index"
+                    options={{
+                        path: 'Chat',
+                        tabBarLabel: "Chat",
+                        title: "Inbox",  // 
+                        headerShown: false,
+                        headerStyle: {
+                            backgroundColor: '#3772FF', // Set background color here
+                        },
+                        headerTitleAlign: 'center', // Center the title
+                        headerTintColor: '#fff', // Set the title color
+                        tabBarIcon: ({ color }) => <Ionicons name="chatbox" size={32} color={color} />
+                    }}
+                />
+                <Tabs.Screen name="Menu/index"
+                    options={{
+                        path: 'Menu',
+                        tabBarLabel: "Menu",
+                        headerShown: false,
+                        tabBarIcon: ({ color }) => <FontAwesome name="gear" size={32} color={color} />
+                    }}
+                />
+            </Tabs>
 
         </SafeAreaView>
 

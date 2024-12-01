@@ -24,6 +24,7 @@ export default function CardBooking({
     petName,
     status,
     sitterName,
+    ownerName,
     date,
     price,
     service,
@@ -34,7 +35,7 @@ export default function CardBooking({
 
     const isPetSitter = currentUserId === petSitterId; // Check if the current user is the Pet Sitter
     return (
-                   <View style={styles.itemContainer}>
+        <View style={styles.itemContainer}>
             <View style={styles.itemHeader}>
                 <View style={styles.petNameContainer}>
                     <Icon name="pets" size={20} color={Colors.TURQUOISE_GREEN} style={styles.petIcon} />
@@ -44,10 +45,7 @@ export default function CardBooking({
                     <Text style={styles.status}>{status}</Text>
                 </View>
             </View>
-            {isPetSitter && (
-                <Text style={styles.sitterName}>Pet Owner: {sitterName}</Text>
-            )}
-            
+                <Text style={styles.sitterName}>{isPetSitter ? `Pet Owner: ${ownerName}` : `Pet Sitter: ${sitterName}`}</Text>
             <View style={styles.detailRow}>
                 <View style={styles.detailItem}>
                     <Text style={styles.detailLabel}>Date:</Text>
@@ -96,7 +94,7 @@ export default function CardBooking({
             </View>
 
         </View>
- 
+
     )
 }
 
@@ -189,13 +187,13 @@ const styles = StyleSheet.create({
 
         marginTop: 25,
 
-        flexDirection:"column-reverse",
+        flexDirection: "column-reverse",
         justifyContent: "space-between",
         alignItems: "center",
 
     },
 
-    containerViewDetails:{
+    containerViewDetails: {
         width: "100%",
         alignItems: "flex-end",
     },
@@ -205,7 +203,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
 
-    containerBtnActions:{
+    containerBtnActions: {
         width: "100%",
         flexDirection: "row",
         justifyContent: "space-between"
@@ -226,7 +224,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: Colors.TURQUOISE_GREEN,
     },
-    btnActionsCancel:{
+    btnActionsCancel: {
         backgroundColor: Colors.PINK_VARIENT,
         height: 40,
         width: 120,

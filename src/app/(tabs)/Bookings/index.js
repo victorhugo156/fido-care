@@ -47,7 +47,6 @@ export default function BookingList() {
   const { currentUser } = UseRegisterService();
 
   const [bookingDetails, setBookingDetails] = useState([]);
-  
   const [searchQuery, setSearchQuery] = useState(""); 
   
 
@@ -65,7 +64,6 @@ export default function BookingList() {
   const receivedBookings = bookingDetails.filter((item) => item.role === "petSitter");
 
       //Fetching data from the DB
-
       const fetchData = async (userId, roles) => {
         try {
           const queries = [];
@@ -100,13 +98,16 @@ export default function BookingList() {
               const data = doc.data();
               bookings.push({
                 id: doc.id, // Firestore document ID
+                petSitterID: data.PetSitterID,
+                ownerID: data.PetOwnerID,
                 status: data.BookingStatus,
                 service: data.ServiceDetails?.title || "N/A",
                 petName: data.ServiceDetails?.petName || "Unknown",
                 date: data.ServiceDetails?.date || "N/A",
                 time: data.ServiceDetails?.time || "N/A",
-                sitterName: data.sitterName || "Unknown",
-                price: data.price || "N/A",
+                sitterName: data.PetSitterName || "Unknown",
+                ownerName: data.PetOwnerName || "Unknown",
+                price: data.ServiceDetails?.totalPrice || "N/A",
                 role: index === 0 && roles.includes("petOwner") ? "petOwner" : "petSitter", // Mark the role
               });
             });
@@ -119,41 +120,6 @@ export default function BookingList() {
           console.error("Error fetching data:", error);
         }
       };
-
-
-      // const fetchData = async (userId, isPetOwner = true) => {
-      //   try {
-      //     const fieldToQuery = isPetOwner ? "PetOwnerID" : "PetSitterID";
-      
-      //     console.log("Fetching bookings for:", userId, "as", isPetOwner ? "PetOwner" : "PetSitter");
-      
-      //     const bookingsQuery = query(
-      //       collection(db, "Booking"),
-      //       where(fieldToQuery, "==", userId)
-      //     );
-      
-      //     const querySnapshot = await getDocs(bookingsQuery);
-      
-      //     console.log("Query snapshot size:", querySnapshot.size);
-      
-      //     const bookings = querySnapshot.docs.map((doc) => ({
-      //       id: doc.id, // Firestore document ID
-      //       status: doc.data().BookingStatus,
-      //       service: doc.data().ServiceDetails?.title || "N/A",
-      //       petName: doc.data().ServiceDetails?.petName || "Unknown",
-      //       date: doc.data().ServiceDetails?.date || "N/A",
-      //       time: doc.data().ServiceDetails?.time || "N/A",
-      //       sitterName: doc.data().sitterName || "Unknown",
-      //       price: doc.data().price || "N/A",
-      //     }));
-      
-      //     console.log("Fetched bookings:", bookings);
-      
-      //     setBookingDetails(bookings); // Update state with accumulated bookings
-      //   } catch (error) {
-      //     console.error("Error fetching data:", error);
-      //   }
-      // };
 
       const handleConfirmBooking = async (bookingId) => {
         try {
@@ -233,6 +199,10 @@ export default function BookingList() {
     </View>
   );
 
+  const handleFunctionTesting = (petID)=>{
+    console.log("This is the Pet Sitter ID Testing ----->>>", petID);
+  }
+
   return (
     <View style={styles.container}>
       {/* Screen Title */}
@@ -264,11 +234,16 @@ export default function BookingList() {
                 petName={item.petName}
                 status={item.status}
                 sitterName={item.sitterName}
+                ownerName={item.ownerName}
                 date={item.date}
                 price={item.price}
                 service={item.service}
                 currentUserId={currentUser.userId} // Pass current user's ID
                 petSitterId={item.PetSitterID}    // Pass Pet Sitter's ID from booking
+                onViewDetailsPress={() => {
+                  router.push(`/screens/Petsitterprofile?id=${item.petSitterID}`)
+                  // handleFunctionTesting(item.petSitterID)
+                }}
               />
             </TouchableOpacity>
           )}
@@ -287,10 +262,11 @@ export default function BookingList() {
                 petName={item.petName}
                 status={item.status}
                 sitterName={item.sitterName}
+                ownerName={item.ownerName}
                 date={item.date}
                 price={item.price}
                 service={item.service}
-                onViewDetailsPress={() => router.push(`/screens/Petsitterprofile?id=${item.id}`)}
+                onViewDetailsPress={() => router.push(`/screens/Petsitterprofile?id=${item.PetSitterID}`)}
                 onConfirmPress={() => handleConfirmBooking(item.id)}
               />
             </TouchableOpacity>

@@ -21,6 +21,7 @@ import EntryPoint from "./screens/EntryPoint";
 import LoginScreen from "./screens/Login";
 import Calendar from "../components/Calendar";
 import Register from "./screens/Register";
+import ViewPetSitterProfile from "./screens/UserPetsitterprofile";
 import { OneSignal } from "react-native-onesignal";
 
 

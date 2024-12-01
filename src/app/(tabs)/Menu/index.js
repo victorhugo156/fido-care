@@ -41,7 +41,7 @@ const Menu = () => {
           console.log("Using currentUser context:", currentUser);
           setUserAuthenticated(true);
           setUserData({
-            uid: currentUser.userId,
+            uid: currentUser.userId || '',
             email: currentUser.email,
             name: currentUser.name,
             photo: currentUser.photo || null,
@@ -176,7 +176,7 @@ const Menu = () => {
     // Synchronize userData with currentUser
     if (currentUser) {
       setUserData({
-        uid: currentUser.userId,
+        uid: currentUser.userId || null,
         email: currentUser.email,
         name: currentUser.name,
         photo: currentUser.photo || null,
