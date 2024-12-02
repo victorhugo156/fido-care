@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, TextInput, Alert, SectionList, Animated } from 'react-native';
 import { collection, doc, getDocs, onSnapshot, query, where, addDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../../../../firebaseConfig';
 import { useRouter } from 'expo-router';
 import { UseRegisterService } from '../../hook/useRegisterService';
+import { GestureHandlerRootView, Swipeable, RectButton } from 'react-native-gesture-handler';
 
-import CardBooking from '../../../components/CardBooking';
+import CardBookingPetSitter from '../../../components/CardBookingPetSitter';
+import CardBookingPetOwner from '../../../components/CardBookingPetOwner';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
@@ -48,6 +50,15 @@ export default function BookingList() {
 
   const [bookingDetails, setBookingDetails] = useState([]);
   const [searchQuery, setSearchQuery] = useState(""); 
+
+  const sentBookings = bookingDetails.filter((item) => item.role === "petOwner");
+  const receivedBookings = bookingDetails.filter((item) => item.role === "petSitter");
+  const isPetSitter = currentUser.roles.includes("petSitter");
+
+  const sections = [
+    { title: 'Received Bookings', data: receivedBookings },
+    { title: 'Sent Bookings', data: sentBookings },
+  ].filter(section => section.data && section.data.length > 0); //Display titles only if there is something;
   
 
   const router = useRouter();
@@ -60,8 +71,7 @@ export default function BookingList() {
       item.service.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const sentBookings = bookingDetails.filter((item) => item.role === "petOwner");
-  const receivedBookings = bookingDetails.filter((item) => item.role === "petSitter");
+
 
       //Fetching data from the DB
       const fetchData = async (userId, roles) => {
@@ -143,7 +153,74 @@ export default function BookingList() {
         }
       };
 
+  const handleCancelBooking = async (bookingId) => {
 
+    Alert.alert('Cancel Booking', 'Are you sure you want to cancel this booking?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Yes', onPress: async () => {
+          try {
+            // Update the status in the local state
+            setBookingDetails((prevBookings) =>
+              prevBookings.map((booking) =>
+                booking.id === bookingId ? { ...booking, status: "Cancelled" } : booking
+              )
+            );
+            // Update the status in Firestore
+            const bookingRef = doc(db, "Booking", bookingId);
+            await updateDoc(bookingRef, {
+              BookingStatus: "Cancelled",
+            });
+
+            Alert.alert("Success", "Booking has been cancled!");
+          } catch (error) {
+            console.error("Error canceling booking:", error);
+            Alert.alert("Error", "Failed to cancel the booking.");
+          }
+        }
+      },
+    ]);
+
+  }
+
+  const handleDeleteBooking = async (bookingId) => {
+    console.log("Deleting booking with ID:", bookingId);
+    try {
+      // Delete from Firestore
+      await deleteDoc(doc(db, "Booking", bookingId));
+      // Update the local state to remove the booking
+      setBookingDetails((prevBookings) => prevBookings.filter((item) => item.id !== bookingId));
+      console.log(`Booking with ID ${bookingId} deleted successfully.`);
+    } catch (error) {
+      console.error("Error deleting booking:", error);
+      Alert.alert("Error", "Failed to delete booking.");
+    }
+  };
+
+    // Render Right Actions for Swipeable
+    const renderRightActions = (progress, dragX, bookingId) => {
+      const scale = dragX.interpolate({
+        inputRange: [-100, 0],
+        outputRange: [1, 0],
+        extrapolate: "clamp",
+      });
+  
+      return (
+        <RectButton
+          style={styles.deleteButton}
+          onPress={() => {
+            console.log('Right action pressed for booking ID:', bookingId); // Debug
+            handleDeleteBooking(bookingId);
+          }}
+        >
+          <Animated.Text style={[styles.deleteText, { transform: [{ scale }] }]}>
+            Delete
+          </Animated.Text>
+        </RectButton>
+      );
+    };
+
+      
       useEffect(() => {
         console.log("Updated bookingDetails:", bookingDetails);
       }, [bookingDetails]);
@@ -218,94 +295,71 @@ export default function BookingList() {
           onChangeText={(text) => setSearchQuery(text)}
         />
       </View>
-
+      <GestureHandlerRootView style={{ flex: 1 }}>
       {/* Booking List */}
       <View style={styles.BookingsList}>
-        <View style={styles.ContainerTitleBookingsCards}>
-          <Text>Sent Bookings</Text>
-        </View>
 
-        <FlatList
-          data={sentBookings}
+        <SectionList
+          sections={sections}
           keyExtractor={(item, index) => item.id || index.toString()}
+          renderSectionHeader={({ section: { title } }) => (
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionHeaderText}>{title}</Text>
+            </View>
+          )}
           renderItem={({ item }) => (
-            <TouchableOpacity>
-              <CardBooking
-                petName={item.petName}
-                status={item.status}
-                sitterName={item.sitterName}
-                ownerName={item.ownerName}
-                date={item.date}
-                price={item.price}
-                service={item.service}
-                currentUserId={currentUser.userId} // Pass current user's ID
-                petSitterId={item.PetSitterID}    // Pass Pet Sitter's ID from booking
-                onViewDetailsPress={() => {
-                  router.push({
-                    pathname: '/screens/Bookingdetail',
-                    params: { bookingDetails: JSON.stringify(item) }, // Pass the whole bookingDetails object
-                  });
-                }}
-              />
-            </TouchableOpacity>
+
+            <Swipeable
+              renderRightActions={(progress, dragX) =>
+                renderRightActions(progress, dragX, item.id)
+              }
+            >
+              <TouchableOpacity>
+                {item.role === "petOwner" ? (
+                  <CardBookingPetOwner
+                    petName={item.petName}
+                    status={item.status}
+                    sitterName={item.sitterName}
+                    ownerName={item.ownerName}
+                    date={item.date}
+                    price={item.price}
+                    service={item.service}
+                    onViewDetailsPress={() => {
+                      router.push({
+                        pathname: '/screens/Bookingdetail',
+                        params: { bookingDetails: JSON.stringify(item) }, // Pass the whole bookingDetails object
+                      });
+                    }}
+                  />
+                ) : (
+                  <CardBookingPetSitter
+                    petName={item.petName}
+                    status={item.status}
+                    sitterName={item.sitterName}
+                    ownerName={item.ownerName}
+                    date={item.date}
+                    price={item.price}
+                    service={item.service}
+                    onViewDetailsPress={() => {
+                      router.push({
+                        pathname: '/screens/Bookingdetail',
+                        params: { bookingDetails: JSON.stringify(item) }, // Pass the whole bookingDetails object
+                      });
+                    }}
+                    onConfirmPress={() => handleConfirmBooking(item.id)}
+                    onCancelPress={() => handleCancelBooking(item.id)}
+                  />
+                )}
+              </TouchableOpacity>
+            </Swipeable>
+
           )}
         />
 
-        <View style={styles.ContainerTitleBookingsCards}>
-          <Text>Received Bookings</Text>
-        </View>
 
-        <FlatList
-          data={receivedBookings}
-          keyExtractor={(item, index) => item.id || index.toString()}
-          renderItem={({ item }) => (
-            <TouchableOpacity>
-              <CardBooking
-                petName={item.petName}
-                status={item.status}
-                sitterName={item.sitterName}
-                ownerName={item.ownerName}
-                date={item.date}
-                price={item.price}
-                service={item.service}
-                onViewDetailsPress={() => {
-                  router.push({
-                    pathname: '/screens/Bookingdetail',
-                    params: { bookingDetails: item }, // Pass the whole bookingDetails object
-                  });
-                }}
-                onConfirmPress={() => handleConfirmBooking(item.id)}
-              />
-            </TouchableOpacity>
-          )}
-        />
+
       </View>
-
-      {/* <FlatList
-        data={bookingDetails}
-        renderItem={({ item }) => (
-          <View style={styles.itemContainer}>
-            <Text style={styles.roleTag}>{item.role === "petOwner" ? "Sent" : "Received"}</Text>
-            <Text>{item.petName}</Text>
-            <Text>{item.status}</Text>
-            <Text>{item.service}</Text>
-          </View>
-        )}
-        keyExtractor={(item) => item.id}
-      /> */}
-      {/* <FlatList
-            data={bookingDetails}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id}
-            ListEmptyComponent={<Text>No bookings available.</Text>}
-        /> */}
-      {/* <FlatList
-        data={filteredBookings}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-        ListEmptyComponent={<Text style={styles.noResultsText}>No bookings found</Text>}
-      /> */}
+      </GestureHandlerRootView>
     </View>
   );
 }
@@ -368,17 +422,21 @@ const styles = StyleSheet.create({
     padding: 0,
   },
 
-  ContainerTitleBookingsCards:{
-    paddingLeft: 12,
-
-    marginBottom: 15,
-  },
-
   noResultsText: {
     textAlign: 'center',
     fontSize: Font_Size.MD,
     color: Colors.GRAY,
     marginTop: 50,
+  },
+
+  sectionHeader: {
+    backgroundColor: Colors.GRAY_50,
+    padding: 10,
+  },
+  sectionHeaderText: {
+    fontFamily: Font_Family.BOLD,
+    fontSize: Font_Size.LG,
+    color: Colors.GRAY_700
   },
 });
 

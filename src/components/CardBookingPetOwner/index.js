@@ -20,7 +20,7 @@ const getStatusStyle = (status) => {
     }
 };
 
-export default function CardBooking({
+export default function CardBookingPetOwner({
     petName,
     status,
     sitterName,
@@ -74,26 +74,6 @@ export default function CardBooking({
                         <Icon name="chevron-right" size={16} color={Colors.BRIGHT_BLUE} />
                     </TouchableOpacity>
                 </View>
-
-                {/* Show Confirm button only if the current user is the Pet Sitter */}
-                {isPetSitter && (
-                    <View style={styles.containerBtnActions}>
-                        <TouchableOpacity
-                            style={styles.btnActionsConfirm}
-                            onPress={onConfirmPress}
-                        >
-                            <Image style={styles.Logo} source={require('../../assets/images/status_green.png')} />
-                            <Text style={styles.detailsBtnActionsText}>Confirm</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.btnActionsCancel}
-                            onPress={onConfirmPress}
-                        >
-                            <Image style={styles.Logo} source={require('../../assets/images/status_red.png')} />
-                            <Text style={styles.detailsBtnActionsText}>Cancel</Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
             </View>
 
         </View>
@@ -104,7 +84,7 @@ export default function CardBooking({
 const styles = StyleSheet.create({
     itemContainer: {
         width: 400,
-        backgroundColor: '#FFFFFF',
+        // backgroundColor: '#FFFFFF',
         padding: 20,
         marginBottom: 16,
         borderRadius: 16,
@@ -116,14 +96,13 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: '#E0E0E0',
     },
-    itemContent: {
-        marginBottom: 12,
-    },
+
     itemHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 12,
+
     },
     petNameContainer: {
         flexDirection: 'row',
@@ -191,13 +170,13 @@ const styles = StyleSheet.create({
 
     callToActions: {
         width: "100%",
-        height: 100,
-
-        marginTop: 25,
+        // height: 100,
 
         flexDirection: "column-reverse",
         justifyContent: "space-between",
         alignItems: "center",
+
+        paddingTop: 15
 
     },
 

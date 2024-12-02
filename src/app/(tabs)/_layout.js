@@ -5,6 +5,7 @@ import { Tabs } from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Entypo from '@expo/vector-icons/Entypo';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 
 import Colors from '../../constants/Colors';
@@ -16,6 +17,8 @@ export default function TabLayout() {
 
     return (
         <SafeAreaView style={styles.safeContainer}>
+
+            <GestureHandlerRootView>
             <Tabs screenOptions={{
                 tabBarActiveTintColor: Colors.BRIGHT_BLUE,
                 tabBarInactiveTintColor: 'white',
@@ -81,9 +84,9 @@ export default function TabLayout() {
                 />
             </Tabs>
 
+            </GestureHandlerRootView>
+
         </SafeAreaView>
-
-
     );
 }
 

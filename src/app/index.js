@@ -59,8 +59,10 @@ export default function index() {
   }
 
   return (
-          <RegisterContextProvider>
-            <GestureHandlerRootView style={{ flex: 1 }}>
+    <RegisterContextProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+      {console.log("GestureHandlerRootView wraps this screen")}
+        
         <BottomSheetModalProvider>
           <SafeAreaView style={styles.Container}>
 
@@ -70,7 +72,6 @@ export default function index() {
         </BottomSheetModalProvider>
       </GestureHandlerRootView>
     </RegisterContextProvider>
-
   );
 }
 
