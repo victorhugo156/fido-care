@@ -241,8 +241,10 @@ export default function BookingList() {
                 currentUserId={currentUser.userId} // Pass current user's ID
                 petSitterId={item.PetSitterID}    // Pass Pet Sitter's ID from booking
                 onViewDetailsPress={() => {
-                  router.push(`/screens/Petsitterprofile?id=${item.petSitterID}`)
-                  // handleFunctionTesting(item.petSitterID)
+                  router.push({
+                    pathname: '/screens/Bookingdetail',
+                    params: { bookingDetails: JSON.stringify(item) }, // Pass the whole bookingDetails object
+                  });
                 }}
               />
             </TouchableOpacity>
@@ -266,7 +268,12 @@ export default function BookingList() {
                 date={item.date}
                 price={item.price}
                 service={item.service}
-                onViewDetailsPress={() => router.push(`/screens/Petsitterprofile?id=${item.PetSitterID}`)}
+                onViewDetailsPress={() => {
+                  router.push({
+                    pathname: '/screens/Bookingdetail',
+                    params: { bookingDetails: item }, // Pass the whole bookingDetails object
+                  });
+                }}
                 onConfirmPress={() => handleConfirmBooking(item.id)}
               />
             </TouchableOpacity>
