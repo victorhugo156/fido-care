@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, TextInput, Alert, SectionList, Animated } from 'react-native';
-import { collection, doc, getDocs, onSnapshot, query, where, addDoc, updateDoc } from 'firebase/firestore';
+import { collection, doc, getDocs, onSnapshot, query, where, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../../../firebaseConfig';
 import { useRouter } from 'expo-router';
 import { UseRegisterService } from '../../hook/useRegisterService';
@@ -184,43 +184,26 @@ export default function BookingList() {
   }
 
   const handleDeleteBooking = async (bookingId) => {
-    console.log("Deleting booking with ID:", bookingId);
-    try {
-      // Delete from Firestore
-      await deleteDoc(doc(db, "Booking", bookingId));
-      // Update the local state to remove the booking
-      setBookingDetails((prevBookings) => prevBookings.filter((item) => item.id !== bookingId));
-      console.log(`Booking with ID ${bookingId} deleted successfully.`);
-    } catch (error) {
-      console.error("Error deleting booking:", error);
-      Alert.alert("Error", "Failed to delete booking.");
-    }
+
+    Alert.alert('Delete Booking', 'Are you sure you want to delete this booking?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Yes', onPress: async () => {
+          try {
+            // Delete from Firestore
+            await deleteDoc(doc(db, "Booking", bookingId));
+            // Update the local state to remove the booking
+            setBookingDetails((prevBookings) => prevBookings.filter((item) => item.id !== bookingId));
+            console.log(`Booking with ID ${bookingId} deleted successfully.`);
+          } catch (error) {
+            console.error("Error deleting booking:", error);
+            Alert.alert("Error", "Failed to delete booking.");
+          }
+
+        }
+      },
+    ]);
   };
-
-    // Render Right Actions for Swipeable
-    const renderRightActions = (progress, dragX, bookingId) => {
-      const scale = dragX.interpolate({
-        inputRange: [-100, 0],
-        outputRange: [1, 0],
-        extrapolate: "clamp",
-      });
-  
-      return (
-        <RectButton
-          style={styles.deleteButton}
-          onPress={() => {
-            console.log('Right action pressed for booking ID:', bookingId); // Debug
-            handleDeleteBooking(bookingId);
-          }}
-        >
-          <Animated.Text style={[styles.deleteText, { transform: [{ scale }] }]}>
-            Delete
-          </Animated.Text>
-        </RectButton>
-      );
-    };
-
-      
       useEffect(() => {
         console.log("Updated bookingDetails:", bookingDetails);
       }, [bookingDetails]);
@@ -281,6 +264,7 @@ export default function BookingList() {
   }
 
   return (
+<GestureHandlerRootView style={{ flex: 1 }}>
     <View style={styles.container}>
       {/* Screen Title */}
       <Text style={styles.screenTitle}>Your Bookings</Text>
@@ -295,10 +279,9 @@ export default function BookingList() {
           onChangeText={(text) => setSearchQuery(text)}
         />
       </View>
-      <GestureHandlerRootView style={{ flex: 1 }}>
+
       {/* Booking List */}
       <View style={styles.BookingsList}>
-
         <SectionList
           sections={sections}
           keyExtractor={(item, index) => item.id || index.toString()}
@@ -308,12 +291,6 @@ export default function BookingList() {
             </View>
           )}
           renderItem={({ item }) => (
-
-            <Swipeable
-              renderRightActions={(progress, dragX) =>
-                renderRightActions(progress, dragX, item.id)
-              }
-            >
               <TouchableOpacity>
                 {item.role === "petOwner" ? (
                   <CardBookingPetOwner
@@ -324,6 +301,9 @@ export default function BookingList() {
                     date={item.date}
                     price={item.price}
                     service={item.service}
+                    onDeletePress={() => {
+                      handleDeleteBooking(item.id)
+                    }}
                     onViewDetailsPress={() => {
                       router.push({
                         pathname: '/screens/Bookingdetail',
@@ -340,6 +320,9 @@ export default function BookingList() {
                     date={item.date}
                     price={item.price}
                     service={item.service}
+                    onDeletePress={() => {
+                      handleDeleteBooking(item.id)
+                    }}
                     onViewDetailsPress={() => {
                       router.push({
                         pathname: '/screens/Bookingdetail',
@@ -351,16 +334,12 @@ export default function BookingList() {
                   />
                 )}
               </TouchableOpacity>
-            </Swipeable>
-
           )}
         />
-
-
-
       </View>
-      </GestureHandlerRootView>
     </View>
+    </GestureHandlerRootView>
+    
   );
 }
 

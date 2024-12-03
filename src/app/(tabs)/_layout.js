@@ -17,8 +17,7 @@ export default function TabLayout() {
 
     return (
         <SafeAreaView style={styles.safeContainer}>
-
-            <GestureHandlerRootView>
+            <GestureHandlerRootView style={{ flex: 1 }}>
             <Tabs screenOptions={{
                 tabBarActiveTintColor: Colors.BRIGHT_BLUE,
                 tabBarInactiveTintColor: 'white',
@@ -83,9 +82,7 @@ export default function TabLayout() {
                     }}
                 />
             </Tabs>
-
             </GestureHandlerRootView>
-
         </SafeAreaView>
     );
 }

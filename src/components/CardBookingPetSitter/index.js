@@ -28,6 +28,7 @@ export default function CardBookingPetSitter({
     date,
     price,
     service,
+    onDeletePress,
     onViewDetailsPress,
     onConfirmPress,
     onCancelPress,
@@ -37,13 +38,24 @@ export default function CardBookingPetSitter({
     const isPetSitter = currentUserId === petSitterId; // Check if the current user is the Pet Sitter
     return (
         <View style={styles.itemContainer}>
-            <View style={styles.itemHeader}>
-                <View style={styles.petNameContainer}>
-                    <Icon name="pets" size={20} color={Colors.TURQUOISE_GREEN} style={styles.petIcon} />
-                    <Text style={styles.petName}>{petName}</Text>
+            <View style={styles.itensHeader}>
+                <View style={styles.itensHeaderCLoseBtn}>
+                    
+                    <TouchableOpacity
+                        onPress={onDeletePress}
+                    >
+                        <Icon name="close" size={26} color={Colors.CORAL_PINK} />
+                    </TouchableOpacity>
                 </View>
-                <View style={[styles.statusContainer, getStatusStyle(status)]}>
-                    <Text style={styles.status}>{status}</Text>
+                <View style={styles.itensHeaderSubGroup}>
+                    <View style={styles.petNameContainer}>
+                        <Icon name="pets" size={20} color={Colors.TURQUOISE_GREEN} style={styles.petIcon} />
+                        <Text style={styles.petName}>{petName}</Text>
+                    </View>
+                    <View style={[styles.statusContainer, getStatusStyle(status)]}>
+                        <Text style={styles.status}>{status}</Text>
+                    </View>
+
                 </View>
             </View>
                 <Text style={styles.sitterName}>{isPetSitter ? `Pet Owner: ${ownerName}` : `Pet Sitter: ${sitterName}`}</Text>
@@ -118,11 +130,30 @@ const styles = StyleSheet.create({
     itemContent: {
         marginBottom: 12,
     },
-    itemHeader: {
+
+    itensHeader: {
+        flexDirection: "column",
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 12,
+
+    },
+
+    itensHeaderCLoseBtn:{
+        width: "100%",
+        alignItems: "flex-end",
+
+        marginBottom: 18,
+
+    },
+
+    itensHeaderSubGroup:{
+        width: "100%",
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 12,
+
     },
     petNameContainer: {
         flexDirection: 'row',

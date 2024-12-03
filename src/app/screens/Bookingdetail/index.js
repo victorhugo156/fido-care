@@ -141,7 +141,7 @@ const BookingDetail = () => {
       {/* Action Button */}
       <TouchableOpacity
         style={styles.messageButton}
-        onPress={() => router.push('/screens/Chat')} // Navigate to the chat screen
+        onPress={() => router.push("/Chat")} // Navigate to the chat screen
       >
         <Text style={styles.messageButtonText}>Message Sitter</Text>
         <Icon name="envelope" size={20} color={Colors.WHITE} style={styles.buttonIcon} />

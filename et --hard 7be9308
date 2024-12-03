@@ -1,0 +1,115 @@
+[33m7be9308[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m Added Cancel Booking FUnctionalite, working on Delete Booking
+[33me7399e2[m Booking Details Working
+[33m2fab5be[m Added Calendar into PetSitterProfile and validtion if user has completed register before booking
+[33m94e934f[m IOs adjustments
+[33ma8aa461[m Merge branch 'main' of https://github.com/victorhugo156/fido-care
+[33mddf25d0[m View Details Working
+[33m1c6adba[m Merge branch 'main' of https://github.com/victorhugo156/fido-care
+[33m643c878[m paypal dependencies added paypal-server-sdk / body-parser / express
+[33m81ce9db[m become pet sitter form displaying one question at a time
+[33m5b10aae[m Booking price added
+[33me2da7d3[m IOs working
+[33m6dfae54[m Merge branch 'main' of https://github.com/victorhugo156/fido-care
+[33me0ba436[m become pet sitter profile one question at a time
+[33ma716a63[m Polishing the component Booking Card
+[33m7fbec3d[m Finished Modal Booking Styles
+[33m25a7f32[m Working on Modal Booking Style
+[33m5d6df25[m booking screen working
+[33me362741[m Authentictions is done.Working on Booking Modal so user can add booking information
+[33m748ebc5[m Functionality Register Screen done
+[33mf63e07c[m PetSitterProfile.index fixed
+[33mc9d9e2a[m Merge branch 'main' of https://github.com/victorhugo156/fido-care
+[33mfd483e4[m working on the components for become pet sitter profile
+[33m07d86be[m Fixing Git Confolicts, Updated Functions/.eslintrc.js, Updataded Functions file, changed Bookings to Bokking in the document, added Booking Functions into PetSitterProgile again
+[33m61d3bcb[m Working on Register Screen
+[33mf6d5a6c[m Fire FUnctions Working
+[33mc40d36d[m Cloud FUnctions Working
+[33mf71e789[m gradle version Updated and My pet profile implemented
+[33m97eb25f[m Pet profile implementation with photo pickup from the user's phone
+[33mf62d986[m ajust read time datebase for petsitter profile and review page
+[33m03a03bb[m BecomePetSitter updated (review info)
+[33me5691ad[m Review System implemented
+[33m2f85ad4[m Favourite screen UI updated
+[33m227647b[m Favourite list Feature implemented
+[33m080d06f[m lastMessage displaying one a single line updated. chat screen
+[33mc284f6a[m button delete size update.chat screen
+[33ma496b16[m chat IU update and Slider delete message added
+[33me5ee481[m Updated Filter screen
+[33m82cbd2c[m Filter Screen Working Out
+[33m69cd995[m Merge branch 'main' of https://github.com/victorhugo156/fido-care
+[33mbfdfb61[m Chat System implementation and Become pet sitter form linked to the user logged in
+[33md3f4441[m Trying to match filter with db information
+[33m6cd35af[m readme updated 2
+[33mf08beb1[m README updated
+[33md9e32cc[m Merge branch 'main' of https://github.com/victorhugo156/fido-care
+[33m48bf968[m become pet sitter form google api updated
+[33md8574ba[m Added README file
+[33m272db46[m PersonalDetails updated
+[33m1b27bc4[m display user's name
+[33mc8ad67d[m  IOs update
+[33mc884a3d[m IOs update
+[33m0be55d1[m Updated limks
+[33m568ba6b[m Working on Register Screen
+[33ma2d6fee[m Featch data based on Home Filter
+[33m50d1b90[m Working on Feed Screen to fetch data based on User Filter
+[33me461fb8[m Fixed headerShown false for the screens (tabs)
+[33m92121b3[m Merge branch 'main' of https://github.com/victorhugo156/fido-care
+[33ma4e2524[m package.json updated
+[33m65feec5[m Merge branch 'main' of https://github.com/victorhugo156/fido-care
+[33m61e7762[m Gmail siginIn Implemented
+[33m7a0c19e[m Merge branch 'main' of https://github.com/victorhugo156/fido-care
+[33m773d138[m _layout.js updated
+[33me426ea2[m Google Login
+[33m3393c1e[m Installed Ios maps
+[33m866a57a[m Updated Service, Location and Date
+[33m39f9e40[m update 3 become pet sitter form
+[33m49e3a72[m Merge branch 'main' of https://github.com/victorhugo156/fido-care
+[33m6dbb852[m become pet sitter form updated 2
+[33md79dc74[m Adding Filter Location
+[33m79a46b0[m Working on Filter and Sending data from Home to Filter screen
+[33mc87b8f9[m Merge branch 'main' of https://github.com/victorhugo156/fido-care
+[33m5a43ac8[m Working on Filter Screens
+[33md8ef133[m become petsitter form updated
+[33mae2d256[m Merge branch 'main' of https://github.com/victorhugo156/fido-care
+[33m63eb287[m Fixed packgage.json and installed bottom-sheet dependencies
+[33mc7550e5[m Resolved merge conflict in package.json
+[33m1347f65[m Resolved merge conflicts
+[33mca7cddc[m Working on Filter Screen, Added Modal Filter
+[33m78c0fce[m Google Maps Initial Setup (using in become pet sitter form to get address
+[33ma408f7f[m polishing become pet sitter form
+[33m3b16338[m date time picker dependencie installed
+[33m4713a9c[m changed the router for become petsitter form
+[33mcb550b0[m Firebase Integration PetSitterList and PetSitter Profile and a Form to become a pet sitter from the menu (for testing) to populate the database in Firebase
+[33m39bdc72[m fixed layout Menu screen (icons and text space)
+[33m458c58e[m Setup Review profile screen
+[33m0ab8fab[m Setup Review Screen
+[33mda525fe[m New update
+[33m7b79dad[m Updated Feed Screen and Entry Point screen
+[33m0b45b6c[m initial setup Review/Rating service screen
+[33mb46a64d[m added some style for the booking screen
+[33m79e2f8a[m Booking list and booking details screens and header style
+[33mbf0debc[m Returning to the older version
+[33m1f55e44[m I have created the Wlecome Screen and Route
+[33m219b9b9[m Initial Setup Pet Sitter List
+[33mcb6aee3[m Firestore Initial setup
+[33meb74e1f[m router updated
+[33m6d3c415[m I have finished the Home Screen. Creating a new route to Welcome Screen
+[33maa78e9c[m Initial Setup Pet Sitter Profile Screen
+[33mf5e392d[m setup Chat/Inbox page_V2
+[33m5de032d[m setup chat/inbox screen
+[33m095083c[m I fixed the screen router and added the Profile/Menu page with Logout function
+[33mdfbc742[m Still working on Home screen design and solving issues with the screesn routes
+[33mf10672d[m I have moved the files of the tab button nav into a folders
+[33me0f572d[m I have added imsg and icons, did the login scree, added style to the header Tab Home Nav, created FontFamily and Size Constants
+[33macb0fbd[m I have added imsg and icons, did the login scree, added style to the header Tab Home Nav, created FontFamily and Size Constants
+[33m7ccfd57[m Merge branch 'main' of https://github.com/victorhugo156/fido-care
+[33mbd0b9f7[m new expo version
+[33mb5719d5[m Added svg imgs and updated app.jason -> app scheme
+[33m8cf75c2[m Firebase Setup
+[33mc939098[m login page design
+[33md554c0e[m Tab bar Navigation Setup
+[33m3a97779[m Install setup expo-google-fonts/nunito expo-font
+[33m4d41173[m Expo Router Setup
+[33m6998a09[m image index (test)
+[33mb517226[m first commint
+[33m45c28fd[m Initial commit
