@@ -1,74 +1,153 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
-import Icon from 'react-native-vector-icons/FontAwesome';
-import Colors from '../../../constants/Colors';
-import Font_Family from '../../../constants/Font_Family';
-import Font_Size from '../../../constants/Font_Size';
-import { useRouter, useLocalSearchParams } from 'expo-router';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Image,
+  Alert,
+  Linking,
+  ActivityIndicator,
+} from "react-native";
+import Icon from "react-native-vector-icons/FontAwesome";
+import Colors from "../../../constants/Colors";
+import Font_Family from "../../../constants/Font_Family";
+import Font_Size from "../../../constants/Font_Size";
+import { useRouter, useLocalSearchParams } from "expo-router";
 
-// Updated booking data with price and location information
-const bookingData = [
-  {
-    id: '1',
-    petName: 'Max',
-    sitterName: 'Stephen',
-    date: '21-09-2024',
-    service: 'Dog Walking',
-    status: 'Confirmed',
-    price: 'AU$ 30',
-    location: 'Sydney Park, Sydney, NSW',
-    details: 'Max needs a walk every day for one hour in the morning. Please ensure he is fed and has water available before leaving.',
-    sitterAvatar: 'https://media.istockphoto.com/id/1350689855/photo/portrait-of-an-asian-man-holding-a-young-dog.jpg?s=612x612&w=0&k=20&c=Iw0OedGHrDViIM_6MipHmPLlo83O59by-LGcsDPyzwU=',
-  },
-  {
-    id: '2',
-    petName: 'Bella',
-    sitterName: 'Jane Doe',
-    date: '03-10-2024',
-    service: 'Pet Sitting',
-    status: 'Pending',
-    price: 'AU$ 35',
-    location: 'Homebush, Sydney, NSW',
-    details: 'Bella needs a daily home visit to check on her food and water. She is very friendly and enjoys some light playtime.',
-    sitterAvatar: 'https://us.images.westend61.de/0001193741pw/black-woman-holding-dog-in-city-BLEF04793.jpg',
-  },
-  {
-    id: '3',
-    petName: 'Rocky',
-    sitterName: 'John Smith',
-    date: '07-10-2024',
-    service: 'Two home visits per day',
-    status: 'Cancelled',
-    price: 'AU$ 30',
-    location: 'Bondi Beach, Sydney, NSW',
-    details: 'Rocky requires home visits twice daily for feeding and walking. He tends to bark at strangers, so approach calmly.',
-    sitterAvatar: 'https://www.dailypaws.com/thmb/3vRjo6plM5FG2-68rVrK94hDexk=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/dachshund-dogs-with-long-snouts-1139706566-2000-1eb6fd444a0e4671be7ea2e0dae9bf79.jpg',
-  },
-];
+// Function to handle payment and capture
+const startPayment = async (details, setLoading, updateStatus) => {
+  try {
+    setLoading(true);
+
+    if (!details || details.price === undefined) {
+      throw new Error("Details or price information is missing.");
+    }
+
+    const totalAmount =
+      typeof details.price === "string"
+        ? parseFloat(details.price.replace(/[^0-9.-]+/g, ""))
+        : details.price;
+
+    if (isNaN(totalAmount)) {
+      throw new Error("Invalid price format.");
+    }
+
+    // Step 1: Start Payment (processPayment function)
+    const processResponse = await fetch(
+      "https://processpayment-3v4do2hn6q-uc.a.run.app",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ totalAmount }),
+      }
+    );
+
+    const processData = await processResponse.json();
+
+    if (processResponse.ok && processData.approveLink) {
+      // Redirect to PayPal approval link
+      Linking.openURL(processData.approveLink);
+
+      // Listen for PayPal redirect and finalize payment
+      const handleUrl = async (event) => {
+        const url = event.url;
+
+        if (url.includes("paypal-success")) {
+          const params = new URLSearchParams(url.split("?")[1]);
+          const orderID = params.get("token");
+
+          if (orderID) {
+            console.log("Order ID received:", orderID); // Add logging to debug
+
+            // Step 2: Automatically capture the payment
+            const captureResponse = await fetch(
+              "https://capturepayment-3v4do2hn6q-uc.a.run.app",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ orderID }),
+              }
+            );
+
+            const captureData = await captureResponse.json();
+
+            if (captureResponse.ok) {
+              console.log("Capture successful:", captureData); // Add logging to debug
+
+              // Update status to confirmed
+              updateStatus("Confirmed");
+              Alert.alert(
+                "Payment Successful",
+                "Your payment has been processed successfully!"
+              );
+            } else {
+              console.error("Capture failed:", captureData); // Add logging to debug
+              throw new Error(
+                captureData.error || "Failed to capture payment."
+              );
+            }
+          } else {
+            console.error("Order ID not found in URL:", url); // Add logging to debug
+          }
+        } else if (url.includes("paypal-cancel")) {
+          Alert.alert("Payment Cancelled", "The payment was cancelled.");
+        }
+      };
+
+      Linking.addEventListener("url", handleUrl);
+
+      // Clean up the event listener when the component unmounts
+      return () => {
+        Linking.removeEventListener("url", handleUrl);
+      };
+    } else {
+      throw new Error(processData.error || "Payment initiation failed.");
+    }
+  } catch (error) {
+    console.error("Error during payment process:", error);
+    Alert.alert("Error", error.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
 const BookingDetail = () => {
-
   const router = useRouter();
   const { bookingDetails } = useLocalSearchParams();
 
-  // Convert bookingDetails to an object if it is serialized
   const [details, setDetails] = useState(null);
+  const [isLoading, setLoading] = useState(false);
+
+  // Function to update the booking status
+  const updateStatus = (status) => {
+    setDetails((prevDetails) => ({
+      ...prevDetails,
+      status,
+    }));
+  };
 
   useEffect(() => {
     if (bookingDetails) {
       try {
-        const parseDetails = JSON.parse(bookingDetails); // Deserialize the bookingDetails object
-        console.log("This is the booking details----->>>>", details);
-        setDetails(parseDetails);
-        // You can now use `details` in your component
+        const parsedDetails = JSON.parse(bookingDetails);
+        if (parsedDetails.price === undefined) {
+          throw new Error("Price is missing from booking details.");
+        }
+        setDetails(parsedDetails);
       } catch (error) {
         console.error("Failed to parse bookingDetails:", error);
+        Alert.alert("Error", "Invalid booking details.");
       }
     }
   }, [bookingDetails]);
 
   if (!details) {
-    console.log("This is the booking details----->>>>", details);
     return <Text style={styles.noDataText}>No booking details found.</Text>;
   }
 
@@ -76,7 +155,10 @@ const BookingDetail = () => {
     <ScrollView style={styles.container}>
       {/* Header Section */}
       <View style={styles.header}>
-        {/* <Image source={{ uri: booking.sitterAvatar }} style={styles.sitterAvatar} /> */}
+        <Image
+          source={{ uri: details.sitterAvatar }}
+          style={styles.sitterAvatar}
+        />
         <Text style={styles.sitterName}>{details.sitterName}</Text>
       </View>
 
@@ -86,69 +168,72 @@ const BookingDetail = () => {
           <Text style={styles.infoLabel}>Pet Name</Text>
           <Text style={styles.infoValue}>{details.petName}</Text>
         </View>
-
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Service</Text>
           <Text style={styles.infoValue}>{details.service}</Text>
         </View>
-
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Date</Text>
           <Text style={styles.infoValue}>{details.date}</Text>
         </View>
-
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Price</Text>
           <Text style={styles.infoValue}>{details.price}</Text>
         </View>
-
-        {/* <View style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Location</Text>
-          <Text style={styles.infoValue}>{booking.location}</Text>
-        </View> */}
-
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Status</Text>
           <Text
             style={[
               styles.infoValue,
-              details.status === 'Confirmed' ? styles.confirmed
-                : details.status === 'Pending' ? styles.pending
-                  : styles.cancelled,
+              details.status === "Confirmed"
+                ? styles.confirmed
+                : details.status === "Pending"
+                ? styles.pending
+                : styles.cancelled,
             ]}
           >
             {details.status}
           </Text>
         </View>
-
-        {/* <View style={[styles.infoRow, styles.detailsRow]}>
-          <Text style={styles.infoLabel}>Details</Text>
-          <Text style={styles.infoValue}>{booking.details}</Text>
-        </View> */}
       </View>
 
       {/* Conditional PayPal Button for Pending Payments */}
-      {details.status === 'Pending' && (
-        <TouchableOpacity style={styles.payButton}>
+      {details.status === "Pending" && (
+        <TouchableOpacity
+          style={styles.payButton}
+          onPress={() => startPayment(details, setLoading, updateStatus)}
+          disabled={isLoading}
+        >
           <Image
-            source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/PayPal_logo.svg/512px-PayPal_logo.svg.png' }}
+            source={{
+              uri: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/PayPal_logo.svg/512px-PayPal_logo.svg.png",
+            }}
             style={styles.paypalIcon}
           />
-          <Text style={styles.payButtonText}>Pay with PayPal</Text>
+          <Text style={styles.payButtonText}>
+            {isLoading ? "Processing..." : "Pay with PayPal"}
+          </Text>
         </TouchableOpacity>
       )}
+
+      {isLoading && <ActivityIndicator size="large" color={Colors.TURQUOISE_GREEN} />}
 
       {/* Action Button */}
       <TouchableOpacity
         style={styles.messageButton}
-        onPress={() => router.push("/Chat")} // Navigate to the chat screen
+        onPress={() => router.push("/Chat")}
       >
         <Text style={styles.messageButtonText}>Message Sitter</Text>
-        <Icon name="envelope" size={20} color={Colors.WHITE} style={styles.buttonIcon} />
+        <Icon
+          name="envelope"
+          size={20}
+          color={Colors.WHITE}
+          style={styles.buttonIcon}
+        />
       </TouchableOpacity>
 
       {/* Rate the Service Button - Shown only if status is "Confirmed" */}
-      {details.status === 'Confirmed' && (
+      {details.status === "Confirmed" && (
         <TouchableOpacity
           style={styles.rateButton}
           onPress={() => router.push(`/screens/Rateservice?id=${details.id}`)}
@@ -164,17 +249,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.SOFT_CREAM,
-    //paddingTop: 5,
   },
   noDataText: {
     fontSize: Font_Size.LG,
     color: Colors.GRAY,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 50,
     fontFamily: Font_Family.BOLD,
   },
   header: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: 20,
     backgroundColor: Colors.BRIGHT_BLUE,
     borderBottomLeftRadius: 30,
@@ -199,15 +283,15 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     borderRadius: 15,
     padding: 15,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 5,
   },
   infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: Colors.GRAY_200,
@@ -221,7 +305,7 @@ const styles = StyleSheet.create({
     fontSize: Font_Size.MD,
     fontFamily: Font_Family.REGULAR,
     color: Colors.GRAY_600,
-    textAlign: 'right',
+    textAlign: "right",
     flex: 1,
     marginLeft: 10,
   },
@@ -230,20 +314,39 @@ const styles = StyleSheet.create({
     fontFamily: Font_Family.BOLD,
   },
   pending: {
-    color: '#FFC107',
-    fontFamily: Font_Family.BOLD, 
+    color: "#FFC107",
+    fontFamily: Font_Family.BOLD,
   },
   cancelled: {
-    color: '#F44336',
-    fontFamily: Font_Family.BOLD, 
+    color: "#F44336",
+    fontFamily: Font_Family.BOLD,
   },
-  detailsRow: {
-    borderBottomWidth: 0, // Remove bottom border for last row
+  payButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: Colors.TURQUOISE_GREEN,
+    padding: 10,
+    borderRadius: 10,
+    marginTop: 20,
+    marginHorizontal: 20,
+  },
+  paypalIcon: {
+    width: 50,
+    height: 50,
+    resizeMode: "contain",
+    marginRight: 10,
+  },
+  payButtonText: {
+    fontSize: Font_Size.LG,
+    color: Colors.WHITE,
+    fontWeight: "bold",
+    fontFamily: Font_Family.BOLD,
   },
   messageButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: Colors.BRIGHT_BLUE,
     padding: 15,
     borderRadius: 10,
@@ -252,53 +355,31 @@ const styles = StyleSheet.create({
   messageButtonText: {
     fontSize: Font_Size.LG,
     color: Colors.WHITE,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontFamily: Font_Family.BOLD,
   },
-  buttonIcon: {
-    marginLeft: 10,
-  },
-  payButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
+  rateButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     backgroundColor: Colors.TURQUOISE_GREEN,
-    padding: 5,
+    padding: 15,
     borderRadius: 10,
-    marginTop: 20,
     marginHorizontal: 20,
-    //marginBottom: 5,
+    marginBottom: 20,
   },
-  paypalIcon: {
-    width: 50,
-    height: 50,
-    resizeMode: 'contain',
-    marginRight: 10,
-  },
-  payButtonText: {
+  rateButtonText: {
     fontSize: Font_Size.LG,
     color: Colors.WHITE,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontFamily: Font_Family.BOLD,
   },
-
-  rateButton: { 
-    flexDirection: 'row', 
-    alignItems: 'center', 
-    justifyContent: 'center', 
-    backgroundColor: Colors.TURQUOISE_GREEN,
-    padding: 15, borderRadius: 10, 
-    marginHorizontal: 20, 
-    marginBottom: 20 
-},
-  rateButtonText: { 
-    fontSize: Font_Size.LG, 
-    color: Colors.WHITE, 
-    fontWeight: 'bold', 
-    fontFamily: Font_Family.BOLD },
 });
 
 export default BookingDetail;
+
+
+
 
 
 

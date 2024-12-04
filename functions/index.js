@@ -1,73 +1,64 @@
-const { onDocumentCreated } = require('firebase-functions/v2/firestore');
-const { https } = require('firebase-functions/v2');
-const { initializeApp } = require('firebase-admin/app');
-const { getFirestore } = require('firebase-admin/firestore');
-const fetch = require('node-fetch');
-const {
-  ApiError,
-  Client,
-  Environment,
-  LogLevel,
-  OrdersController,
-} = require('@paypal/paypal-server-sdk');
+const {onDocumentCreated} = require("firebase-functions/v2/firestore");
+const {https} = require("firebase-functions/v2");
+const {initializeApp} = require("firebase-admin/app");
+const {getFirestore} = require("firebase-admin/firestore");
+const fetch = require("node-fetch");
 
 // Initialize Firebase and Firestore
 initializeApp();
 const db = getFirestore();
 
 // PayPal Configuration
-const PAYPAL_CLIENT_ID = 'AS_GTolwioaJfiCbhiq5779NyJRbbAfGTxKgUOKa1MuVo-0ll_kh8O7NOiOT-KfBo5ENwJ97fx6GeXVN';
-const PAYPAL_CLIENT_SECRET = 'EFjgoWwj-4E967DnIilHJKBUKWyyrTCheTkAoEopOGhyAzkK03W0UYE9tyelHDoGcTsqwm3QKSrrcJ6M';
-const PAYPAL_API = 'https://api-m.sandbox.paypal.com';
+const PAYPAL_CLIENT_ID = "AS_GTolwioaJfiCbhiq5779NyJRbbAfGTxKgUOKa1MuVo-0ll_kh8O7NOiOT-KfBo5ENwJ97fx6GeXVN";
+const PAYPAL_CLIENT_SECRET = "EFjgoWwj-4E967DnIilHJKBUKWyyrTCheTkAoEopOGhyAzkK03W0UYE9tyelHDoGcTsqwm3QKSrrcJ6M";
+const PAYPAL_API = "https://api-m.sandbox.paypal.com";
 
 // Test Account Emails
-const TEST_PET_OWNER = 'sb-eelz934441333@personal.example.com';
-const TEST_PET_SITTER = 'sb-plqc4731169958@businessPetSitter.example.com';
-const FIDOCARE_BUSINESS_EMAIL = 'sb-zj443l31169898@business.example.com';
+const TEST_PET_SITTER = "sb-plqc4731169958@businessPetSitter.example.com";
 
 /**
  * Fetch PayPal Access Token
- * @returns {Promise<string>}
+ * @return {Promise<string>}
  */
 const fetchAccessToken = async () => {
-  const credentials = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`).toString('base64');
+  const credentials = Buffer.from(`${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`).toString("base64");
   const response = await fetch(`${PAYPAL_API}/v1/oauth2/token`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: `Basic ${credentials}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Authorization": `Basic ${credentials}`,
     },
-    body: 'grant_type=client_credentials',
+    body: "grant_type=client_credentials",
   });
 
   const data = await response.json();
   if (response.ok) {
     return data.access_token;
   } else {
-    console.error('Failed to fetch access token:', data);
-    throw new Error(data.error || 'Failed to fetch access token');
+    console.error("Failed to fetch access token:", data);
+    throw new Error(data.error || "Failed to fetch access token");
   }
 };
 
 /**
  * Create PayPal Order
  * @param {number} totalAmount - Total payment amount in AUD
- * @returns {Promise<Object>}
+ * @return {Promise<Object>}
  */
 const createOrder = async (totalAmount) => {
   const accessToken = await fetchAccessToken();
   const response = await fetch(`${PAYPAL_API}/v2/checkout/orders`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${accessToken}`,
     },
     body: JSON.stringify({
-      intent: 'CAPTURE',
+      intent: "CAPTURE",
       purchase_units: [
         {
           amount: {
-            currency_code: 'AUD',
+            currency_code: "AUD",
             value: totalAmount.toFixed(2),
           },
         },
@@ -79,23 +70,23 @@ const createOrder = async (totalAmount) => {
   if (response.ok) {
     return data;
   } else {
-    console.error('Failed to create order:', data);
-    throw new Error(data.error || 'Failed to create order');
+    console.error("Failed to create order:", data);
+    throw new Error(data.error || "Failed to create order");
   }
 };
 
 /**
  * Capture PayPal Order
  * @param {string} orderID
- * @returns {Promise<Object>}
+ * @return {Promise<Object>}
  */
 const captureOrder = async (orderID) => {
   const accessToken = await fetchAccessToken();
   const response = await fetch(`${PAYPAL_API}/v2/checkout/orders/${orderID}/capture`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${accessToken}`,
     },
   });
 
@@ -103,8 +94,8 @@ const captureOrder = async (orderID) => {
   if (response.ok) {
     return data;
   } else {
-    console.error('Failed to capture order:', data);
-    throw new Error(data.error || 'Failed to capture order');
+    console.error("Failed to capture order:", data);
+    throw new Error(data.error || "Failed to capture order");
   }
 };
 
@@ -112,7 +103,7 @@ const captureOrder = async (orderID) => {
  * Send Payout to Pet Sitter
  * @param {string} recipientEmail
  * @param {number|string} amount
- * @returns {Promise<Object>}
+ * @return {Promise<Object>}
  */
 const sendPayout = async (recipientEmail, amount) => {
   const numericAmount = parseFloat(amount); // Ensure the amount is a valid number
@@ -124,25 +115,25 @@ const sendPayout = async (recipientEmail, amount) => {
   const senderBatchId = `batch_${Date.now()}`;
 
   const response = await fetch(`${PAYPAL_API}/v1/payments/payouts`, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${accessToken}`,
     },
     body: JSON.stringify({
       sender_batch_header: {
         sender_batch_id: senderBatchId,
-        email_subject: 'Payout from FidoCare',
+        email_subject: "Payout from FidoCare",
       },
       items: [
         {
-          recipient_type: 'EMAIL',
+          recipient_type: "EMAIL",
           amount: {
             value: numericAmount.toFixed(2), // Ensure proper formatting
-            currency: 'AUD',
+            currency: "AUD",
           },
           receiver: recipientEmail,
-          note: 'Payment for pet sitting services',
+          note: "Payment for pet sitting services",
         },
       ],
     }),
@@ -152,71 +143,40 @@ const sendPayout = async (recipientEmail, amount) => {
   if (response.ok) {
     return data;
   } else {
-    console.error('Failed to send payout:', data);
-    throw new Error(data.details?.[0]?.issue || 'Failed to send payout');
+    console.error("Failed to send payout:", data);
+    throw new Error(data.details && data.details[0] && data.details[0].issue || "Failed to send payout");
   }
-};
-
-
-
-
-/**
- * Handle Payment and Payout Workflow
- * @param {number} totalAmount - Total payment amount in AUD
- * @returns {Promise<Object>}
- */
-const handlePayment = async (totalAmount) => {
-  // Step 1: Create Order
-  const order = await createOrder(totalAmount);
-  const orderID = order.id;
-
-  // Step 2: Capture Order
-  await captureOrder(orderID);
-
-  // Step 3: Calculate Payout and Service Fee
-  const serviceFee = (totalAmount * 0.15).toFixed(2);
-  const payoutAmount = (totalAmount * 0.85).toFixed(2);
-
-  // Step 4: Payout to Pet Sitter
-  const payoutResult = await sendPayout(TEST_PET_SITTER, payoutAmount);
-
-  return {
-    orderID,
-    serviceFee,
-    payoutAmount,
-    payoutResult,
-  };
 };
 
 /** HTTP Function: Process Payment */
 exports.processPayment = https.onRequest(async (req, res) => {
   try {
-    const { totalAmount } = req.body;
+    const {totalAmount} = req.body;
 
     if (!totalAmount) {
-      return res.status(400).json({ error: 'Missing totalAmount in request body' });
+      return res.status(400).json({error: "Missing totalAmount in request body"});
     }
 
     // Step 1: Create Order
     const order = await createOrder(totalAmount);
 
     // Step 2: Return the approve URL to the client
-    const approveLink = order.links.find(link => link.rel === 'approve').href;
+    const approveLink = order.links.find((link) => link.rel === "approve").href;
 
-    res.status(200).json({ orderID: order.id, approveLink });
+    res.status(200).json({orderID: order.id, approveLink});
   } catch (error) {
-    console.error('Error processing payment:', error);
-    res.status(500).json({ error: error.message });
+    console.error("Error processing payment:", error);
+    res.status(500).json({error: error.message});
   }
 });
 
 /** HTTP Function: Capture Payment */
 exports.capturePayment = https.onRequest(async (req, res) => {
   try {
-    const { orderID } = req.body;
+    const {orderID} = req.body;
 
     if (!orderID) {
-      return res.status(400).json({ error: 'Missing orderID in request body' });
+      return res.status(400).json({error: "Missing orderID in request body"});
     }
 
     let captureResult;
@@ -225,21 +185,21 @@ exports.capturePayment = https.onRequest(async (req, res) => {
       // Step 1: Attempt to capture the approved order
       captureResult = await captureOrder(orderID);
     } catch (error) {
-      if (error.message.includes('ORDER_ALREADY_CAPTURED')) {
-        console.warn('Order already captured. Fetching existing capture details.');
+      if (error.message.includes("ORDER_ALREADY_CAPTURED")) {
+        console.warn("Order already captured. Fetching existing capture details.");
         // Fetch details of the existing capture
         const accessToken = await fetchAccessToken();
         const response = await fetch(`${PAYPAL_API}/v2/checkout/orders/${orderID}`, {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${accessToken}`,
           },
         });
 
         const orderDetails = await response.json();
         if (!response.ok) {
-          throw new Error('Failed to retrieve existing capture details');
+          throw new Error("Failed to retrieve existing capture details");
         }
 
         captureResult = orderDetails;
@@ -250,7 +210,7 @@ exports.capturePayment = https.onRequest(async (req, res) => {
 
     // Step 2: Extract captured amount and calculate splits
     const capturedAmount = parseFloat(
-      captureResult.purchase_units[0].payments.captures[0].seller_receivable_breakdown.gross_amount.value
+        captureResult.purchase_units[0].payments.captures[0].seller_receivable_breakdown.gross_amount.value,
     );
     const serviceFee = (capturedAmount * 0.15).toFixed(2); // 15% fee
     const payoutAmount = (capturedAmount * 0.85).toFixed(2); // 85% to pet sitter
@@ -266,13 +226,10 @@ exports.capturePayment = https.onRequest(async (req, res) => {
       payoutResult,
     });
   } catch (error) {
-    console.error('Error capturing payment:', error);
-    res.status(500).json({ error: error.message });
+    console.error("Error capturing payment:", error);
+    res.status(500).json({error: error.message});
   }
 });
-
-
-
 
 /** This function is in charge of sending notification to the user as soon
  * as a new Bokkings document is created in Firebase FIrestore.
@@ -282,9 +239,8 @@ exports.capturePayment = https.onRequest(async (req, res) => {
 exports.sendBookingNotification = onDocumentCreated("/Booking/{bookingId}", async (event) => {
   console.log("Function triggered for Booking ID:", event.params.bookingId);
 
-
   const booking = event.data.data(); // Extractiong data from Booking document
-  const petSitterId = booking.PetSitterID;// Extracting PetSitter ID from Booking doc
+  const petSitterId = booking.PetSitterID; // Extracting PetSitter ID from Booking doc
 
   try {
     // Look up the pet sitter’s user document in the Users collection

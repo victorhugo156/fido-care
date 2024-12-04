@@ -25,5 +25,7 @@ module.exports = {
       rules: {},
     },
   ],
-  globals: {},
+  globals: {
+    TEST_PET_SITTER: "readonly", // Declare TEST_PET_SITTER as a global variable
+  },
 };

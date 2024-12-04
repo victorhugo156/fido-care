@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, TextInput, Alert, SectionList, Animated } from 'react-native';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, TextInput, Alert, SectionList, Animated, ScrollView } from 'react-native';
 import { collection, doc, getDocs, onSnapshot, query, where, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../../../firebaseConfig';
 import { useRouter } from 'expo-router';
@@ -12,7 +12,6 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
 import Font_Size from '../../../constants/Font_Size';
-
 
 // Example booking data
 const bookingData = [
@@ -265,6 +264,7 @@ export default function BookingList() {
 
   return (
 <GestureHandlerRootView style={{ flex: 1 }}>
+  <ScrollView style={{ flex: 1 }}>
     <View style={styles.container}>
       {/* Screen Title */}
       <Text style={styles.screenTitle}>Your Bookings</Text>
@@ -338,7 +338,8 @@ export default function BookingList() {
         />
       </View>
     </View>
-    </GestureHandlerRootView>
+  </ScrollView>
+</GestureHandlerRootView>
     
   );
 }
