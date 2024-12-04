@@ -38,16 +38,7 @@ export default function Home() {
 
   return (
 
-    <SafeAreaView style={styles.ContainerSafeArea}>
-      <View style={styles.Container}>
-
-      {/* Search Bar */}
-      <View style={styles.ContainerSearchBar}>
-        <View style={styles.SearchBar}>
-          <Image style={styles.SearchIcon} source={require("../../../assets/icons/map-pin-line.png")} />
-          <TextInput style={styles.TxtInput} placeholder="Enter your address or suburb" placeholderTextColor={Colors.GRAY} />
-        </View>
-      </View>
+    <View style={styles.Container}>
 
       {/* Title */}
       <View>
@@ -59,7 +50,7 @@ export default function Home() {
         {/* Pet Sitter Button */}
         <TouchableOpacity
           style={styles.ContainerBtnPetSitter}
-          onPress={()=>handlePetSitterPress("Pet Sitting")}
+          onPress={() => handlePetSitterPress("Pet Sitting")}
         >
           <View>
             <Image style={styles.Icon} source={require('../../../assets/icons/kitten_face.png')} />
@@ -72,7 +63,7 @@ export default function Home() {
         {/* Dog Walk Button */}
         <TouchableOpacity
           style={styles.ContainerBtnDogWalk}
-          onPress={()=>handlePetSitterPress("Dog Walking")}
+          onPress={() => handlePetSitterPress("Dog Walking")}
         >
           <View>
             <Image style={styles.Icon} source={require('../../../assets/icons/paw.png')} />
@@ -85,8 +76,8 @@ export default function Home() {
         {/* Pet Wash Button */}
         <TouchableOpacity
           style={styles.ContainerBtnPetWash}
-          onPress={()=>handlePetSitterPress("Dog Wash")}
-          //onPress={() => router.push('/screens/Petsitterlist')}
+          onPress={() => handlePetSitterPress("Dog Wash")}
+        //onPress={() => router.push('/screens/Petsitterlist')}
         >
           <View>
             <Image style={styles.Icon} source={require('../../../assets/icons/shower.png')} />
@@ -97,54 +88,24 @@ export default function Home() {
         </TouchableOpacity>
       </View>
 
-      </View>
+    </View>
 
-
-    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  ContainerSafeArea: {
-    backgroundColor: "blue",
-    flex: 1,
-    height: " 100%",
 
-    alignItems: 'center',
-    //justifyContent: " center"
-    // paddingTop: 10,
-  },
   Container:{
-    backgroundColor: " orange",
-    height: 150,
-    justifyContent: " center"
+    flex:1,
+    width: "100%",
+
+    justifyContent: "center",
+    alignItems: "center"
 
     // padding: 70
 
   },
   
-  ContainerSearchBar: {
-    width: 327,
-    height: 38,
-    paddingLeft: 15,
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: Colors.GRAY_200,
-    borderRadius: 9,
-    marginBottom: 60,
-  },
-  SearchBar: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 20,
-  },
-  SearchIcon: {
-    tintColor: Colors.TURQUOISE_GREEN,
-  },
-  TxtInput: {
-    fontFamily: Font_Family.BOLD,
-    color: Colors.TURQUOISE_GREEN,
-  },
   Title: {
     color: Colors.GRAY_600,
     fontSize: Font_Size.XXL,

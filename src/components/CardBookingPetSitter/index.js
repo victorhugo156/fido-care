@@ -20,38 +20,52 @@ const getStatusStyle = (status) => {
     }
 };
 
-export default function CardBooking({
+export default function CardBookingPetSitter({
     petName,
     status,
     sitterName,
+    ownerName,
     date,
     price,
     service,
+    onDeletePress,
     onViewDetailsPress,
     onConfirmPress,
+    onCancelPress,
     currentUserId,
     petSitterId, }) {
 
     const isPetSitter = currentUserId === petSitterId; // Check if the current user is the Pet Sitter
     return (
-                   <View style={styles.itemContainer}>
-            <View style={styles.itemHeader}>
-                <View style={styles.petNameContainer}>
-                    <Icon name="pets" size={20} color={Colors.TURQUOISE_GREEN} style={styles.petIcon} />
-                    <Text style={styles.petName}>{petName}</Text>
+        <View style={styles.itemContainer}>
+            <View style={styles.itensHeader}>
+                <View style={styles.itensHeaderCLoseBtn}>
+                    
+                    <TouchableOpacity
+                        onPress={onDeletePress}
+                    >
+                        <Icon name="close" size={26} color={Colors.CORAL_PINK} />
+                    </TouchableOpacity>
                 </View>
-                <View style={[styles.statusContainer, getStatusStyle(status)]}>
-                    <Text style={styles.status}>{status}</Text>
+                <View style={styles.itensHeaderSubGroup}>
+                    <View style={styles.petNameContainer}>
+                        <Icon name="pets" size={20} color={Colors.TURQUOISE_GREEN} style={styles.petIcon} />
+                        <Text style={styles.petName}>{petName}</Text>
+                    </View>
+                    <View style={[styles.statusContainer, getStatusStyle(status)]}>
+                        <Text style={styles.status}>{status}</Text>
+                    </View>
+
                 </View>
             </View>
-            {isPetSitter && (
-                <Text style={styles.sitterName}>Pet Owner: {sitterName}</Text>
-            )}
-            
+                <Text style={styles.sitterName}>{isPetSitter ? `Pet Owner: ${ownerName}` : `Pet Sitter: ${sitterName}`}</Text>
             <View style={styles.detailRow}>
-                <View style={styles.detailItem}>
+                <View style={styles.detailItemDate}>
                     <Text style={styles.detailLabel}>Date:</Text>
-                    <Text style={styles.date}>{date}</Text>
+                    <View style={styles.detailLabelText}>
+                        <Text style={styles.date}>{date}</Text>
+                    </View>
+                    
                 </View>
                 <View style={styles.detailItem}>
                     <Text style={styles.detailLabel}>Price:</Text>
@@ -74,8 +88,6 @@ export default function CardBooking({
                     </TouchableOpacity>
                 </View>
 
-                {/* Show Confirm button only if the current user is the Pet Sitter */}
-                {isPetSitter && (
                     <View style={styles.containerBtnActions}>
                         <TouchableOpacity
                             style={styles.btnActionsConfirm}
@@ -86,17 +98,17 @@ export default function CardBooking({
                         </TouchableOpacity>
                         <TouchableOpacity
                             style={styles.btnActionsCancel}
-                            onPress={onConfirmPress}
+                            onPress={onCancelPress}
                         >
                             <Image style={styles.Logo} source={require('../../assets/images/status_red.png')} />
                             <Text style={styles.detailsBtnActionsText}>Cancel</Text>
                         </TouchableOpacity>
                     </View>
-                )}
+
             </View>
 
         </View>
- 
+
     )
 }
 
@@ -118,11 +130,30 @@ const styles = StyleSheet.create({
     itemContent: {
         marginBottom: 12,
     },
-    itemHeader: {
+
+    itensHeader: {
+        flexDirection: "column",
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 12,
+
+    },
+
+    itensHeaderCLoseBtn:{
+        width: "100%",
+        alignItems: "flex-end",
+
+        marginBottom: 18,
+
+    },
+
+    itensHeaderSubGroup:{
+        width: "100%",
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: 12,
+
     },
     petNameContainer: {
         flexDirection: 'row',
@@ -160,6 +191,11 @@ const styles = StyleSheet.create({
     detailItem: {
         flexDirection: 'row',
     },
+
+    detailLabelText:{
+        width: 90,
+    },
+
     detailLabel: {
         fontSize: Font_Size.MD,
         fontFamily: Font_Family.BLACK,
@@ -189,13 +225,13 @@ const styles = StyleSheet.create({
 
         marginTop: 25,
 
-        flexDirection:"column-reverse",
+        flexDirection: "column-reverse",
         justifyContent: "space-between",
         alignItems: "center",
 
     },
 
-    containerViewDetails:{
+    containerViewDetails: {
         width: "100%",
         alignItems: "flex-end",
     },
@@ -205,7 +241,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
 
-    containerBtnActions:{
+    containerBtnActions: {
         width: "100%",
         flexDirection: "row",
         justifyContent: "space-between"
@@ -226,7 +262,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: Colors.TURQUOISE_GREEN,
     },
-    btnActionsCancel:{
+    btnActionsCancel: {
         backgroundColor: Colors.PINK_VARIENT,
         height: 40,
         width: 120,

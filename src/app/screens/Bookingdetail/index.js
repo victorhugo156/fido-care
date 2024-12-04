@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import Colors from '../../../constants/Colors';
@@ -47,67 +47,88 @@ const bookingData = [
 ];
 
 const BookingDetail = () => {
-  const router = useRouter();
-  const { id } = useLocalSearchParams();
-  const booking = bookingData.find((item) => item.id === id);
 
-  if (!booking) return <Text style={styles.noDataText}>No booking details found.</Text>;
+  const router = useRouter();
+  const { bookingDetails } = useLocalSearchParams();
+
+  // Convert bookingDetails to an object if it is serialized
+  const [details, setDetails] = useState(null);
+
+  useEffect(() => {
+    if (bookingDetails) {
+      try {
+        const parseDetails = JSON.parse(bookingDetails); // Deserialize the bookingDetails object
+        console.log("This is the booking details----->>>>", details);
+        setDetails(parseDetails);
+        // You can now use `details` in your component
+      } catch (error) {
+        console.error("Failed to parse bookingDetails:", error);
+      }
+    }
+  }, [bookingDetails]);
+
+  if (!details) {
+    console.log("This is the booking details----->>>>", details);
+    return <Text style={styles.noDataText}>No booking details found.</Text>;
+  }
 
   return (
     <ScrollView style={styles.container}>
       {/* Header Section */}
       <View style={styles.header}>
-        <Image source={{ uri: booking.sitterAvatar }} style={styles.sitterAvatar} />
-        <Text style={styles.sitterName}>{booking.sitterName}</Text>
+        {/* <Image source={{ uri: booking.sitterAvatar }} style={styles.sitterAvatar} /> */}
+        <Text style={styles.sitterName}>{details.sitterName}</Text>
       </View>
 
       {/* Booking Information */}
       <View style={styles.infoContainer}>
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Pet Name</Text>
-          <Text style={styles.infoValue}>{booking.petName}</Text>
+          <Text style={styles.infoValue}>{details.petName}</Text>
         </View>
 
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Service</Text>
-          <Text style={styles.infoValue}>{booking.service}</Text>
+          <Text style={styles.infoValue}>{details.service}</Text>
         </View>
 
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Date</Text>
-          <Text style={styles.infoValue}>{booking.date}</Text>
+          <Text style={styles.infoValue}>{details.date}</Text>
         </View>
 
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Price</Text>
-          <Text style={styles.infoValue}>{booking.price}</Text>
+          <Text style={styles.infoValue}>{details.price}</Text>
         </View>
 
-        <View style={styles.infoRow}>
+        {/* <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Location</Text>
           <Text style={styles.infoValue}>{booking.location}</Text>
-        </View>
+        </View> */}
 
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Status</Text>
           <Text
             style={[
               styles.infoValue,
-              booking.status === 'Confirmed' ? styles.confirmed : booking.status === 'Pending' ? styles.pending : styles.cancelled,
+              details.status === 'Confirmed' ? styles.confirmed
+                : details.status === 'Pending' ? styles.pending
+                  : styles.cancelled,
             ]}
           >
-            {booking.status}
+            {details.status}
           </Text>
         </View>
 
-        <View style={[styles.infoRow, styles.detailsRow]}>
+        {/* <View style={[styles.infoRow, styles.detailsRow]}>
           <Text style={styles.infoLabel}>Details</Text>
           <Text style={styles.infoValue}>{booking.details}</Text>
-        </View>
+        </View> */}
       </View>
 
       {/* Conditional PayPal Button for Pending Payments */}
-      {booking.status === 'Pending' && (
+      {details.status === 'Pending' && (
         <TouchableOpacity style={styles.payButton}>
           <Image
             source={{ uri: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/PayPal_logo.svg/512px-PayPal_logo.svg.png' }}
@@ -120,17 +141,17 @@ const BookingDetail = () => {
       {/* Action Button */}
       <TouchableOpacity
         style={styles.messageButton}
-        onPress={() => router.push('/screens/Chat')} // Navigate to the chat screen
+        onPress={() => router.push("/Chat")} // Navigate to the chat screen
       >
         <Text style={styles.messageButtonText}>Message Sitter</Text>
         <Icon name="envelope" size={20} color={Colors.WHITE} style={styles.buttonIcon} />
       </TouchableOpacity>
 
       {/* Rate the Service Button - Shown only if status is "Confirmed" */}
-      {booking.status === 'Confirmed' && (
+      {details.status === 'Confirmed' && (
         <TouchableOpacity
           style={styles.rateButton}
-          onPress={() => router.push(`/screens/Rateservice?id=${booking.id}`)}
+          onPress={() => router.push(`/screens/Rateservice?id=${details.id}`)}
         >
           <Text style={styles.rateButtonText}>Rate the Service</Text>
         </TouchableOpacity>

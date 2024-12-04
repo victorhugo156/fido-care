@@ -4,7 +4,6 @@ import { useContext, useEffect } from 'react';
 import { Link } from 'expo-router';
 import { useRouter } from 'expo-router'; 
 
-
 import { FilterServiceContext } from '../../Context/globalContext';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
@@ -31,7 +30,6 @@ export default function EntryPoint(){
                 <Image style={styles.PetImg} source={require("../../../assets/images/Pets.png")} />
                 <Text style={styles.Title}>Find your Pet Sitter</Text>
             </View>
-
 
             <View style={styles.ContainerButtons}>
                 <TouchableOpacity style={styles.ContainerLogin} onPress={() => router.push('screens/Login')}>

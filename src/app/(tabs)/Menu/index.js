@@ -41,7 +41,7 @@ const Menu = () => {
           console.log("Using currentUser context:", currentUser);
           setUserAuthenticated(true);
           setUserData({
-            uid: currentUser.userId,
+            uid: currentUser.userId || '',
             email: currentUser.email,
             name: currentUser.name,
             photo: currentUser.photo || null,
@@ -124,7 +124,6 @@ const Menu = () => {
             try {
               await AsyncStorage.removeItem('userToken');
               await handleSignOut();
-              router.push('screens/EntryPoint');
             } catch (error) {
               Alert.alert('Error', 'An error occurred while logging out.');
             }
@@ -159,7 +158,6 @@ const Menu = () => {
       //await AsyncStorage.removeItem('user_data');
       setUserAuthenticated(false); // Reset authentication state
       setUserData(null);
-      setUserData(null);
       setCurrentUser(null); // Clear context 
       console.log("User signed out successfully");
       router.push('screens/EntryPoint');
@@ -176,7 +174,7 @@ const Menu = () => {
     // Synchronize userData with currentUser
     if (currentUser) {
       setUserData({
-        uid: currentUser.userId,
+        uid: currentUser.userId || "",
         email: currentUser.email,
         name: currentUser.name,
         photo: currentUser.photo || null,

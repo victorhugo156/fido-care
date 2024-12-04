@@ -297,7 +297,6 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   safeContainer:{
     flex: 1,
-    backgroundColor: Colors.CORAL_PINK, // Ensure it matches your theme
   },
   container: {
     backgroundColor: Colors.BRIGHT_BLUE,
@@ -309,7 +308,7 @@ const styles = StyleSheet.create({
   containerHeader: {
     alignItems: "center",
 
-    marginBottom: 40
+    marginBottom: 15
   },
 
   logo: {
@@ -332,7 +331,7 @@ const styles = StyleSheet.create({
 
     padding: 10,
 
-    marginBottom: 60
+    marginBottom: 30
   },
 
   containerInputs: {
@@ -341,7 +340,7 @@ const styles = StyleSheet.create({
 
     gap: 15,
 
-    marginBottom: 20
+    marginBottom: 5
   },
 
   ErrorMsg: {

@@ -21,6 +21,7 @@ import EntryPoint from "./screens/EntryPoint";
 import LoginScreen from "./screens/Login";
 import Calendar from "../components/Calendar";
 import Register from "./screens/Register";
+import ViewPetSitterProfile from "./screens/UserPetsitterprofile";
 import { OneSignal } from "react-native-onesignal";
 
 
@@ -58,8 +59,8 @@ export default function index() {
   }
 
   return (
-          <RegisterContextProvider>
-            <GestureHandlerRootView style={{ flex: 1 }}>
+    <RegisterContextProvider>
+      <GestureHandlerRootView style={{ flex: 1 }}> 
         <BottomSheetModalProvider>
           <SafeAreaView style={styles.Container}>
 
@@ -69,7 +70,6 @@ export default function index() {
         </BottomSheetModalProvider>
       </GestureHandlerRootView>
     </RegisterContextProvider>
-
   );
 }
 

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
-import { collection, doc, getDocs, onSnapshot, query, where, addDoc, updateDoc } from 'firebase/firestore';
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, TextInput, Alert, SectionList, Animated } from 'react-native';
+import { collection, doc, getDocs, onSnapshot, query, where, addDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../../../../firebaseConfig';
 import { useRouter } from 'expo-router';
 import { UseRegisterService } from '../../hook/useRegisterService';
+import { GestureHandlerRootView, Swipeable, RectButton } from 'react-native-gesture-handler';
 
-import CardBooking from '../../../components/CardBooking';
+import CardBookingPetSitter from '../../../components/CardBookingPetSitter';
+import CardBookingPetOwner from '../../../components/CardBookingPetOwner';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Colors from '../../../constants/Colors';
 import Font_Family from '../../../constants/Font_Family';
@@ -47,8 +49,16 @@ export default function BookingList() {
   const { currentUser } = UseRegisterService();
 
   const [bookingDetails, setBookingDetails] = useState([]);
-  
   const [searchQuery, setSearchQuery] = useState(""); 
+
+  const sentBookings = bookingDetails.filter((item) => item.role === "petOwner");
+  const receivedBookings = bookingDetails.filter((item) => item.role === "petSitter");
+  const isPetSitter = currentUser.roles.includes("petSitter");
+
+  const sections = [
+    { title: 'Received Bookings', data: receivedBookings },
+    { title: 'Sent Bookings', data: sentBookings },
+  ].filter(section => section.data && section.data.length > 0); //Display titles only if there is something;
   
 
   const router = useRouter();
@@ -61,11 +71,9 @@ export default function BookingList() {
       item.service.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const sentBookings = bookingDetails.filter((item) => item.role === "petOwner");
-  const receivedBookings = bookingDetails.filter((item) => item.role === "petSitter");
+
 
       //Fetching data from the DB
-
       const fetchData = async (userId, roles) => {
         try {
           const queries = [];
@@ -100,13 +108,16 @@ export default function BookingList() {
               const data = doc.data();
               bookings.push({
                 id: doc.id, // Firestore document ID
+                petSitterID: data.PetSitterID,
+                ownerID: data.PetOwnerID,
                 status: data.BookingStatus,
                 service: data.ServiceDetails?.title || "N/A",
                 petName: data.ServiceDetails?.petName || "Unknown",
                 date: data.ServiceDetails?.date || "N/A",
                 time: data.ServiceDetails?.time || "N/A",
-                sitterName: data.sitterName || "Unknown",
-                price: data.price || "N/A",
+                sitterName: data.PetSitterName || "Unknown",
+                ownerName: data.PetOwnerName || "Unknown",
+                price: data.ServiceDetails?.totalPrice || "N/A",
                 role: index === 0 && roles.includes("petOwner") ? "petOwner" : "petSitter", // Mark the role
               });
             });
@@ -119,41 +130,6 @@ export default function BookingList() {
           console.error("Error fetching data:", error);
         }
       };
-
-
-      // const fetchData = async (userId, isPetOwner = true) => {
-      //   try {
-      //     const fieldToQuery = isPetOwner ? "PetOwnerID" : "PetSitterID";
-      
-      //     console.log("Fetching bookings for:", userId, "as", isPetOwner ? "PetOwner" : "PetSitter");
-      
-      //     const bookingsQuery = query(
-      //       collection(db, "Booking"),
-      //       where(fieldToQuery, "==", userId)
-      //     );
-      
-      //     const querySnapshot = await getDocs(bookingsQuery);
-      
-      //     console.log("Query snapshot size:", querySnapshot.size);
-      
-      //     const bookings = querySnapshot.docs.map((doc) => ({
-      //       id: doc.id, // Firestore document ID
-      //       status: doc.data().BookingStatus,
-      //       service: doc.data().ServiceDetails?.title || "N/A",
-      //       petName: doc.data().ServiceDetails?.petName || "Unknown",
-      //       date: doc.data().ServiceDetails?.date || "N/A",
-      //       time: doc.data().ServiceDetails?.time || "N/A",
-      //       sitterName: doc.data().sitterName || "Unknown",
-      //       price: doc.data().price || "N/A",
-      //     }));
-      
-      //     console.log("Fetched bookings:", bookings);
-      
-      //     setBookingDetails(bookings); // Update state with accumulated bookings
-      //   } catch (error) {
-      //     console.error("Error fetching data:", error);
-      //   }
-      // };
 
       const handleConfirmBooking = async (bookingId) => {
         try {
@@ -177,7 +153,57 @@ export default function BookingList() {
         }
       };
 
+  const handleCancelBooking = async (bookingId) => {
 
+    Alert.alert('Cancel Booking', 'Are you sure you want to cancel this booking?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Yes', onPress: async () => {
+          try {
+            // Update the status in the local state
+            setBookingDetails((prevBookings) =>
+              prevBookings.map((booking) =>
+                booking.id === bookingId ? { ...booking, status: "Cancelled" } : booking
+              )
+            );
+            // Update the status in Firestore
+            const bookingRef = doc(db, "Booking", bookingId);
+            await updateDoc(bookingRef, {
+              BookingStatus: "Cancelled",
+            });
+
+            Alert.alert("Success", "Booking has been cancled!");
+          } catch (error) {
+            console.error("Error canceling booking:", error);
+            Alert.alert("Error", "Failed to cancel the booking.");
+          }
+        }
+      },
+    ]);
+
+  }
+
+  const handleDeleteBooking = async (bookingId) => {
+
+    Alert.alert('Delete Booking', 'Are you sure you want to delete this booking?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Yes', onPress: async () => {
+          try {
+            // Delete from Firestore
+            await deleteDoc(doc(db, "Booking", bookingId));
+            // Update the local state to remove the booking
+            setBookingDetails((prevBookings) => prevBookings.filter((item) => item.id !== bookingId));
+            console.log(`Booking with ID ${bookingId} deleted successfully.`);
+          } catch (error) {
+            console.error("Error deleting booking:", error);
+            Alert.alert("Error", "Failed to delete booking.");
+          }
+
+        }
+      },
+    ]);
+  };
       useEffect(() => {
         console.log("Updated bookingDetails:", bookingDetails);
       }, [bookingDetails]);
@@ -233,7 +259,12 @@ export default function BookingList() {
     </View>
   );
 
+  const handleFunctionTesting = (petID)=>{
+    console.log("This is the Pet Sitter ID Testing ----->>>", petID);
+  }
+
   return (
+<GestureHandlerRootView style={{ flex: 1 }}>
     <View style={styles.container}>
       {/* Screen Title */}
       <Text style={styles.screenTitle}>Your Bookings</Text>
@@ -251,79 +282,64 @@ export default function BookingList() {
 
       {/* Booking List */}
       <View style={styles.BookingsList}>
-        <View style={styles.ContainerTitleBookingsCards}>
-          <Text>Sent Bookings</Text>
-        </View>
-
-        <FlatList
-          data={sentBookings}
+        <SectionList
+          sections={sections}
           keyExtractor={(item, index) => item.id || index.toString()}
-          renderItem={({ item }) => (
-            <TouchableOpacity>
-              <CardBooking
-                petName={item.petName}
-                status={item.status}
-                sitterName={item.sitterName}
-                date={item.date}
-                price={item.price}
-                service={item.service}
-                currentUserId={currentUser.userId} // Pass current user's ID
-                petSitterId={item.PetSitterID}    // Pass Pet Sitter's ID from booking
-              />
-            </TouchableOpacity>
+          renderSectionHeader={({ section: { title } }) => (
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionHeaderText}>{title}</Text>
+            </View>
           )}
-        />
-
-        <View style={styles.ContainerTitleBookingsCards}>
-          <Text>Received Bookings</Text>
-        </View>
-
-        <FlatList
-          data={receivedBookings}
-          keyExtractor={(item, index) => item.id || index.toString()}
           renderItem={({ item }) => (
-            <TouchableOpacity>
-              <CardBooking
-                petName={item.petName}
-                status={item.status}
-                sitterName={item.sitterName}
-                date={item.date}
-                price={item.price}
-                service={item.service}
-                onViewDetailsPress={() => router.push(`/screens/Petsitterprofile?id=${item.id}`)}
-                onConfirmPress={() => handleConfirmBooking(item.id)}
-              />
-            </TouchableOpacity>
+              <TouchableOpacity>
+                {item.role === "petOwner" ? (
+                  <CardBookingPetOwner
+                    petName={item.petName}
+                    status={item.status}
+                    sitterName={item.sitterName}
+                    ownerName={item.ownerName}
+                    date={item.date}
+                    price={item.price}
+                    service={item.service}
+                    onDeletePress={() => {
+                      handleDeleteBooking(item.id)
+                    }}
+                    onViewDetailsPress={() => {
+                      router.push({
+                        pathname: '/screens/Bookingdetail',
+                        params: { bookingDetails: JSON.stringify(item) }, // Pass the whole bookingDetails object
+                      });
+                    }}
+                  />
+                ) : (
+                  <CardBookingPetSitter
+                    petName={item.petName}
+                    status={item.status}
+                    sitterName={item.sitterName}
+                    ownerName={item.ownerName}
+                    date={item.date}
+                    price={item.price}
+                    service={item.service}
+                    onDeletePress={() => {
+                      handleDeleteBooking(item.id)
+                    }}
+                    onViewDetailsPress={() => {
+                      router.push({
+                        pathname: '/screens/Bookingdetail',
+                        params: { bookingDetails: JSON.stringify(item) }, // Pass the whole bookingDetails object
+                      });
+                    }}
+                    onConfirmPress={() => handleConfirmBooking(item.id)}
+                    onCancelPress={() => handleCancelBooking(item.id)}
+                  />
+                )}
+              </TouchableOpacity>
           )}
         />
       </View>
-
-      {/* <FlatList
-        data={bookingDetails}
-        renderItem={({ item }) => (
-          <View style={styles.itemContainer}>
-            <Text style={styles.roleTag}>{item.role === "petOwner" ? "Sent" : "Received"}</Text>
-            <Text>{item.petName}</Text>
-            <Text>{item.status}</Text>
-            <Text>{item.service}</Text>
-          </View>
-        )}
-        keyExtractor={(item) => item.id}
-      /> */}
-      {/* <FlatList
-            data={bookingDetails}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id}
-            ListEmptyComponent={<Text>No bookings available.</Text>}
-        /> */}
-      {/* <FlatList
-        data={filteredBookings}
-        renderItem={renderItem}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContainer}
-        ListEmptyComponent={<Text style={styles.noResultsText}>No bookings found</Text>}
-      /> */}
     </View>
+    </GestureHandlerRootView>
+    
   );
 }
 
@@ -382,14 +398,7 @@ const styles = StyleSheet.create({
 
   BookingsList:{
     alignItems: "center",
-  },
-
-
-
-  ContainerTitleBookingsCards:{
-    paddingLeft: 12,
-
-    marginBottom: 15,
+    padding: 0,
   },
 
   noResultsText: {
@@ -397,6 +406,16 @@ const styles = StyleSheet.create({
     fontSize: Font_Size.MD,
     color: Colors.GRAY,
     marginTop: 50,
+  },
+
+  sectionHeader: {
+    backgroundColor: Colors.GRAY_50,
+    padding: 10,
+  },
+  sectionHeaderText: {
+    fontFamily: Font_Family.BOLD,
+    fontSize: Font_Size.LG,
+    color: Colors.GRAY_700
   },
 });
 

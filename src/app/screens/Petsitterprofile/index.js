@@ -47,6 +47,7 @@ const PetSitterProfile = () => {
   //This will get the reference of the bottom sheet
   const bottomSheetRef = useRef(null);
 
+
   const router = useRouter();
   const [dropDownMenuselected, setDropDownMenuSelected] = useState([]);
   const [timeText, setTimeText] = useState('Select Your Time');
@@ -64,6 +65,7 @@ const PetSitterProfile = () => {
   const [petQuantity, setPetQuantity] = useState(1);
   const [totalPrice, setTotalPrice] = useState(0);
   const [modalSelectedService, setModalSelectedService] = useState(null); // Currently selected service
+  const [markedDates, setMarkedDates] = useState({});
 
 
 
@@ -107,6 +109,19 @@ const PetSitterProfile = () => {
             setSelectedService(petSitterData.Services[0].title); // Default to the first service
             setTotalPrice(parseInt(petSitterData.Services[0].price, 10)); // Initialize price
           }
+
+          // Setting markedDates after setting petSitter to display in the calendar
+          if (petSitterData.Availability) {
+            const markedDates = petSitterData.Availability.reduce((acc, date) => {
+              const [month, day, year] = date.split('/');
+              const formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+              acc[formattedDate] = { selected: true, selectedColor: 'blue' };
+              return acc;
+            }, {});
+
+          setMarkedDates(markedDates); // Use state to store markedDates
+        }
+
         } else {
           Alert.alert("Error", "Pet sitter not found.");
         }
@@ -165,20 +180,17 @@ const PetSitterProfile = () => {
       return;
     }
 
-    // setBookingDetails({
-    //   petOwnerID: currentUser.userId,
-    //   petSitterID: petSitter.id,
-    //   status: "waiting",
-    //   title: selectedService,
-    //   petName: petName,
-    //   time: selectedTime,
-    //   date: days,
-    // });
+    if (!days || days.length === 0) {
+      Alert.alert("Error", "Please select at least one date for the booking.");
+      return;
+  }
 
     const bookingData = {
       PetOwnerID: currentUser.userId,
       PetSitterID: petSitter.id,
       BookingStatus: "Pending",
+      PetSitterName: petSitter.Name,
+      PetOwnerName: currentUser.name,
       ServiceDetails: {
         title: selectedService,
         date: days,
@@ -189,6 +201,7 @@ const PetSitterProfile = () => {
     };
 
     console.log("Booking data being sent:", bookingDetails);
+    console.log("Pet Sitter Name and Current User name --->>>:", petSitter, currentUser.name,)
     try {
       await addDoc(collection(db, "Booking"), bookingData);
       Alert.alert("Success", "Booking request sent.");
@@ -199,9 +212,16 @@ const PetSitterProfile = () => {
     }
   };
 
-  const handleDateValue = (dates) => {
-    setBookingDetails({ date: setDates(dates) });
-    console.log("Thhis is the Pet Sitter Info From DB --->> ", petSitter)
+  const handleDateValue = (selectedDates) => {
+    // Extract date keys (e.g., "2024-12-05") from selectedDates
+    const selectedDateKeys = Object.keys(selectedDates);
+    setDays(selectedDateKeys)
+    setBookingDetails((prevDetails) => ({
+      ...prevDetails, // Spread previous booking details
+      date: selectedDateKeys, // Add or update the date field
+  }));
+  console.log("Selected dates for booking:", selectedDateKeys);
+  console.log("Updated booking details:", bookingDetails);
 
   }
 
@@ -214,7 +234,7 @@ const PetSitterProfile = () => {
     // console.log("The Service Selectes are: ", dropDownMenuselected);
     // console.log("The Pet Name Selectes are: ", petName);
 
-    console.log("These are the pet sitter information --->>", petSitter?.Services);
+    console.log("Pet Sitter Name and Current User name --->>>:", petSitter.Name, currentUser.name,)
 
   }
 
@@ -277,32 +297,8 @@ const PetSitterProfile = () => {
 
   //Function Inside Modal to select pet quantity
   const handleNext = (servicePrice) => {
-    console.log('Service Price Received:', servicePrice); // Add this
     setPetQuantity((prevQuantity) => {
-      console.log("Previous Quantity:", prevQuantity);
-      const newQuantity = prevQuantity + 1;
-
-      setTotalPrice((prevPrice) => {
-        console.log("Previous Total Price:", prevPrice);
-        console.log("Adding Service Price:", parseInt(servicePrice, 10));
-        const additionalCost = (newQuantity - 1) * 10; // Extra cost for additional pets
-        const updatedTotalPrice = parseInt(servicePrice, 10) + additionalCost;
-        return updatedTotalPrice;
-      });
-      return newQuantity;
-    });
-  };
-  //This function is the back Pet
-  const handlePrevious = function (servicePrice) {
-    console.log('Service Price Received:', servicePrice); // Debugging
-  
-    setPetQuantity((prevQuantity) => {
-      if (prevQuantity <= 1) {
-        console.log("Cannot decrease below 1 pet.");
-        return prevQuantity; // Prevent decreasing below 1
-      }
-  
-      const newQuantity = prevQuantity - 1;
+      const newQuantity = prevQuantity + 1; // Increment pet quantity
       console.log("New Pet Quantity:", newQuantity);
   
       // Update total price
@@ -316,6 +312,31 @@ const PetSitterProfile = () => {
       return newQuantity;
     });
   };
+  
+  //This function is the back Pet
+  const handlePrevious = (servicePrice) => {
+    setPetQuantity((prevQuantity) => {
+      if (prevQuantity <= 1) {
+        console.log("Cannot decrease below 1 pet. Resetting to initial price.");
+        setTotalPrice(parseInt(servicePrice, 10)); // Reset to initial price
+        return 1;
+      }
+  
+      const newQuantity = prevQuantity - 1; // Decrement pet quantity
+      console.log("New Pet Quantity:", newQuantity);
+  
+      // Update total price
+      setTotalPrice((prevPrice) => {
+        const additionalCost = (newQuantity - 1) * 10; // Extra cost for additional pets
+        const updatedTotalPrice = parseInt(servicePrice, 10) + additionalCost;
+        console.log("Updated Total Price:", updatedTotalPrice);
+        return updatedTotalPrice;
+      });
+  
+      return newQuantity;
+    });
+  };
+  
 
   const handleServiceChange = (serviceTitle) => {
     // Find the selected service in petSitter.Services
@@ -326,6 +347,13 @@ const PetSitterProfile = () => {
       setTotalPrice(parseInt(selected.price, 10)); // Update total price
     }
   };
+
+  const handleDateCalendar = (dates) => {
+    setDates(dates);
+    console.log("The dates Selectes are: ", dates)
+
+}
+
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -383,12 +411,19 @@ const PetSitterProfile = () => {
           ))}
         </View>
 
-        <View style={styles.sectionContainer}>
+        <View style={styles.sectionContainerAvailability}>
           <Text style={styles.sectionTitle}>AVAILABILITY</Text>
+
           <View style={styles.availabilityCalendar}>
-            {petSitter.Availability && petSitter.Availability.map((date, index) => (
-              <Text key={index} style={styles.calendarText}>{date}</Text>
-            ))}
+            {markedDates ? (
+              <CalendarPicker
+                markedDates={markedDates} // Highlight available dates
+                isReadOnly={true} // Disable user interaction
+                handleDate={() => { }} // No-op since it's read-only
+              />
+            ) : (
+              <Text style={styles.errorText}>No availability data found.</Text>
+            )}
           </View>
         </View>
 
@@ -399,7 +434,15 @@ const PetSitterProfile = () => {
           ))}
         </View>
 
-        <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Book"} onPress={handleOpenPress} />
+        <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Book"} onPress={()=>{
+          if(currentUser.name){
+            handleOpenPress()
+          }else{
+            Alert.alert("You have To finish your register");
+            router.push('screens/PersonalDetails');
+          }
+
+        }} />
       </ScrollView>
       {/*-------------- Modal ------------------- */}
 
@@ -408,7 +451,10 @@ const PetSitterProfile = () => {
           <View style={styles.containerModal}>
             <View style={styles.containerModalCalendar}>
               <Text style={styles.modalTitles}>Select the Date</Text>
-              <CalendarPicker handleDate={handleDateValue} />
+              <CalendarPicker
+                markedDates={markedDates}
+                handleDate={handleDateValue}
+              />
             </View>
 
             <View style={styles.containerModalTime}>
@@ -442,7 +488,7 @@ const PetSitterProfile = () => {
             <View style={styles.containerModalPetQuantity}>
               <Text style={styles.modalTitles}>How many Pets: </Text>
               <View style={styles.ContainerSwapper}>
-                <TouchableOpacity onPress={()=>{handlePrevious(totalPrice)}}>
+                <TouchableOpacity onPress={()=>{handlePrevious(petSitter.Services[0].price)}}>
                   <Image style={styles.BtnControlMinus} source={require("../../../assets/icons/btn_minus.png")} />
                 </TouchableOpacity>
 
@@ -451,23 +497,17 @@ const PetSitterProfile = () => {
                 </View>
 
 
-                  <TouchableOpacity onPress={() => handleNext(totalPrice)}>
+                  <TouchableOpacity onPress={() => handleNext(petSitter.Services[0].price)}>
                     <Image style={styles.BtnControlPlus} source={require("../../../assets/icons/btn_plus.png")} />
                   </TouchableOpacity>
-
-
-                {/* <TouchableOpacity onPress={handleNext()}>
-                  <Image style={styles.BtnControlPlus} source={require("../../../assets/icons/btn_plus.png")} />
-                </TouchableOpacity> */}
               </View>
             </View>
 
             <View style={styles.containerModalTotalPrice}>
-              <Text>Total:</Text>
+              <Text style={styles.modalTitles}>Total:</Text>
               <View style={styles.serviceItem}>
-                <Text style={styles.servicePrice}>AU${totalPrice} / hour</Text>
+                <Text style={styles.totalPrice}>AU${totalPrice} / hour</Text>
               </View>
-
             </View>
           </View>
           <ButtonApply bgColor={Colors.CORAL_PINK} btnTitle={"Send Booking"} onPress={createBookingRequest} />
@@ -542,12 +582,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 20,
 
-    marginBottom: 30
+    marginBottom: 20
 
   },
 
   ContainerSwapper: {
-    width: 90,
+    width: 120,
     height: 170,
 
     flexDirection: "row",
@@ -560,9 +600,17 @@ const styles = StyleSheet.create({
     gap: 5
 
   },
+
+  InfoData:{
+    fontFamily: Font_Family.BOLD,
+    color: Colors.GRAY_700,
+    fontSize: Font_Size.LG
+
+  },
+
   BtnControlMinus: {
-    width: 30,
-    height: 30,
+    width: 28,
+    height: 28,
     resizeMode: "contain"
   },
   BtnControlPlus: {
@@ -570,6 +618,21 @@ const styles = StyleSheet.create({
     height: 33,
     resizeMode: "contain"
   },
+
+  containerModalTotalPrice:{
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  
+  totalPrice:{
+    fontFamily: Font_Family.BLACK,
+    color: Colors.GRAY_700,
+    fontSize: Font_Size.LG
+
+  },
+
 
   /*-------------- End Modal Style ------------------- */
   container: {
@@ -660,6 +723,22 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#E0E0E0',
   },
+
+  sectionContainerAvailability:{
+
+
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E0E0E0',
+
+  },
+
+  availabilityCalendar: {
+    backgroundColor: '#F0F0F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 10,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -692,13 +771,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  availabilityCalendar: {
-    height: 200,
-    backgroundColor: '#F0F0F0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 10,
-  },
+
+
   calendarText: {
     color: '#999',
   },
