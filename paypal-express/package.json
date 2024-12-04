@@ -1,0 +1,27 @@
+{
+  "name": "paypal-express",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Backend server for PayPal Checkout integration",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "server-dev": "nodemon index.js",
+    "start": "npm run server-dev",
+    "prod": "node index.js",
+    "format": "npx prettier --write \"**/*.{js,jsx,md}\"",
+    "format:check": "npx prettier --check \"**/*.{js,jsx,md}\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@paypal/paypal-server-sdk": "^0.6.1",
+    "body-parser": "^1.20.3",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.1",
+    "nodemon": "^3.0.1"
+  }
+}

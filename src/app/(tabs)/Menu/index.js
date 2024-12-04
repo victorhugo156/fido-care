@@ -198,7 +198,7 @@ const Menu = () => {
         {userData?.photo ? (
           <Image style={styles.UserIcon} source={{ uri: userData.photo }} />
         ) : (
-          <Image style={styles.UserIcon} source={require('../../../assets/icons/User.png')} />
+          <Image style={styles.UserIcon} source={require('../../../assets/icons/user.png')} />
         )}
         <View>
           <Text style={styles.welcomeText}>Welcome,</Text>
