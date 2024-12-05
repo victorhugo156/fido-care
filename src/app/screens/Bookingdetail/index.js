@@ -15,6 +15,7 @@ import Colors from "../../../constants/Colors";
 import Font_Family from "../../../constants/Font_Family";
 import Font_Size from "../../../constants/Font_Size";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import * as Linking from "expo-linking";
 
 // Function to handle payment and capture
 const startPayment = async (details, setLoading, updateStatus) => {
@@ -52,18 +53,16 @@ const startPayment = async (details, setLoading, updateStatus) => {
       // Redirect to PayPal approval link
       Linking.openURL(processData.approveLink);
 
-      // Listen for PayPal redirect and finalize payment
-      const handleRedirect = async (event) => {
-        const url = event.url;
-
-        if (url.includes("token=")) {
+      // Step 2: Listen for PayPal deep link redirect
+      const handleRedirect = async ({ url }) => {
+        if (url.includes("paypal-success")) {
           const params = new URLSearchParams(url.split("?")[1]);
           const orderID = params.get("token");
 
           if (orderID) {
             console.log("Order ID received:", orderID); // Debug log
 
-            // Step 2: Automatically capture the payment
+            // Step 3: Automatically capture the payment
             const captureResponse = await fetch(
               "https://capturepayment-3v4do2hn6q-uc.a.run.app",
               {
@@ -95,15 +94,15 @@ const startPayment = async (details, setLoading, updateStatus) => {
           } else {
             console.error("Order ID not found in URL:", url); // Debug log
           }
-        } else if (url.includes("cancel")) {
+        } else if (url.includes("paypal-cancel")) {
           Alert.alert("Payment Cancelled", "The payment was cancelled.");
         }
 
-        // Remove the event listener after processing
+        // Clean up the listener after handling
         Linking.removeEventListener("url", handleRedirect);
       };
 
-      // Add event listener for URL changes
+      // Add event listener for deep links
       Linking.addEventListener("url", handleRedirect);
     } else {
       throw new Error(processData.error || "Payment initiation failed.");
