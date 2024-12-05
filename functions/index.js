@@ -46,7 +46,7 @@ const fetchAccessToken = async () => {
  * @return {Promise<Object>}
  */
 const createOrder = async (totalAmount) => {
-  const accessToken = await fetchAccessToken();
+  const accessToken = await fetchAccessToken(); // Replace with your existing function to get the access token
   const response = await fetch(`${PAYPAL_API}/v2/checkout/orders`, {
     method: "POST",
     headers: {
@@ -63,6 +63,10 @@ const createOrder = async (totalAmount) => {
           },
         },
       ],
+      application_context: {
+        return_url: "fidocare://paypal-success", // Replace 'myapp' with your actual scheme from app.json
+        cancel_url: "fidocare://paypal-cancel", // Replace 'myapp' with your actual scheme from app.json
+      },
     }),
   });
 
@@ -74,6 +78,7 @@ const createOrder = async (totalAmount) => {
     throw new Error(data.error || "Failed to create order");
   }
 };
+
 
 /**
  * Capture PayPal Order
@@ -148,6 +153,34 @@ const sendPayout = async (recipientEmail, amount) => {
   }
 };
 
+/**
+ * Fetch the status of a payout batch by its ID
+ * @param {string} payoutBatchId - The ID of the payout batch
+ * @return {Promise<Object>}
+ */
+const fetchPayoutStatus = async (payoutBatchId) => {
+  const accessToken = await fetchAccessToken(); // Use your existing fetchAccessToken method
+
+  const response = await fetch(`${PAYPAL_API}/v1/payments/payouts/${payoutBatchId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${accessToken}`,
+    },
+  });
+
+  const payoutDetails = await response.json();
+
+  if (response.ok) {
+    console.log("Payout Status:", payoutDetails.batch_header.batch_status);
+    return payoutDetails;
+  } else {
+    console.error("Failed to fetch payout details:", payoutDetails);
+    throw new Error(payoutDetails.error || "Failed to fetch payout details");
+  }
+};
+
+
 /** HTTP Function: Process Payment */
 exports.processPayment = https.onRequest(async (req, res) => {
   try {
@@ -170,6 +203,7 @@ exports.processPayment = https.onRequest(async (req, res) => {
   }
 });
 
+/** HTTP Function: Capture Payment and Trigger Payout */
 /** HTTP Function: Capture Payment */
 exports.capturePayment = https.onRequest(async (req, res) => {
   try {
@@ -218,18 +252,23 @@ exports.capturePayment = https.onRequest(async (req, res) => {
     // Step 3: Trigger payout to the pet sitter
     const payoutResult = await sendPayout(TEST_PET_SITTER, payoutAmount);
 
-    // Step 4: Respond with success
+    // Step 4: Check the payout status
+    const payoutDetails = await fetchPayoutStatus(payoutResult.batch_header.payout_batch_id);
+
+    // Step 5: Respond with success
     res.status(200).json({
       captureResult,
       serviceFee,
       payoutAmount,
       payoutResult,
+      payoutDetails,
     });
   } catch (error) {
     console.error("Error capturing payment:", error);
     res.status(500).json({error: error.message});
   }
 });
+
 
 /** This function is in charge of sending notification to the user as soon
  * as a new Bokkings document is created in Firebase FIrestore.

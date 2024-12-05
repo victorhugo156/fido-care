@@ -53,15 +53,15 @@ const startPayment = async (details, setLoading, updateStatus) => {
       Linking.openURL(processData.approveLink);
 
       // Listen for PayPal redirect and finalize payment
-      const handleUrl = async (event) => {
+      const handleRedirect = async (event) => {
         const url = event.url;
 
-        if (url.includes("paypal-success")) {
+        if (url.includes("token=")) {
           const params = new URLSearchParams(url.split("?")[1]);
           const orderID = params.get("token");
 
           if (orderID) {
-            console.log("Order ID received:", orderID); // Add logging to debug
+            console.log("Order ID received:", orderID); // Debug log
 
             // Step 2: Automatically capture the payment
             const captureResponse = await fetch(
@@ -78,7 +78,7 @@ const startPayment = async (details, setLoading, updateStatus) => {
             const captureData = await captureResponse.json();
 
             if (captureResponse.ok) {
-              console.log("Capture successful:", captureData); // Add logging to debug
+              console.log("Capture successful:", captureData); // Debug log
 
               // Update status to confirmed
               updateStatus("Confirmed");
@@ -87,25 +87,24 @@ const startPayment = async (details, setLoading, updateStatus) => {
                 "Your payment has been processed successfully!"
               );
             } else {
-              console.error("Capture failed:", captureData); // Add logging to debug
+              console.error("Capture failed:", captureData); // Debug log
               throw new Error(
                 captureData.error || "Failed to capture payment."
               );
             }
           } else {
-            console.error("Order ID not found in URL:", url); // Add logging to debug
+            console.error("Order ID not found in URL:", url); // Debug log
           }
-        } else if (url.includes("paypal-cancel")) {
+        } else if (url.includes("cancel")) {
           Alert.alert("Payment Cancelled", "The payment was cancelled.");
         }
+
+        // Remove the event listener after processing
+        Linking.removeEventListener("url", handleRedirect);
       };
 
-      Linking.addEventListener("url", handleUrl);
-
-      // Clean up the event listener when the component unmounts
-      return () => {
-        Linking.removeEventListener("url", handleUrl);
-      };
+      // Add event listener for URL changes
+      Linking.addEventListener("url", handleRedirect);
     } else {
       throw new Error(processData.error || "Payment initiation failed.");
     }
@@ -216,7 +215,9 @@ const BookingDetail = () => {
         </TouchableOpacity>
       )}
 
-      {isLoading && <ActivityIndicator size="large" color={Colors.TURQUOISE_GREEN} />}
+      {isLoading && (
+        <ActivityIndicator size="large" color={Colors.TURQUOISE_GREEN} />
+      )}
 
       {/* Action Button */}
       <TouchableOpacity
