@@ -64,8 +64,8 @@ const createOrder = async (totalAmount) => {
         },
       ],
       application_context: {
-        return_url: "fidocare://paypal-success", // Replace 'myapp' with your actual scheme from app.json
-        cancel_url: "fidocare://paypal-cancel", // Replace 'myapp' with your actual scheme from app.json
+        return_url: "fido-care://paypal-success", // Replace 'myapp' with your actual scheme from app.json
+        cancel_url: "fido-care://paypal-cancel", // Replace 'myapp' with your actual scheme from app.json
       },
     }),
   });
