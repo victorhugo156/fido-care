@@ -61,6 +61,13 @@ export default function Rootlayout() {
                         }}
                     />
 
+                    <Stack.Screen
+                        name="screens/Register/formStepOne"
+                        options={{
+                            headerShown: false,  // No header for tab navigation
+                        }}
+                    />
+
                         <Stack.Screen
                             name="index"
                             options={{

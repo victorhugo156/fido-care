@@ -21,7 +21,26 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "fido-care",
+              "host": "paypal-success"
+            },
+            {
+              "scheme": "fido-care",
+              "host": "paypal-cancel"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -37,9 +56,6 @@
         }
       ]
     ],
-    "scheme": "fido-care",
-    "extra": {
-      "deepLinkHost": "paypal-success"
-    }
+    "scheme": "fido-care"
   }
 }
