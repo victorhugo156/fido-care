@@ -2,7 +2,7 @@ import { View, Text, StyleSheet, Image, TextInput, Alert, Button, ViewComponent 
 import React, { useState } from 'react';
 import { Link } from 'expo-router';
 
-import { auth, db  } from "../../../../firebaseConfig";
+import { auth, db } from "../../../../firebaseConfig";
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 
 import { useRouter } from 'expo-router';
@@ -24,7 +24,7 @@ export default function formStepTwo() {
     const { currentUser, setCurrentUser } = UseRegisterService(); // Access context
 
     const { control, handleSubmit, formState: { errors } } = useForm({
-        defaultValues:{
+        defaultValues: {
             email: currentUser.email || "",
             password: currentUser.password || "",
         }
@@ -35,8 +35,8 @@ export default function formStepTwo() {
 
 
     const handleNextStep = async (data) => {
-        try{
-            setCurrentUser((prev)=>({
+        try {
+            setCurrentUser((prev) => ({
                 ...prev,
                 email: data.email,
                 password: data.password,
@@ -52,9 +52,16 @@ export default function formStepTwo() {
                 oneSignalId: currentUser.oneSignalId,
             });
 
-            router.push("Home");
+            // Clear the form fields
+            reset({
+                email: "",
+                password: "",
+            });
 
-        }catch(error){
+
+            router.push("screens/Login");
+
+        } catch (error) {
             console.error("Error in handleNextStep: ", error);
         }
     }
@@ -65,9 +72,9 @@ export default function formStepTwo() {
             const userCredential = await createUserWithEmailAndPassword(auth, email, password);
             const userId = userCredential.user.uid;
 
-            
+
             // Update the displayName
-            
+
             await updateProfile(userCredential.user, {
                 displayName: displayName,
             });
@@ -147,13 +154,13 @@ export default function formStepTwo() {
                     }}
                     render={({ field: { onChange, value } }) => (
                         <Input
-                        style={styles.input}
+                            style={styles.input}
                             iconName="lock"
                             iconSize={25}
                             placeholder='type your password'
                             secureTextEntry={true}
                             placeholderTextColor={Colors.GRAY_700}
-                            error = {errors.address?.message}
+                            error={errors.address?.message}
                             onChangeText={onChange}
                             value={value}
                         />

@@ -35,6 +35,12 @@ export default function formStepOne() {
             name: data.name,
             address: data.address,
         }));
+            // Clear the form fields
+    reset({
+        name: "",
+        address: "",
+    });
+    
         router.push("screens/Register/formStepTwo");
     }
 

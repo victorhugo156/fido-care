@@ -36,7 +36,7 @@
     "expo-router": "~3.5.23",
     "expo-status-bar": "~1.12.1",
     "express": "^4.21.1",
-    "firebase": "^11.0.1",
+    "firebase": "^11.0.2",
     "firebase-admin": "^12.7.0",
     "firebase-functions": "^6.1.0",
     "formik": "^2.4.6",

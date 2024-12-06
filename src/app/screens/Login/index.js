@@ -238,11 +238,6 @@ export default function LoginScreen() {
             )}
           />
 
-          {
-            errors.email?.message &&
-            <Text style={styles.ErrorMsg}>{errors.email?.message}</Text>
-          }
-
           <Controller
             control={control}
             name='password'
@@ -265,9 +260,6 @@ export default function LoginScreen() {
             )}
           />
 
-          {errors.password?.message &&
-            <Text style={styles.ErrorMsg}>{errors.password.message}</Text>
-          }
         </View>
 
         <View style={styles.containerBtnLogin}>
