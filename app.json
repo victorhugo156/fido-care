@@ -37,6 +37,9 @@
         }
       ]
     ],
-    "scheme": "fidocare"
+    "scheme": "fido-care",
+    "extra": {
+      "deepLinkHost": "paypal-success"
+    }
   }
 }

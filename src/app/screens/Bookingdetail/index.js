@@ -7,7 +7,6 @@ import {
   ScrollView,
   Image,
   Alert,
-  Linking,
   ActivityIndicator,
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
@@ -54,7 +53,9 @@ const startPayment = async (details, setLoading, updateStatus) => {
       Linking.openURL(processData.approveLink);
 
       // Step 2: Listen for PayPal deep link redirect
-      const handleRedirect = async ({ url }) => {
+      const handleRedirect = async (event) => {
+        const url = event.url;
+
         if (url.includes("paypal-success")) {
           const params = new URLSearchParams(url.split("?")[1]);
           const orderID = params.get("token");
@@ -81,31 +82,31 @@ const startPayment = async (details, setLoading, updateStatus) => {
 
               // Update status to confirmed
               updateStatus("Confirmed");
+
+              // Navigate back to the app's main screen or show a success message
               Alert.alert(
                 "Payment Successful",
-                "Your payment has been processed successfully!"
+                "Your payment has been successfully processed."
               );
+              router.push("/Home");
             } else {
-              console.error("Capture failed:", captureData); // Debug log
-              throw new Error(
-                captureData.error || "Failed to capture payment."
-              );
+              console.error("Capture failed:", captureData);
+              Alert.alert("Payment Failed", "Failed to capture the payment.");
             }
-          } else {
-            console.error("Order ID not found in URL:", url); // Debug log
           }
-        } else if (url.includes("paypal-cancel")) {
-          Alert.alert("Payment Cancelled", "The payment was cancelled.");
         }
-
-        // Clean up the listener after handling
-        Linking.removeEventListener("url", handleRedirect);
       };
 
-      // Add event listener for deep links
-      Linking.addEventListener("url", handleRedirect);
+      // Add event listener for deep link redirects
+      const subscription = Linking.addEventListener("url", handleRedirect);
+
+      // Clean up the event listener
+      return () => {
+        subscription.remove();
+      };
     } else {
-      throw new Error(processData.error || "Payment initiation failed.");
+      console.error("Failed to process payment:", processData);
+      Alert.alert("Payment Failed", "Failed to process the payment.");
     }
   } catch (error) {
     console.error("Error during payment process:", error);
@@ -148,6 +149,8 @@ const BookingDetail = () => {
   if (!details) {
     return <Text style={styles.noDataText}>No booking details found.</Text>;
   }
+
+  const isPetOwner = details.userId === "currentUserId"; // Replace with actual user ID check
 
   return (
     <ScrollView style={styles.container}>
@@ -196,7 +199,9 @@ const BookingDetail = () => {
       </View>
 
       {/* Conditional PayPal Button for Pending Payments */}
-      {details.status === "Pending" && (
+      {isPetOwner && details.status === "Confirmed" && (
+
+      console.log("details", isPetOwner),
         <TouchableOpacity
           style={styles.payButton}
           onPress={() => startPayment(details, setLoading, updateStatus)}
@@ -377,12 +382,3 @@ const styles = StyleSheet.create({
 });
 
 export default BookingDetail;
-
-
-
-
-
-
-
-
-
