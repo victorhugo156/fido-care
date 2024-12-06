@@ -52,7 +52,7 @@ export default function BookingList() {
 
   const sentBookings = bookingDetails.filter((item) => item.role === "petOwner");
   const receivedBookings = bookingDetails.filter((item) => item.role === "petSitter");
-  const isPetSitter = currentUser.roles.includes("petSitter");
+  // const isPetSitter = currentUser.roles.includes("petSitter");
 
   const sections = [
     { title: 'Received Bookings', data: receivedBookings },

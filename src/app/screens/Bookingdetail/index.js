@@ -15,6 +15,7 @@ import Font_Family from "../../../constants/Font_Family";
 import Font_Size from "../../../constants/Font_Size";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import * as Linking from "expo-linking";
+import { UseRegisterService } from '../../hook/useRegisterService';
 
 // Function to handle payment and capture
 const startPayment = async (details, setLoading, updateStatus) => {
@@ -118,6 +119,7 @@ const startPayment = async (details, setLoading, updateStatus) => {
 
 const BookingDetail = () => {
   const router = useRouter();
+  const { currentUser } = UseRegisterService();
   const { bookingDetails } = useLocalSearchParams();
 
   const [details, setDetails] = useState(null);
@@ -150,8 +152,10 @@ const BookingDetail = () => {
     return <Text style={styles.noDataText}>No booking details found.</Text>;
   }
 
+  const isPetOwner = details.userId === "currentUserId"; // Replace with actual user ID check
+
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
       {/* Header Section */}
       <View style={styles.header}>
         <Image
@@ -197,7 +201,9 @@ const BookingDetail = () => {
       </View>
 
       {/* Conditional PayPal Button for Pending Payments */}
-      {details.status === "Pending" && (
+      {isPetOwner && details.status === "Confirmed" && (
+
+      console.log("details", isPetOwner),
         <TouchableOpacity
           style={styles.payButton}
           onPress={() => startPayment(details, setLoading, updateStatus)}
@@ -242,7 +248,7 @@ const BookingDetail = () => {
           <Text style={styles.rateButtonText}>Rate the Service</Text>
         </TouchableOpacity>
       )}
-    </ScrollView>
+    </View>
   );
 };
 
